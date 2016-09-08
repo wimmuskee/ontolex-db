@@ -1,0 +1,12 @@
+DROP TABLE IF EXISTS partOfSpeechVocabulary;
+
+CREATE TABLE partOfSpeechVocabulary (
+id TINYINT UNSIGNED NOT NULL PRIMARY KEY auto_increment,
+value VARCHAR(50) NOT NULL
+);
+
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('noun');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('verb');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('adjective');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('adverb');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('article');

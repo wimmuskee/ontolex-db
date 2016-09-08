@@ -1,0 +1,43 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import argparse
+import json
+from database.mysql import Database
+from format.rdf import RDFGraph
+
+parser = argparse.ArgumentParser(description='One script to generate config specified datasets.')
+parser.add_argument('-f', '--format', nargs=1, help='output format', metavar='format', dest='format')
+parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
+
+args = parser.parse_args()
+format = "turtle"
+configfile = "config.json"
+
+if args.format:
+	format = args.format[0]
+
+if args.config:
+	configfile = args.config[0]
+
+
+# load config file
+with open(configfile) as f:
+	config = json.loads(f.read())
+
+
+
+
+db = Database(config)
+db.connect()
+db.setLexicalEntries()
+
+
+
+if format == "xml" or format == "turtle":
+	output = RDFGraph(format)
+
+
+output.setLexicalEntries(db.lexicalEntries)
+output.printGraph()
+
