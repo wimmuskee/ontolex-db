@@ -40,3 +40,25 @@ class Database:
 		self.lexicalForms = c.fetchall()
 		c.close()
 
+
+	def setLexicalEntry(self,identifier):
+		c = self.DB.cursor()
+		query = "SELECT lexicalEntryID, class, lex.value AS lex_value, pos.value AS pos_value FROM lexicalEntry AS lex \
+			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id \
+			WHERE lexicalEntryID = %s"
+		c.execute(query, (identifier))
+		self.lexicalEntries = c.fetchall()
+		c.close()
+
+
+	def setLexicalForm(self,identifier,lang):
+		c = self.DB.cursor()
+		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.value AS lex_value, lang.iso_639_1 FROM lexicalForm AS form \
+			LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
+			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
+			LEFT JOIN languageVocabulary AS lang ON rep.languageID = lang.id \
+			WHERE form.lexicalEntryID = %s \
+			AND iso_639_1 = %s"
+		c.execute(query, (identifier,lang))
+		self.lexicalForms = c.fetchall()
+		c.close()

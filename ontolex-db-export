@@ -6,16 +6,18 @@ import json
 from database.mysql import Database
 from format.rdf import RDFGraph
 
-parser = argparse.ArgumentParser(description='One script to generate config specified datasets.')
+parser = argparse.ArgumentParser(description='export script for ontolox-db')
 parser.add_argument('-f', '--format', nargs=1, help='output format', metavar='format', dest='format')
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
+parser.add_argument('-i', '--identifier', nargs=1, help='local identifier', metavar='identifier', dest='identifier')
 
 
 args = parser.parse_args()
 format = "turtle"
 configfile = "config.json"
 language = "nl"
+identifier = ""
 
 if args.format:
 	format = args.format[0]
@@ -26,6 +28,8 @@ if args.config:
 if args.language:
 	language = args.language[0]
 
+if args.identifier:
+	identifier = args.identifier[0]
 
 # load config file
 with open(configfile) as f:
@@ -36,15 +40,17 @@ with open(configfile) as f:
 
 db = Database(config)
 db.connect()
-db.setLexicalEntries()
-db.setLexicalForms("nl")
-
 
 if format == "xml" or format == "turtle":
 	output = RDFGraph(format)
 
+if identifier:
+	db.setLexicalEntry(identifier)
+	db.setLexicalForm(identifier,language)
+else:
+	db.setLexicalEntries()
+	db.setLexicalForms(language)
 
 output.setLexicalEntries(db.lexicalEntries)
 output.setLexicalForms(db.lexicalForms)
 output.printGraph()
-
