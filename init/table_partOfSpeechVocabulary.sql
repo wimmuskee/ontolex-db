@@ -10,3 +10,7 @@ INSERT INTO partOfSpeechVocabulary (value) VALUES ('verb');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('adjective');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('adverb');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('article');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('conjunction');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('preposition');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('pronoun');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('numeral');
