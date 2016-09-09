@@ -11,7 +11,6 @@ class RDFGraph:
 	def __init__(self,format):
 		global ONTOLEX
 		global LEXINFO
-		global RDF
 
 		self.format = format
 		self.g = Graph()
@@ -34,8 +33,10 @@ class RDFGraph:
 			lexicalFormIdentifier = self.__getIdentifier("form", form["rep_value"],form["lexicalFormID"])
 
 			self.g.add((lexicalEntryIdentifier,URIRef(ONTOLEX + form["type"]),lexicalFormIdentifier))
+			self.g.add((lexicalEntryIdentifier,RDFS.label,Literal(form["lex_value"], lang=form["iso_639_1"])))
 			self.g.add((lexicalFormIdentifier,RDF.type,ONTOLEX.Form))
 			self.g.add((lexicalFormIdentifier,ONTOLEX.writtenRep,Literal(form["rep_value"], lang=form["iso_639_1"])))
+			self.g.add((lexicalFormIdentifier,RDFS.label,Literal(form["rep_value"], lang=form["iso_639_1"])))
 
 
 	def printGraph(self):
