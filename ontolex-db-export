@@ -9,16 +9,22 @@ from format.rdf import RDFGraph
 parser = argparse.ArgumentParser(description='One script to generate config specified datasets.')
 parser.add_argument('-f', '--format', nargs=1, help='output format', metavar='format', dest='format')
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
+parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
+
 
 args = parser.parse_args()
 format = "turtle"
 configfile = "config.json"
+language = "nl"
 
 if args.format:
 	format = args.format[0]
 
 if args.config:
 	configfile = args.config[0]
+
+if args.language:
+	language = args.language[0]
 
 
 # load config file
@@ -31,7 +37,7 @@ with open(configfile) as f:
 db = Database(config)
 db.connect()
 db.setLexicalEntries()
-
+db.setLexicalForms("nl")
 
 
 if format == "xml" or format == "turtle":
@@ -39,5 +45,6 @@ if format == "xml" or format == "turtle":
 
 
 output.setLexicalEntries(db.lexicalEntries)
+output.setLexicalForms(db.lexicalForms)
 output.printGraph()
 

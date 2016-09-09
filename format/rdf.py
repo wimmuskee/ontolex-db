@@ -21,11 +21,26 @@ class RDFGraph:
 
 	def setLexicalEntries(self,lexicalEntries):
 		for entry in lexicalEntries:
-			subject = URIRef(entry["identifier"])
-			self.g.add((subject,RDF.type,ONTOLEX.lexicalEntry))
-			self.g.add((subject,RDF.type,URIRef(ONTOLEX + entry["class"])))
-			self.g.add((subject,LEXINFO.partOfSpeech,URIRef(LEXINFO + entry["pos_value"])))
+			lexicalEntryIdentifier = self.__getIdentifier("lex",entry["lex_value"],entry["lexicalEntryID"])
+
+			self.g.add((lexicalEntryIdentifier,RDF.type,ONTOLEX.lexicalEntry))
+			self.g.add((lexicalEntryIdentifier,RDF.type,URIRef(ONTOLEX + entry["class"])))
+			self.g.add((lexicalEntryIdentifier,LEXINFO.partOfSpeech,URIRef(LEXINFO + entry["pos_value"])))
+
+
+	def setLexicalForms(self,lexicalForms):
+		for form in lexicalForms:
+			lexicalEntryIdentifier = self.__getIdentifier("lex",form["lex_value"],form["lexicalEntryID"])
+			lexicalFormIdentifier = self.__getIdentifier("form", form["rep_value"],form["lexicalFormID"])
+
+			self.g.add((lexicalEntryIdentifier,URIRef(ONTOLEX + form["type"]),lexicalFormIdentifier))
+			self.g.add((lexicalFormIdentifier,RDF.type,ONTOLEX.Form))
+			self.g.add((lexicalFormIdentifier,ONTOLEX.writtenRep,Literal(form["rep_value"], lang=form["iso_639_1"])))
 
 
 	def printGraph(self):
 		print(bytes.decode(self.g.serialize(format=self.format)))
+
+
+	def __getIdentifier(self,ns,value,id):
+		return URIRef( "urn:" + ns + "_" + value + "_" + str(id) )
