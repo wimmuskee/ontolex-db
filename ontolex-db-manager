@@ -1,0 +1,56 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import argparse
+import json
+from database.mysql import Database
+
+
+parser = argparse.ArgumentParser(description='manager script for ontolox-db')
+parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
+parser.add_argument('-a', '--add', nargs=1, help='add a word', metavar='word', dest='word')
+parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
+parser.add_argument('-p', '--pos', nargs=1, help='part of speech', metavar='pos', dest='pos')
+
+
+args = parser.parse_args()
+configfile = "config.json"
+word = ""
+language = "nl"
+
+if args.language:
+	language = args.language[0]
+
+if args.config:
+	configfile = args.config[0]
+
+if args.word:
+	word = args.word[0].strip(' \t\n\r')
+else:
+	parser.error("need word")
+
+if args.pos:
+	pos = args.pos[0]
+else:
+	parser.error("need part of speech")
+
+# load config file
+with open(configfile) as f:
+	config = json.loads(f.read())
+
+
+# gonna asume canonicalForm for now, and Word
+db = Database(config)
+db.connect()
+
+# pos validation
+db.setPosses()
+if pos not in db.posses:
+	parser.error("invalid partOfSpeech: " + pos)
+
+# language validation
+db.setLanguages()
+if language not in db.languages:
+	parser.error("invalid language: " + language)
+
+db.storeCanonical(word,db.languages[language],db.posses[pos])

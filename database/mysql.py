@@ -12,10 +12,28 @@ class Database:
 		self.lexicalEntries = []
 		self.lexicalEntryIDs = []
 		self.lexicalForms = []
+		self.posses = {}
+		self.languages = {}
 
 
 	def connect(self):
 		self.DB = pymysql.connect(host=self.host,user=self.user, passwd=self.passwd,db=self.name,charset='utf8',use_unicode=1,cursorclass=pymysql.cursors.DictCursor)
+
+
+	def setPosses(self):
+		c = self.DB.cursor()
+		query = "SELECT * FROM partOfSpeechVocabulary"
+		c.execute(query)
+		for row in c.fetchall():
+			self.posses[row["value"]] = row["id"]
+
+
+	def setLanguages(self):
+		c = self.DB.cursor()
+		query = "SELECT * FROM languageVocabulary"
+		c.execute(query)
+		for row in c.fetchall():
+			self.languages[row["iso_639_1"]] = row["id"]
 
 
 	def setLexicalEntries(self):
@@ -62,3 +80,35 @@ class Database:
 		c.execute(query, (identifier,lang))
 		self.lexicalForms = c.fetchall()
 		c.close()
+
+
+	def storeCanonical(self,word,lang_id,pos_id):
+		lexicalEntryID = self.__storeLexicalEntry(word,pos_id)
+		lexicalFormID = self.storeForm(lexicalEntryID,"canonicalForm")
+		self.storeWrittenRep(lexicalFormID,word,lang_id)
+		self.DB.commit()
+
+
+	def storeForm(self,lexicalEntryID,type):
+		c = self.DB.cursor()
+		query = "INSERT INTO lexicalForm (lexicalEntryID,type) VALUES (%s,%s)"
+		c.execute(query, (lexicalEntryID,type))
+		lexicalFormID = c.lastrowid
+		c.close()
+		return lexicalFormID
+
+
+	def storeWrittenRep(self,lexicalFormID,word,lang_id):
+		c = self.DB.cursor()
+		query = "INSERT INTO writtenRep (lexicalFormID,languageID,value) VALUES (%s,%s,%s)"
+		c.execute(query, (lexicalFormID,lang_id,word))
+		c.close()
+		
+
+	def __storeLexicalEntry(self,word,pos_id):
+		c = self.DB.cursor()
+		query = "INSERT INTO lexicalEntry (value,partOfSpeechID) VALUES (%s,%s)"
+		c.execute(query, (word,pos_id))
+		lexicalEntryID = c.lastrowid
+		c.close()
+		return lexicalEntryID
