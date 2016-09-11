@@ -12,8 +12,10 @@ class Database:
 		self.lexicalEntries = []
 		self.lexicalEntryIDs = []
 		self.lexicalForms = []
+		self.lexicalProperties = []
 		self.posses = {}
 		self.languages = {}
+		self.morphosyntactics = {}
 
 
 	def connect(self):
@@ -34,6 +36,15 @@ class Database:
 		c.execute(query)
 		for row in c.fetchall():
 			self.languages[row["iso_639_1"]] = row["id"]
+
+
+	def setMorphoSyntactics(self):
+		c = self.DB.cursor()
+		query = "SELECT * FROM morphoSyntacticsVocabulary"
+		c.execute(query)
+		for row in c.fetchall():
+			key = row["property"] + ":" + row["value"]
+			self.morphosyntactics[key] = row["id"]
 
 
 	def setLexicalEntries(self):
@@ -82,10 +93,36 @@ class Database:
 		c.close()
 
 
+	def setLexicalFormProperties(self,lang):
+		c = self.DB.cursor()
+		for form in self.lexicalForms:
+			propertydict = { "lexicalFormID": form["lexicalFormID"], "rep_value": form["rep_value"], "properties": [] }
+			query = "SELECT vocab.property, vocab.value FROM formMorphoSyntactics AS formprop \
+				LEFT JOIN morphoSyntacticsVocabulary AS vocab ON formprop.morphoSyntacticsID = vocab.id \
+				WHERE formprop.lexicalFormID = %s"
+			c.execute(query, (form["lexicalFormID"]))
+			if c.rowcount > 0:
+				propertydict["properties"] = c.fetchall()
+			
+			self.lexicalProperties.append(propertydict)
+
+		c.close()
+
+
 	def storeCanonical(self,word,lang_id,pos_id):
 		lexicalEntryID = self.__storeLexicalEntry(word,pos_id)
 		lexicalFormID = self.storeForm(lexicalEntryID,"canonicalForm")
 		self.storeWrittenRep(lexicalFormID,word,lang_id)
+		self.DB.commit()
+		return lexicalEntryID
+
+
+	def storeOtherForm(self,lexicalEntryID,word,lang_id,properties):
+		lexicalFormID = self.storeForm(lexicalEntryID,"otherForm")
+		self.storeWrittenRep(lexicalFormID,word,lang_id)
+		for property in properties:
+			# p in form <property>:<value>
+			self.storeFormProperty(lexicalFormID,self.morphosyntactics[property])
 		self.DB.commit()
 
 
@@ -103,7 +140,14 @@ class Database:
 		query = "INSERT INTO writtenRep (lexicalFormID,languageID,value) VALUES (%s,%s,%s)"
 		c.execute(query, (lexicalFormID,lang_id,word))
 		c.close()
-		
+
+
+	def storeFormProperty(self,lexicalFormID,morphoSyntacticsID):
+		c = self.DB.cursor()
+		query = "INSERT INTO formMorphoSyntactics (lexicalFormID,morphoSyntacticsID) VALUES (%s,%s)"
+		c.execute(query, (lexicalFormID,morphoSyntacticsID))
+		c.close()
+
 
 	def __storeLexicalEntry(self,word,pos_id):
 		c = self.DB.cursor()

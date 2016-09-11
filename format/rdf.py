@@ -39,6 +39,14 @@ class RDFGraph:
 			self.g.add((lexicalFormIdentifier,RDFS.label,Literal(form["rep_value"], lang=form["iso_639_1"])))
 
 
+	def setLexicalProperties(self,lexicalProperties):
+		for form in lexicalProperties:
+			lexicalFormIdentifier = self.__getIdentifier("form", form["rep_value"],form["lexicalFormID"])
+			if form["properties"]:
+				for property in form["properties"]:
+					self.g.add((lexicalFormIdentifier,URIRef(LEXINFO + property["property"]),URIRef(LEXINFO + property["value"])))
+
+
 	def printGraph(self):
 		print(bytes.decode(self.g.serialize(format=self.format)))
 

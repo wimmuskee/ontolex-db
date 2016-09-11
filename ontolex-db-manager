@@ -3,20 +3,33 @@
 
 import argparse
 import json
+import re
 from database.mysql import Database
 
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
+parser.add_argument('mode', choices=['lexicon','entry','form'], help="main operating mode, add stuff to either lexicon, entry or form")
+parser.add_argument('word', help="word to add")
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
-parser.add_argument('-a', '--add', nargs=1, help='add a word', metavar='word', dest='word')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
-parser.add_argument('-p', '--pos', nargs=1, help='part of speech', metavar='pos', dest='pos')
+lexicongroup = parser.add_argument_group('lexicon options')
+lexicongroup.add_argument('-p', '--pos', nargs=1, help='part of speech', metavar='pos', dest='pos')
+entrygroup = parser.add_argument_group('entry options')
+entrygroup.add_argument('-e', '--lexid', type=int, nargs=1, help='lexicalEntryID', metavar='lexid', dest='lexid')
+entrygroup.add_argument('-x', '--props', nargs='+', help='form properties, in format: property:value', metavar='props', dest='props')
 
-
+# set initial vars
 args = parser.parse_args()
 configfile = "config.json"
-word = ""
 language = "nl"
+pos = ""
+lexid = 0
+properties = []
+
+
+# check input vars
+mode = args.mode
+word = args.word.strip(' \t\n\r')
 
 if args.language:
 	language = args.language[0]
@@ -24,33 +37,56 @@ if args.language:
 if args.config:
 	configfile = args.config[0]
 
-if args.word:
-	word = args.word[0].strip(' \t\n\r')
-else:
-	parser.error("need word")
-
 if args.pos:
 	pos = args.pos[0]
-else:
-	parser.error("need part of speech")
+
+if args.lexid:
+	lexicalEntryID = args.lexid[0]
+
+if args.props:
+	propertyregex = re.compile(r'^[a-z]+:[a-zA-Z]+$')
+	for property in args.props:
+		if propertyregex.match(property):
+			properties.append(property)
+
+
+# validate group dependencies
+if mode == "lexicon" and not pos:
+	parser.error("need part of speech when adding to lexicon")
+
+if mode == "entry" and not lexicalEntryID:
+	parser.error("need lexicalEntryID when adding to entry")
+
 
 # load config file
 with open(configfile) as f:
 	config = json.loads(f.read())
 
 
-# gonna asume canonicalForm for now, and Word
 db = Database(config)
 db.connect()
-
-# pos validation
-db.setPosses()
-if pos not in db.posses:
-	parser.error("invalid partOfSpeech: " + pos)
 
 # language validation
 db.setLanguages()
 if language not in db.languages:
 	parser.error("invalid language: " + language)
 
-db.storeCanonical(word,db.languages[language],db.posses[pos])
+
+if mode == "lexicon":
+	# pos validation
+	db.setPosses()
+	if pos not in db.posses:
+		parser.error("invalid partOfSpeech: " + pos)
+
+	lexicalEntryID = db.storeCanonical(word,db.languages[language],db.posses[pos])
+	print("Stored lexicalEntryID: " + str(lexicalEntryID))
+
+elif mode == "entry":
+	db.setMorphoSyntactics()
+	for p in properties:
+		if p not in db.morphosyntactics:
+			parser.error("invalid property provided: " + p)
+	
+	db.storeOtherForm(lexicalEntryID,word,db.languages[language],properties)
+	print("Stored otherForm for: " + str(lexicalEntryID))
+
