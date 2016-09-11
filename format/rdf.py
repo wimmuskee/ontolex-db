@@ -10,7 +10,7 @@ LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
 
 
 class RDFGraph:
-	def __init__(self,name,format,buildlexicon):
+	def __init__(self,name,language,format,buildlexicon):
 		global ONTOLEX
 		global LEXINFO
 		global LIME
@@ -24,6 +24,7 @@ class RDFGraph:
 		if buildlexicon:
 			self.g.bind("lime", LIME)
 			self.g.add((URIRef("urn:" + name),RDF.type,LIME.lexicon))
+			self.g.add((URIRef("urn:" + name),LIME.language,Literal(language)))
 
 
 	def setLexicalEntries(self,lexicalEntries):

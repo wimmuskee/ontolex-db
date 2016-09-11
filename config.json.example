@@ -2,5 +2,6 @@
   "user": "root",
   "host": "localhost",
   "passwd": "***",
-  "name": "ontolex"
+  "name": "ontolex",
+  "language": "nl"
 }

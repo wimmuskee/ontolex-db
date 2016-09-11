@@ -21,7 +21,6 @@ entrygroup.add_argument('-x', '--props', nargs='+', help='form properties, in fo
 # set initial vars
 args = parser.parse_args()
 configfile = "config.json"
-language = "nl"
 pos = ""
 lexid = 0
 properties = []
@@ -30,9 +29,6 @@ properties = []
 # check input vars
 mode = args.mode
 word = args.word.strip(' \t\n\r')
-
-if args.language:
-	language = args.language[0]
 
 if args.config:
 	configfile = args.config[0]
@@ -61,6 +57,11 @@ if mode == "entry" and not lexicalEntryID:
 # load config file
 with open(configfile) as f:
 	config = json.loads(f.read())
+
+language = config["language"]
+if args.language:
+	language = args.language[0]
+
 
 
 db = Database(config)
