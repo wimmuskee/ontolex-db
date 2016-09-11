@@ -11,6 +11,7 @@ parser.add_argument('-f', '--format', nargs=1, help='output format', metavar='fo
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
 parser.add_argument('-i', '--identifier', nargs=1, help='local identifier', metavar='identifier', dest='identifier')
+parser.add_argument('--lexicon', help="build lexicon definition", action="store_true")
 
 
 args = parser.parse_args()
@@ -18,6 +19,7 @@ format = "turtle"
 configfile = "config.json"
 language = "nl"
 identifier = ""
+buildlexicon = False
 
 if args.format:
 	format = args.format[0]
@@ -31,6 +33,9 @@ if args.language:
 if args.identifier:
 	identifier = args.identifier[0]
 
+if args.lexicon:
+	buildlexicon = True
+
 # load config file
 with open(configfile) as f:
 	config = json.loads(f.read())
@@ -42,7 +47,7 @@ db = Database(config)
 db.connect()
 
 if format == "xml" or format == "turtle":
-	output = RDFGraph(format)
+	output = RDFGraph("mylexicon",format,buildlexicon)
 
 if identifier:
 	db.setLexicalEntry(identifier)

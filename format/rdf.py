@@ -6,16 +6,24 @@ from rdflib import Graph
 
 ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
+LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
+
 
 class RDFGraph:
-	def __init__(self,format):
+	def __init__(self,name,format,buildlexicon):
 		global ONTOLEX
 		global LEXINFO
+		global LIME
 
+		self.name = name
 		self.format = format
+		self.buildlexicon = buildlexicon
 		self.g = Graph()
 		self.g.bind("ontolex", ONTOLEX)
 		self.g.bind("lexinfo", LEXINFO)
+		if buildlexicon:
+			self.g.bind("lime", LIME)
+			self.g.add((URIRef("urn:" + name),RDF.type,LIME.lexicon))
 
 
 	def setLexicalEntries(self,lexicalEntries):
@@ -25,6 +33,8 @@ class RDFGraph:
 			self.g.add((lexicalEntryIdentifier,RDF.type,ONTOLEX.lexicalEntry))
 			self.g.add((lexicalEntryIdentifier,RDF.type,URIRef(ONTOLEX + entry["class"])))
 			self.g.add((lexicalEntryIdentifier,LEXINFO.partOfSpeech,URIRef(LEXINFO + entry["pos_value"])))
+			if self.buildlexicon:
+				self.g.add((URIRef("urn:" + self.name),LIME.entry,lexicalEntryIdentifier))
 
 
 	def setLexicalForms(self,lexicalForms):
