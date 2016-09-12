@@ -21,6 +21,8 @@ class RDFGraph:
 		self.g = Graph()
 		self.g.bind("ontolex", ONTOLEX)
 		self.g.bind("lexinfo", LEXINFO)
+		self.g.bind("skos", SKOS)
+
 		if buildlexicon:
 			self.g.bind("lime", LIME)
 			self.g.add((URIRef("urn:" + name),RDF.type,LIME.lexicon))
@@ -70,13 +72,26 @@ class RDFGraph:
 
 			self.g.add((lexicalEntryIdentifier,ONTOLEX.sense,lexicalSenseIdentifier))
 			self.g.add((lexicalSenseIdentifier,RDF.type,ONTOLEX.LexicalSense))
+			self.g.add((lexicalSenseIdentifier,RDF.type,SKOS.Concept))
 
 
 	def setSenseReferences(self,senseReferences):
 		for senseref in senseReferences:
 			lexicalSenseIdentifier = URIRef(senseref["sense_identifier"])
 			for reference in senseref["references"]:
-				self.g.add((lexicalSenseIdentifier,LEXINFO.reference,URIRef(reference["reference"])))
+				if reference["namespace"] == "ontolex":
+					self.g.add((lexicalSenseIdentifier,URIRef(ONTOLEX + reference["property"]),URIRef(reference["reference"])))
+
+				elif reference["namespace"] == "skos":
+					self.g.add((lexicalSenseIdentifier,URIRef(SKOS + reference["property"]),URIRef(reference["reference"])))
+					
+					if reference["property"] == "narrower":
+						# also add the broader variant
+						# this only works when exporting everything
+						self.g.add((URIRef(reference["reference"]),SKOS.broader,lexicalSenseIdentifier))
+
+
+				
 
 
 	def printGraph(self):

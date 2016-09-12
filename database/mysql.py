@@ -51,7 +51,7 @@ class Database:
 
 	def setLexicalEntries(self):
 		c = self.DB.cursor()
-		query = "SELECT lexicalEntryID, class, lex.value AS lex_value, pos.value AS pos_value FROM lexicalEntry AS lex \
+		query = "SELECT lexicalEntryID, class, lex.value AS lex_value, pos.value AS pos_value, lex.identifier AS lex_identifier FROM lexicalEntry AS lex \
 			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id"
 		c.execute(query)
 		self.lexicalEntries = c.fetchall()
@@ -112,7 +112,7 @@ class Database:
 
 	def setLexicalSenses(self):
 		c = self.DB.cursor()
-		query = "SELECT lex.value AS lex_value, lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier FROM lexicalSense AS sense \
+		query = "SELECT lex.value AS lex_value, lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
 			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID"
 		c.execute(query)
 		self.lexicalSenses = c.fetchall()
@@ -133,7 +133,7 @@ class Database:
 		c = self.DB.cursor()
 		for sense in self.lexicalSenses:
 			propertydict = { "sense_identifier": sense["sense_identifier"], "references": [] }
-			query = "SELECT reference FROM senseReference \
+			query = "SELECT namespace, property, reference FROM senseReference \
 				WHERE lexicalSenseID = %s"
 			c.execute(query, (sense["lexicalSenseID"]))
 			if c.rowcount > 0:
