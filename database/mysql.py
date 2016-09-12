@@ -60,14 +60,13 @@ class Database:
 			self.lexicalEntryIDs.append(entry["lexicalEntryID"])
 
 
-	def setLexicalForms(self,lang):
+	def setLexicalForms(self,lang_id):
 		c = self.DB.cursor()
-		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.value AS lex_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier, lang.iso_639_1 FROM lexicalForm AS form \
+		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.value AS lex_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier FROM lexicalForm AS form \
 			LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
-			LEFT JOIN languageVocabulary AS lang ON rep.languageID = lang.id \
-			WHERE iso_639_1 = %s"
-		c.execute(query, (lang))
+			WHERE rep.languageID = %s"
+		c.execute(query, (lang_id))
 		self.lexicalForms = c.fetchall()
 		c.close()
 
@@ -82,15 +81,14 @@ class Database:
 		c.close()
 
 
-	def setLexicalForm(self,lexicalEntryID,lang):
+	def setLexicalForm(self,lexicalEntryID,lang_id):
 		c = self.DB.cursor()
-		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, lex.value AS lex_value, form.identifier AS form_identifier, lang.iso_639_1 FROM lexicalForm AS form \
+		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, lex.value AS lex_value, form.identifier AS form_identifier FROM lexicalForm AS form \
 			LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
-			LEFT JOIN languageVocabulary AS lang ON rep.languageID = lang.id \
 			WHERE form.lexicalEntryID = %s \
-			AND iso_639_1 = %s"
-		c.execute(query, (lexicalEntryID,lang))
+			AND rep.languageID = %s"
+		c.execute(query, (lexicalEntryID,lang_id))
 		self.lexicalForms = c.fetchall()
 		c.close()
 

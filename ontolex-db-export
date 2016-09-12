@@ -44,18 +44,24 @@ if args.language:
 db = Database(config)
 db.connect()
 
+# language validation
+db.setLanguages()
+if language not in db.languages:
+	parser.error("invalid language: " + language)
+
+
 if format == "xml" or format == "turtle":
 	output = RDFGraph("mylexicon",language,format,buildlexicon)
 
 if identifier:
 	db.setLexicalEntry(identifier)
-	db.setLexicalForm(identifier,language)
+	db.setLexicalForm(identifier,db.languages[language])
 	db.setLexicalFormProperties()
 	db.setLexicalSensesByID(identifier)
 	db.setSenseReferences()
 else:
 	db.setLexicalEntries()
-	db.setLexicalForms(language)
+	db.setLexicalForms(db.languages[language])
 	db.setLexicalFormProperties()
 	db.setLexicalSenses()
 	db.setSenseReferences()
