@@ -163,6 +163,17 @@ class Database:
 		self.DB.commit()
 
 
+	def storeSense(self,lexicalEntryID,reference,narrower):
+		lexicalSenseID = self.storeLexicalSense(lexicalEntryID)
+		if reference:
+			self.storeSenseReference(lexicalSenseID,"ontolex","reference",reference)
+		
+		if narrower:
+			self.storeSenseReference(lexicalSenseID,"skos","narrower",narrower)
+		
+		self.DB.commit()
+
+
 	def storeForm(self,lexicalEntryID,type):
 		c = self.DB.cursor()
 		identifier = "urn:uuid:" + str(uuid.uuid4())
@@ -171,6 +182,16 @@ class Database:
 		lexicalFormID = c.lastrowid
 		c.close()
 		return lexicalFormID
+
+
+	def storeLexicalSense(self,lexicalEntryID):
+		c = self.DB.cursor()
+		identifier = "urn:uuid:" + str(uuid.uuid4())
+		query = "INSERT INTO lexicalSense (lexicalEntryID,identifier) VALUES (%s,%s)"
+		c.execute(query, (lexicalEntryID,identifier))
+		lexicalSenseID = c.lastrowid
+		c.close()
+		return lexicalSenseID
 
 
 	def storeWrittenRep(self,lexicalFormID,word,lang_id):
@@ -184,6 +205,13 @@ class Database:
 		c = self.DB.cursor()
 		query = "INSERT INTO formMorphoSyntactics (lexicalFormID,morphoSyntacticsID) VALUES (%s,%s)"
 		c.execute(query, (lexicalFormID,morphoSyntacticsID))
+		c.close()
+
+
+	def storeSenseReference(self,lexicalSenseID,namespace,property,reference):
+		c = self.DB.cursor()
+		query = "INSERT INTO senseReference (lexicalSenseID,namespace,property,reference) VALUES (%s,%s,%s,%s)"
+		c.execute(query, (lexicalSenseID,namespace,property,reference))
 		c.close()
 
 

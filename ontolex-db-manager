@@ -8,21 +8,26 @@ from database.mysql import Database
 
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
-parser.add_argument('mode', choices=['lexicon','entry','form'], help="main operating mode, add stuff to either lexicon, entry or form")
+parser.add_argument('mode', choices=['entry','form','sense'], help="main operating mode, add stuff")
 parser.add_argument('word', help="word to add")
-parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
+parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='path', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
-lexicongroup = parser.add_argument_group('lexicon options')
-lexicongroup.add_argument('-p', '--pos', nargs=1, help='part of speech', metavar='pos', dest='pos')
+parser.add_argument('-e', '--entryid', type=int, nargs=1, help='lexicalEntryID', metavar='entryid', dest='entryid')
 entrygroup = parser.add_argument_group('entry options')
-entrygroup.add_argument('-e', '--lexid', type=int, nargs=1, help='lexicalEntryID', metavar='lexid', dest='lexid')
-entrygroup.add_argument('-x', '--props', nargs='+', help='form properties, in format: property:value', metavar='props', dest='props')
+entrygroup.add_argument('-p', '--pos', nargs=1, help='part of speech', metavar='pos', dest='pos')
+formgroup = parser.add_argument_group('form options')
+formgroup.add_argument('-x', '--props', nargs='+', help='form properties, in format: property:value', metavar='props', dest='props')
+sensegroup = parser.add_argument_group('sense options')
+sensegroup.add_argument('-r', '--ref', nargs=1, help='sense reference', metavar='uri', dest='ref')
+sensegroup.add_argument('-n', '--narrower', nargs=1, help='skos narrower relation', metavar='uri', dest='narrower')
 
 # set initial vars
 args = parser.parse_args()
 configfile = "config.json"
 pos = ""
-lexid = 0
+lexicalEntryID = 0
+reference = ""
+narrower = ""
 properties = []
 
 
@@ -36,8 +41,14 @@ if args.config:
 if args.pos:
 	pos = args.pos[0]
 
-if args.lexid:
-	lexicalEntryID = args.lexid[0]
+if args.entryid:
+	lexicalEntryID = args.entryid[0]
+
+if args.ref:
+	reference = args.ref[0]
+
+if args.narrower:
+	narrower = args.narrower[0]
 
 if args.props:
 	propertyregex = re.compile(r'^[a-z]+:[a-zA-Z]+$')
@@ -47,12 +58,14 @@ if args.props:
 
 
 # validate group dependencies
-if mode == "lexicon" and not pos:
-	parser.error("need part of speech when adding to lexicon")
+if mode == "entry" and not pos:
+	parser.error("need part of speech when adding an entry")
 
-if mode == "entry" and not lexicalEntryID:
-	parser.error("need lexicalEntryID when adding to entry")
+if mode == "form" and not lexicalEntryID:
+	parser.error("need lexicalEntryID when adding a form")
 
+if mode == "sense" and not lexicalEntryID:
+	parser.error("need lexicalEntryID when adding a sense")
 
 # load config file
 with open(configfile) as f:
@@ -73,7 +86,7 @@ if language not in db.languages:
 	parser.error("invalid language: " + language)
 
 
-if mode == "lexicon":
+if mode == "entry":
 	# pos validation
 	db.setPosses()
 	if pos not in db.posses:
@@ -82,7 +95,7 @@ if mode == "lexicon":
 	lexicalEntryID = db.storeCanonical(word,db.languages[language],db.posses[pos])
 	print("Stored lexicalEntryID: " + str(lexicalEntryID))
 
-elif mode == "entry":
+elif mode == "form":
 	db.setMorphoSyntactics()
 	for p in properties:
 		if p not in db.morphosyntactics:
@@ -91,3 +104,6 @@ elif mode == "entry":
 	db.storeOtherForm(lexicalEntryID,word,db.languages[language],properties)
 	print("Stored otherForm for: " + str(lexicalEntryID))
 
+elif mode == "sense":
+	db.storeSense(lexicalEntryID,reference,narrower)
+	print("Stored lexicalSense for: " + str(lexicalEntryID))
