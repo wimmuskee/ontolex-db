@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from rdflib import URIRef, Literal, Namespace
-from rdflib.namespace import SKOS, RDFS, RDF
+from rdflib.namespace import SKOS, RDFS, RDF, XSD
 from rdflib import Graph
 
 ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
@@ -28,6 +28,9 @@ class RDFGraph:
 
 
 	def setLexicalEntries(self,lexicalEntries):
+		if self.buildlexicon:
+			self.g.add((URIRef("urn:" + self.name),LIME.lexicalEntries,Literal(str(len(lexicalEntries)), datatype=XSD.integer)))
+
 		for entry in lexicalEntries:
 			lexicalEntryIdentifier = self.__getIdentifier("lex",entry["lex_value"],entry["lexicalEntryID"])
 
@@ -36,6 +39,7 @@ class RDFGraph:
 			self.g.add((lexicalEntryIdentifier,LEXINFO.partOfSpeech,URIRef(LEXINFO + entry["pos_value"])))
 			if self.buildlexicon:
 				self.g.add((URIRef("urn:" + self.name),LIME.entry,lexicalEntryIdentifier))
+
 
 
 	def setLexicalForms(self,lexicalForms):
