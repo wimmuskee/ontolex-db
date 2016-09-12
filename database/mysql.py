@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pymysql.cursors
-
+import uuid
 
 class Database:
 	def __init__(self,config):
@@ -62,7 +62,7 @@ class Database:
 
 	def setLexicalForms(self,lang):
 		c = self.DB.cursor()
-		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.value AS lex_value, lang.iso_639_1 FROM lexicalForm AS form \
+		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.value AS lex_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier, lang.iso_639_1 FROM lexicalForm AS form \
 			LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
 			LEFT JOIN languageVocabulary AS lang ON rep.languageID = lang.id \
@@ -72,25 +72,25 @@ class Database:
 		c.close()
 
 
-	def setLexicalEntry(self,identifier):
+	def setLexicalEntry(self,lexicalEntryID):
 		c = self.DB.cursor()
-		query = "SELECT lexicalEntryID, class, lex.value AS lex_value, pos.value AS pos_value FROM lexicalEntry AS lex \
+		query = "SELECT lexicalEntryID, class, lex.value AS lex_value, pos.value AS pos_value, identifier AS lex_identifier FROM lexicalEntry AS lex \
 			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id \
 			WHERE lexicalEntryID = %s"
-		c.execute(query, (identifier))
+		c.execute(query, (lexicalEntryID))
 		self.lexicalEntries = c.fetchall()
 		c.close()
 
 
-	def setLexicalForm(self,identifier,lang):
+	def setLexicalForm(self,lexicalEntryID,lang):
 		c = self.DB.cursor()
-		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.value AS lex_value, lang.iso_639_1 FROM lexicalForm AS form \
+		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, lex.value AS lex_value, form.identifier AS form_identifier, lang.iso_639_1 FROM lexicalForm AS form \
 			LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
 			LEFT JOIN languageVocabulary AS lang ON rep.languageID = lang.id \
 			WHERE form.lexicalEntryID = %s \
 			AND iso_639_1 = %s"
-		c.execute(query, (identifier,lang))
+		c.execute(query, (lexicalEntryID,lang))
 		self.lexicalForms = c.fetchall()
 		c.close()
 
@@ -98,7 +98,7 @@ class Database:
 	def setLexicalFormProperties(self):
 		c = self.DB.cursor()
 		for form in self.lexicalForms:
-			propertydict = { "lexicalFormID": form["lexicalFormID"], "rep_value": form["rep_value"], "properties": [] }
+			propertydict = { "form_identifier": form["form_identifier"], "properties": [] }
 			query = "SELECT vocab.property, vocab.value FROM formMorphoSyntactics AS formprop \
 				LEFT JOIN morphoSyntacticsVocabulary AS vocab ON formprop.morphoSyntacticsID = vocab.id \
 				WHERE formprop.lexicalFormID = %s"
@@ -112,7 +112,7 @@ class Database:
 
 	def setLexicalSenses(self):
 		c = self.DB.cursor()
-		query = "SELECT lex.value AS lex_value, lexicalSenseID, sense.lexicalEntryID FROM lexicalSense AS sense \
+		query = "SELECT lex.value AS lex_value, lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier FROM lexicalSense AS sense \
 			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID"
 		c.execute(query)
 		self.lexicalSenses = c.fetchall()
@@ -121,7 +121,7 @@ class Database:
 
 	def setLexicalSensesByID(self,lexicalEntryID):
 		c = self.DB.cursor()
-		query = "SELECT lex.value AS lex_value, lexicalSenseID, sense.lexicalEntryID FROM lexicalSense AS sense \
+		query = "SELECT lex.value AS lex_value, lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
 			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
 			WHERE sense.lexicalEntryID = %s"
 		c.execute(query, (lexicalEntryID))
@@ -132,7 +132,7 @@ class Database:
 	def setSenseReferences(self):
 		c = self.DB.cursor()
 		for sense in self.lexicalSenses:
-			propertydict = { "lexicalSenseID": sense["lexicalSenseID"], "lex_value": sense["lex_value"], "references": [] }
+			propertydict = { "sense_identifier": sense["sense_identifier"], "references": [] }
 			query = "SELECT reference FROM senseReference \
 				WHERE lexicalSenseID = %s"
 			c.execute(query, (sense["lexicalSenseID"]))
@@ -167,8 +167,9 @@ class Database:
 
 	def storeForm(self,lexicalEntryID,type):
 		c = self.DB.cursor()
-		query = "INSERT INTO lexicalForm (lexicalEntryID,type) VALUES (%s,%s)"
-		c.execute(query, (lexicalEntryID,type))
+		identifier = "urn:uuid:" + str(uuid.uuid4())
+		query = "INSERT INTO lexicalForm (lexicalEntryID,identifier,type) VALUES (%s,%s,%s)"
+		c.execute(query, (lexicalEntryID,identifier,type))
 		lexicalFormID = c.lastrowid
 		c.close()
 		return lexicalFormID
@@ -202,8 +203,9 @@ class Database:
 
 	def __storeLexicalEntry(self,word,pos_id):
 		c = self.DB.cursor()
-		query = "INSERT INTO lexicalEntry (value,partOfSpeechID) VALUES (%s,%s)"
-		c.execute(query, (word,pos_id))
+		identifier = "urn:uuid:" + str(uuid.uuid4())
+		query = "INSERT INTO lexicalEntry (value,identifier,partOfSpeechID) VALUES (%s,%s,%s)"
+		c.execute(query, (word,identifier,pos_id))
 		lexicalEntryID = c.lastrowid
 		c.close()
 		return lexicalEntryID

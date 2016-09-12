@@ -32,7 +32,7 @@ class RDFGraph:
 			self.g.add((URIRef("urn:" + self.name),LIME.lexicalEntries,Literal(str(len(lexicalEntries)), datatype=XSD.integer)))
 
 		for entry in lexicalEntries:
-			lexicalEntryIdentifier = self.__getIdentifier("lex",entry["lex_value"],entry["lexicalEntryID"])
+			lexicalEntryIdentifier = URIRef(entry["lex_identifier"])
 
 			self.g.add((lexicalEntryIdentifier,RDF.type,ONTOLEX.LexicalEntry))
 			self.g.add((lexicalEntryIdentifier,RDF.type,URIRef(ONTOLEX + entry["class"])))
@@ -44,8 +44,8 @@ class RDFGraph:
 
 	def setLexicalForms(self,lexicalForms):
 		for form in lexicalForms:
-			lexicalEntryIdentifier = self.__getIdentifier("lex",form["lex_value"],form["lexicalEntryID"])
-			lexicalFormIdentifier = self.__getIdentifier("form", form["rep_value"],form["lexicalFormID"])
+			lexicalEntryIdentifier = URIRef(form["lex_identifier"])
+			lexicalFormIdentifier = URIRef(form["form_identifier"])
 
 			self.g.add((lexicalEntryIdentifier,URIRef(ONTOLEX + form["type"]),lexicalFormIdentifier))
 			self.g.add((lexicalEntryIdentifier,RDFS.label,Literal(form["lex_value"], lang=form["iso_639_1"])))
@@ -56,7 +56,8 @@ class RDFGraph:
 
 	def setLexicalProperties(self,lexicalProperties):
 		for form in lexicalProperties:
-			lexicalFormIdentifier = self.__getIdentifier("form", form["rep_value"],form["lexicalFormID"])
+			lexicalFormIdentifier = URIRef(form["form_identifier"])
+
 			if form["properties"]:
 				for property in form["properties"]:
 					self.g.add((lexicalFormIdentifier,URIRef(LEXINFO + property["property"]),URIRef(LEXINFO + property["value"])))
@@ -64,8 +65,8 @@ class RDFGraph:
 
 	def setLexicalSenses(self,lexicalSenses):
 		for sense in lexicalSenses:
-			lexicalEntryIdentifier = self.__getIdentifier("lex",sense["lex_value"],sense["lexicalEntryID"])
-			lexicalSenseIdentifier = self.__getIdentifier("sense",sense["lex_value"],sense["lexicalSenseID"])
+			lexicalEntryIdentifier = URIRef(sense["lex_identifier"])
+			lexicalSenseIdentifier = URIRef(sense["sense_identifier"])
 
 			self.g.add((lexicalEntryIdentifier,ONTOLEX.sense,lexicalSenseIdentifier))
 			self.g.add((lexicalSenseIdentifier,RDF.type,ONTOLEX.LexicalSense))
@@ -73,14 +74,10 @@ class RDFGraph:
 
 	def setSenseReferences(self,senseReferences):
 		for senseref in senseReferences:
-			lexicalSenseIdentifier = self.__getIdentifier("sense",senseref["lex_value"],senseref["lexicalSenseID"])
+			lexicalSenseIdentifier = URIRef(senseref["sense_identifier"])
 			for reference in senseref["references"]:
 				self.g.add((lexicalSenseIdentifier,LEXINFO.reference,URIRef(reference["reference"])))
 
 
 	def printGraph(self):
 		print(bytes.decode(self.g.serialize(format=self.format)))
-
-
-	def __getIdentifier(self,ns,value,id):
-		return URIRef( "urn:" + ns + "_" + value + "_" + str(id) )
