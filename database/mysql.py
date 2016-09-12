@@ -13,6 +13,8 @@ class Database:
 		self.lexicalEntryIDs = []
 		self.lexicalForms = []
 		self.lexicalProperties = []
+		self.lexicalSenses = []
+		self.senseReferences = []
 		self.posses = {}
 		self.languages = {}
 		self.morphosyntactics = {}
@@ -93,7 +95,7 @@ class Database:
 		c.close()
 
 
-	def setLexicalFormProperties(self,lang):
+	def setLexicalFormProperties(self):
 		c = self.DB.cursor()
 		for form in self.lexicalForms:
 			propertydict = { "lexicalFormID": form["lexicalFormID"], "rep_value": form["rep_value"], "properties": [] }
@@ -105,6 +107,39 @@ class Database:
 				propertydict["properties"] = c.fetchall()
 			
 			self.lexicalProperties.append(propertydict)
+
+		c.close()
+
+	def setLexicalSenses(self):
+		c = self.DB.cursor()
+		query = "SELECT lex.value AS lex_value, lexicalSenseID, sense.lexicalEntryID FROM lexicalSense AS sense \
+			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID"
+		c.execute(query)
+		self.lexicalSenses = c.fetchall()
+		c.close()
+
+
+	def setLexicalSensesByID(self,lexicalEntryID):
+		c = self.DB.cursor()
+		query = "SELECT lex.value AS lex_value, lexicalSenseID, sense.lexicalEntryID FROM lexicalSense AS sense \
+			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
+			WHERE sense.lexicalEntryID = %s"
+		c.execute(query, (lexicalEntryID))
+		self.lexicalSenses = c.fetchall()
+		c.close()
+
+
+	def setSenseReferences(self):
+		c = self.DB.cursor()
+		for sense in self.lexicalSenses:
+			propertydict = { "lexicalSenseID": sense["lexicalSenseID"], "lex_value": sense["lex_value"], "references": [] }
+			query = "SELECT reference FROM senseReference \
+				WHERE lexicalSenseID = %s"
+			c.execute(query, (sense["lexicalSenseID"]))
+			if c.rowcount > 0:
+				propertydict["references"] = c.fetchall()
+
+			self.senseReferences.append( propertydict )
 
 		c.close()
 
