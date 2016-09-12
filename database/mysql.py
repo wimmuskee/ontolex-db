@@ -110,6 +110,10 @@ class Database:
 
 
 	def storeCanonical(self,word,lang_id,pos_id):
+		""" Stores new lexicalEntry and canonicalForm if entry does not exist."""
+		if self.findLexicalEntry(word,pos_id):
+			return None
+		
 		lexicalEntryID = self.__storeLexicalEntry(word,pos_id)
 		lexicalFormID = self.storeForm(lexicalEntryID,"canonicalForm")
 		self.storeWrittenRep(lexicalFormID,word,lang_id)
@@ -147,6 +151,18 @@ class Database:
 		query = "INSERT INTO formMorphoSyntactics (lexicalFormID,morphoSyntacticsID) VALUES (%s,%s)"
 		c.execute(query, (lexicalFormID,morphoSyntacticsID))
 		c.close()
+
+
+	def findLexicalEntry(self,word,pos_id):
+		c = self.DB.cursor()
+		query = "SELECT lexicalEntryID FROM lexicalEntry WHERE value = %s AND partOfSpeechID = %s"
+		c.execute(query, (word,pos_id))
+		row = c.fetchone()
+		
+		if row:
+			return row["lexicalEntryID"]
+		else:
+			return None
 
 
 	def __storeLexicalEntry(self,word,pos_id):

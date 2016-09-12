@@ -6,3 +6,5 @@ value VARCHAR(255) NOT NULL,
 class ENUM('Word','MultiwordExpression','Affix') NOT NULL DEFAULT 'Word',
 partOfSpeechID TINYINT NULL
 );
+
+ALTER TABLE lexicalEntry ADD UNIQUE u_lexicalEntry_value_partOfSpeechID ( value, partOfSpeechID );
