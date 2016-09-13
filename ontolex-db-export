@@ -98,7 +98,7 @@ else:
 output.setLexicalEntries(db.lexicalEntries)
 output.setLexicalForms(db.lexicalForms)
 output.setLexicalProperties(db.lexicalProperties)
-output.setLexicalSenses(db.lexicalSenses)
+output.setLexicalSenses(db.lexicalSenses,db.lexicalEntryLabels)
 output.setSenseReferences(db.senseReferences)
 
 if buildredundants:

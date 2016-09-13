@@ -51,7 +51,9 @@ class RDFGraph:
 			lexicalFormIdentifier = URIRef(form["form_identifier"])
 
 			self.g.add((lexicalEntryIdentifier,URIRef(ONTOLEX + form["type"]),lexicalFormIdentifier))
-			self.g.add((lexicalEntryIdentifier,RDFS.label,Literal(form["lex_value"], lang=self.language)))
+			if form["type"] == "canonicalForm":
+				self.g.add((lexicalEntryIdentifier,RDFS.label,Literal(form["rep_value"], lang=self.language)))
+
 			self.g.add((lexicalFormIdentifier,RDF.type,ONTOLEX.Form))
 			self.g.add((lexicalFormIdentifier,ONTOLEX.writtenRep,Literal(form["rep_value"], lang=self.language)))
 			self.g.add((lexicalFormIdentifier,RDFS.label,Literal(form["rep_value"], lang=self.language)))
@@ -66,7 +68,7 @@ class RDFGraph:
 					self.g.add((lexicalFormIdentifier,URIRef(LEXINFO + property["property"]),URIRef(LEXINFO + property["value"])))
 
 
-	def setLexicalSenses(self,lexicalSenses):
+	def setLexicalSenses(self,lexicalSenses,lexicalEntryLabels):
 		for sense in lexicalSenses:
 			lexicalEntryIdentifier = URIRef(sense["lex_identifier"])
 			lexicalSenseIdentifier = URIRef(sense["sense_identifier"])
@@ -74,6 +76,7 @@ class RDFGraph:
 			self.g.add((lexicalEntryIdentifier,ONTOLEX.sense,lexicalSenseIdentifier))
 			self.g.add((lexicalSenseIdentifier,RDF.type,ONTOLEX.LexicalSense))
 			self.g.add((lexicalSenseIdentifier,RDF.type,SKOS.Concept))
+			self.g.add((lexicalSenseIdentifier,SKOS.label,Literal(lexicalEntryLabels[sense["lexicalEntryID"]], lang=self.language)))
 
 
 	def setSenseReferences(self,senseReferences):
