@@ -12,6 +12,7 @@ parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar=
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
 parser.add_argument('-i', '--identifier', nargs=1, help='local identifier', metavar='identifier', dest='identifier')
 parser.add_argument('--lexicon', help="build lexicon definition", action="store_true")
+parser.add_argument('--redundant', help="set redundant inverse relations", action="store_true")
 
 
 args = parser.parse_args()
@@ -19,6 +20,7 @@ format = "turtle"
 configfile = "config.json"
 identifier = ""
 buildlexicon = False
+buildredundants = False
 
 if args.format:
 	format = args.format[0]
@@ -31,6 +33,10 @@ if args.identifier:
 
 if args.lexicon:
 	buildlexicon = True
+
+if args.redundant:
+	buildredundants = True
+
 
 # load config file
 with open(configfile) as f:
@@ -72,4 +78,8 @@ output.setLexicalForms(db.lexicalForms)
 output.setLexicalProperties(db.lexicalProperties)
 output.setLexicalSenses(db.lexicalSenses)
 output.setSenseReferences(db.senseReferences)
+
+if buildredundants:
+	output.setRedundants()
+
 output.printGraph()

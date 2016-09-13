@@ -85,14 +85,14 @@ class RDFGraph:
 
 				elif reference["namespace"] == "skos":
 					self.g.add((lexicalSenseIdentifier,URIRef(SKOS + reference["property"]),URIRef(reference["reference"])))
-					
-					if reference["property"] == "narrower":
-						# also add the broader variant
-						# this only works when exporting everything
-						self.g.add((URIRef(reference["reference"]),SKOS.broader,lexicalSenseIdentifier))
 
 
-				
+	def setRedundants(self):
+		for s,p,o in self.g.triples( (None,  SKOS.narrower, None) ):
+			self.g.add((o,SKOS.broader,s))
+
+		for s,p,o in self.g.triples( (None,  ONTOLEX.evokes, None) ):
+			self.g.add((o,ONTOLEX.isEvokedBy,s))
 
 
 	def printGraph(self):
