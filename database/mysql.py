@@ -118,6 +118,7 @@ class Database:
 
 
 	def setLexicalSensesByID(self,lexicalEntryID):
+		self.lexicalSenses = []
 		c = self.DB.cursor()
 		query = "SELECT lex.value AS lex_value, lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
 			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
@@ -171,14 +172,19 @@ class Database:
 		self.DB.commit()
 
 
-	def storeSense(self,lexicalEntryID,reference,narrower):
-		lexicalSenseID = self.storeLexicalSense(lexicalEntryID)
-		if reference:
-			self.storeSenseReference(lexicalSenseID,"ontolex","reference",reference)
+	def addSense(self,source_value,source_pos_id,namespace,property,target_value,target_pos_id):
+		# property and namespace are not validated right now
+		sourceLexicalEntryID = self.getLexicalEntryID(source_value,source_pos_id)
+		sourceLexicalSenseID = self.storeLexicalSense(sourceLexicalEntryID)
+
+		if target_pos_id:
+			targetLexicalEntryID = self.getLexicalEntryID(target_value,target_pos_id)
+			targetLexicalSenseID = self.storeLexicalSense(targetLexicalEntryID)
+			reference = self.__getLexicalSenseIdentifier(targetLexicalSenseID)
+		else:
+			reference = target_value
 		
-		if narrower:
-			self.storeSenseReference(lexicalSenseID,"skos","narrower",narrower)
-		
+		self.storeSenseReference(sourceLexicalSenseID,namespace,property,reference)
 		self.DB.commit()
 
 
@@ -193,12 +199,18 @@ class Database:
 
 
 	def storeLexicalSense(self,lexicalEntryID):
-		c = self.DB.cursor()
-		identifier = "urn:uuid:" + str(uuid.uuid4())
-		query = "INSERT INTO lexicalSense (lexicalEntryID,identifier) VALUES (%s,%s)"
-		c.execute(query, (lexicalEntryID,identifier))
-		lexicalSenseID = c.lastrowid
-		c.close()
+		""" This safely stores max 1 lexicalSense for the lexicalEntryID. """
+		self.setLexicalSensesByID(lexicalEntryID)
+		sensecount = len(self.lexicalSenses) 
+		if sensecount > 1:
+			print("error, more senses")
+			exit()
+		elif sensecount == 1:
+			lexicalSenseID = self.lexicalSenses[0]["lexicalSenseID"]
+		elif sensecount == 0:
+			lexicalSenseID = self.__storeLexicalSense(lexicalEntryID)
+
+		self.DB.commit()
 		return lexicalSenseID
 
 
@@ -243,3 +255,22 @@ class Database:
 		lexicalEntryID = c.lastrowid
 		c.close()
 		return lexicalEntryID
+
+
+	def __storeLexicalSense(self,lexicalEntryID):
+		c = self.DB.cursor()
+		identifier = "urn:uuid:" + str(uuid.uuid4())
+		query = "INSERT INTO lexicalSense (lexicalEntryID,identifier) VALUES (%s,%s)"
+		c.execute(query, (lexicalEntryID,identifier))
+		lexicalSenseID = c.lastrowid
+		c.close()
+		return lexicalSenseID
+
+
+	def __getLexicalSenseIdentifier(self,lexicalSenseID):
+		c = self.DB.cursor()
+		query = "SELECT identifier FROM lexicalSense WHERE lexicalSenseID = %s"
+		c.execute(query, (lexicalSenseID))
+		row = c.fetchone()
+		c.close()
+		return row["identifier"]

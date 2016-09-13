@@ -8,7 +8,7 @@ from database.mysql import Database
 
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
-parser.add_argument('mode', choices=['entry','form','sense'], help="main operating mode, add stuff")
+parser.add_argument('mode', choices=['entry','form'], help="main operating mode, add stuff")
 parser.add_argument('word', help="word to add")
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='path', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
@@ -17,17 +17,12 @@ entrygroup = parser.add_argument_group('entry options')
 entrygroup.add_argument('-p', '--pos', nargs=1, help='part of speech', metavar='pos', dest='pos')
 formgroup = parser.add_argument_group('form options')
 formgroup.add_argument('-x', '--props', nargs='+', help='form properties, in format: property:value', metavar='props', dest='props')
-sensegroup = parser.add_argument_group('sense options')
-sensegroup.add_argument('-r', '--ref', nargs=1, help='sense reference', metavar='uri', dest='ref')
-sensegroup.add_argument('-n', '--narrower', nargs=1, help='skos narrower relation', metavar='uri', dest='narrower')
 
 # set initial vars
 args = parser.parse_args()
 configfile = "config.json"
 pos = ""
 lexicalEntryID = 0
-reference = ""
-narrower = ""
 properties = []
 
 
@@ -44,11 +39,6 @@ if args.pos:
 if args.entryid:
 	lexicalEntryID = args.entryid[0]
 
-if args.ref:
-	reference = args.ref[0]
-
-if args.narrower:
-	narrower = args.narrower[0]
 
 if args.props:
 	propertyregex = re.compile(r'^[a-z]+:[a-zA-Z]+$')
@@ -64,8 +54,6 @@ if mode == "entry" and not pos:
 if mode == "form" and not lexicalEntryID:
 	parser.error("need lexicalEntryID when adding a form")
 
-if mode == "sense" and not lexicalEntryID:
-	parser.error("need lexicalEntryID when adding a sense")
 
 # load config file
 with open(configfile) as f:
@@ -103,7 +91,3 @@ elif mode == "form":
 	
 	db.storeOtherForm(lexicalEntryID,word,db.languages[language],properties)
 	print("Stored otherForm for: " + str(lexicalEntryID))
-
-elif mode == "sense":
-	db.storeSense(lexicalEntryID,reference,narrower)
-	print("Stored lexicalSense for: " + str(lexicalEntryID))
