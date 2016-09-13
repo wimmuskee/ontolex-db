@@ -11,6 +11,9 @@ parser.add_argument('-f', '--format', nargs=1, help='output format', metavar='fo
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
 parser.add_argument('-i', '--identifier', nargs=1, help='local identifier', metavar='identifier', dest='identifier')
+parser.add_argument('-v', '--value', nargs=1, help='word', metavar='value', dest='value')
+parser.add_argument('-p', '--pos', nargs=1, help='partOfSpeech', metavar='partOfSpeech', dest='pos')
+
 parser.add_argument('--lexicon', help="build lexicon definition", action="store_true")
 parser.add_argument('--redundant', help="set redundant inverse relations", action="store_true")
 
@@ -19,6 +22,8 @@ args = parser.parse_args()
 format = "turtle"
 configfile = "config.json"
 identifier = ""
+value = ""
+pos = ""
 buildlexicon = False
 buildredundants = False
 
@@ -30,6 +35,12 @@ if args.config:
 
 if args.identifier:
 	identifier = args.identifier[0]
+
+if args.value:
+	value = args.value[0]
+
+if args.pos:
+	pos = args.pos[0]
 
 if args.lexicon:
 	buildlexicon = True
@@ -49,6 +60,17 @@ if args.language:
 
 db = Database(config)
 db.connect()
+
+# for now not flexible output handling
+# just do this if 1 result
+if value and pos:
+	db.setPosses()
+	if pos not in db.posses:
+		parser.error("invalid partOfSpeech: " + pos)
+
+	identifier = db.getLexicalEntryID(value,db.posses[pos])
+
+
 
 # language validation
 db.setLanguages()

@@ -141,6 +141,14 @@ class Database:
 
 		c.close()
 
+	def getLexicalEntryID(self,value,partOfSpeechID):
+		c = self.DB.cursor()
+		query = "SELECT lexicalEntryID FROM lexicalEntry WHERE value = %s AND partOfSpeechID = %s"
+		c.execute(query, (value,partOfSpeechID))
+		row = c.fetchone()
+		c.close()
+		return row["lexicalEntryID"]
+
 
 	def storeCanonical(self,word,lang_id,pos_id):
 		""" Stores new lexicalEntry and canonicalForm if entry does not exist."""
