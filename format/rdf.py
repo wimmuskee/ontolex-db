@@ -88,8 +88,8 @@ class RDFGraph:
 
 
 	def setRedundants(self):
-		for s,p,o in self.g.triples( (None,  SKOS.narrower, None) ):
-			self.g.add((o,SKOS.broader,s))
+		for s,p,o in self.g.triples( (None,  SKOS.broader, None) ):
+			self.g.add((o,SKOS.narrower,s))
 
 		for s,p,o in self.g.triples( (None,  ONTOLEX.evokes, None) ):
 			self.g.add((o,ONTOLEX.isEvokedBy,s))
