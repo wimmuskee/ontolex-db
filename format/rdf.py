@@ -47,7 +47,6 @@ class RDFGraph:
 				self.g.add((URIRef("urn:" + self.name),LIME.entry,lexicalEntryIdentifier))
 
 
-
 	def setLexicalForms(self,lexicalForms):
 		for form in lexicalForms:
 			lexicalEntryIdentifier = URIRef(form["lex_identifier"])
@@ -59,7 +58,6 @@ class RDFGraph:
 
 			self.g.add((lexicalFormIdentifier,RDF.type,ONTOLEX.Form))
 			self.g.add((lexicalFormIdentifier,ONTOLEX.writtenRep,Literal(form["rep_value"], lang=self.language)))
-			self.g.add((lexicalFormIdentifier,RDFS.label,Literal(form["rep_value"], lang=self.language)))
 
 
 	def setLexicalProperties(self,lexicalProperties):
@@ -120,6 +118,9 @@ class RDFGraph:
 
 		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
 			self.g.add((s,SKOS.broader,o))
+		
+		for s,p,o in self.g.triples( (None, ONTOLEX.writtenRep, None) ):
+			self.g.add((s,RDFS.label,o))
 
 
 	def printGraph(self):
