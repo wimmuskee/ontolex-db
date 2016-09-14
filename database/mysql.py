@@ -198,7 +198,11 @@ class Database:
 		return lexicalEntryID
 
 
-	def storeOtherForm(self,lexicalEntryID,word,lang_id,properties):
+	def storeOtherForm(self,lexicalEntryID,word,lang_id,properties,safemode=True):
+		if self.findlexicalForm(lexicalEntryID,word,lang_id) and safemode:
+			print("found this form already: " + word)
+			return
+
 		lexicalFormID = self.storeForm(lexicalEntryID,"otherForm")
 		self.storeWrittenRep(lexicalFormID,word,lang_id)
 		for property in properties:
@@ -275,9 +279,27 @@ class Database:
 		query = "SELECT lexicalEntryID FROM lexicalEntry WHERE value = %s AND partOfSpeechID = %s"
 		c.execute(query, (word,pos_id))
 		row = c.fetchone()
-		
+		c.close()
+
 		if row:
 			return row["lexicalEntryID"]
+		else:
+			return None
+
+
+	def findlexicalForm(self,lexicalEntryID,word,lang_id):
+		c = self.DB.cursor()
+		query = "SELECT form.lexicalFormID FROM lexicalForm AS form \
+			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
+			WHERE form.lexicalEntryID = %s \
+			AND rep.value = %s \
+			AND rep.languageID = %s"
+		c.execute(query, (lexicalEntryID,word,lang_id))
+		row = c.fetchone()
+		c.close()
+
+		if row:
+			return row["lexicalFormID"]
 		else:
 			return None
 
