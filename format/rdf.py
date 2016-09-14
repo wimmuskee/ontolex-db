@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from rdflib import URIRef, Literal, Namespace
-from rdflib.namespace import SKOS, RDFS, RDF, XSD
+from rdflib.namespace import SKOS, RDFS, RDF, XSD, VOID
 from rdflib import Graph
 
 ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
@@ -26,6 +26,7 @@ class RDFGraph:
 
 		if buildlexicon:
 			self.g.bind("lime", LIME)
+			self.g.bind("void", VOID)
 			self.g.add((URIRef("urn:" + name),RDF.type,LIME.lexicon))
 			self.g.add((URIRef("urn:" + name),LIME.language,Literal(language)))
 
@@ -99,4 +100,7 @@ class RDFGraph:
 
 
 	def printGraph(self):
+		if self.buildlexicon:
+			self.g.add((URIRef("urn:" + self.name),VOID.triples,Literal(str(len(self.g)), datatype=XSD.integer)))
+
 		print(bytes.decode(self.g.serialize(format=self.format)))
