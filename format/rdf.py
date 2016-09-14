@@ -7,13 +7,14 @@ from rdflib import Graph
 ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
 LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
-
+SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 
 class RDFGraph:
 	def __init__(self,name,language,format,buildlexicon):
 		global ONTOLEX
 		global LEXINFO
 		global LIME
+		global SKOSTHES
 
 		self.name = name
 		self.language = language
@@ -23,6 +24,7 @@ class RDFGraph:
 		self.g.bind("ontolex", ONTOLEX)
 		self.g.bind("lexinfo", LEXINFO)
 		self.g.bind("skos", SKOS)
+		self.g.bind("skosthes", SKOSTHES)
 
 		if buildlexicon:
 			self.g.bind("lime", LIME)
@@ -89,11 +91,20 @@ class RDFGraph:
 
 				elif reference["namespace"] == "skos":
 					self.g.add((lexicalSenseIdentifier,URIRef(SKOS + reference["property"]),URIRef(reference["reference"])))
+				
+				elif reference["namespace"] == "skos-thes":
+					self.g.add((lexicalSenseIdentifier,URIRef(SKOSTHES + reference["property"]),URIRef(reference["reference"])))
 
 
 	def setRedundants(self):
 		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
 			self.g.add((o,SKOS.narrower,s))
+
+		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
+			self.g.add((o,SKOSTHES.narrowerPartitive,s))
+
+		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
+			self.g.add((o,SKOSTHES.narrowerInstantial,s))
 
 		for s,p,o in self.g.triples( (None, ONTOLEX.canonicalForm, None) ):
 			self.g.add((s,ONTOLEX.lexicalForm,o))
