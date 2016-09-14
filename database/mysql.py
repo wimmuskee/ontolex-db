@@ -60,8 +60,16 @@ class Database:
 		c.execute(query)
 		self.lexicalEntries = c.fetchall()
 		c.close()
-		for entry in self.lexicalEntries:
-			self.lexicalEntryIDs.append(entry["lexicalEntryID"])
+
+
+	def setLexicalEntriesByPOS(self,pos_id):
+		c = self.DB.cursor()
+		query = "SELECT lexicalEntryID, class, pos.value AS pos_value, lex.identifier AS lex_identifier FROM lexicalEntry AS lex \
+			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id \
+			WHERE lex.partOfSpeechID = %s"
+		c.execute(query, (pos_id))
+		self.lexicalEntries = c.fetchall()
+		c.close()
 
 
 	def setLexicalForms(self,lang_id):
@@ -99,6 +107,20 @@ class Database:
 		self.__setLexicalEntryLabels()
 
 
+	def setLexicalFormsByEntries(self,lang_id):
+		c = self.DB.cursor()
+		for entry in self.lexicalEntries:
+			query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier FROM lexicalForm AS form \
+				LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
+				LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
+				WHERE form.lexicalEntryID = %s \
+				AND rep.languageID = %s"
+			c.execute(query, (entry["lexicalEntryID"],lang_id))
+			self.lexicalForms.extend(c.fetchall())
+		c.close()
+		self.__setLexicalEntryLabels()
+
+
 	def setLexicalFormProperties(self):
 		c = self.DB.cursor()
 		for form in self.lexicalForms:
@@ -129,6 +151,16 @@ class Database:
 			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
 			WHERE sense.lexicalEntryID = %s"
 		c.execute(query, (lexicalEntryID))
+		self.lexicalSenses = c.fetchall()
+		c.close()
+
+	def setLexicalSensesByEntries(self):
+		c = self.DB.cursor()
+		for entry in self.lexicalEntries:
+			query = "SELECT lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
+				LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
+				WHERE sense.lexicalEntryID = %s"
+		c.execute(query, (entry["lexicalEntryID"]))
 		self.lexicalSenses = c.fetchall()
 		c.close()
 

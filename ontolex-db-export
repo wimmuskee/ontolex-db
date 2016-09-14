@@ -65,15 +65,15 @@ if args.language:
 db = Database(config)
 db.connect()
 
-# for now not flexible output handling
-# just do this if 1 result
-if value and pos:
+
+if pos:
 	db.setPosses()
 	if pos not in db.posses:
 		parser.error("invalid partOfSpeech: " + pos)
 
+# set entry lookup as identifier, later we can select by single pos and no value
+if value and pos:
 	identifier = db.getLexicalEntryID(value,db.posses[pos])
-
 
 
 # language validation
@@ -90,6 +90,12 @@ if identifier:
 	db.setLexicalForm(identifier,db.languages[language])
 	db.setLexicalFormProperties()
 	db.setLexicalSensesByID(identifier)
+	db.setSenseReferences()
+elif pos:
+	db.setLexicalEntriesByPOS(db.posses[pos])
+	db.setLexicalFormsByEntries(db.languages[language])
+	db.setLexicalFormProperties()
+	db.setLexicalSensesByEntries()
 	db.setSenseReferences()
 else:
 	db.setLexicalEntries()
