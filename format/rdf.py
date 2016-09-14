@@ -92,11 +92,17 @@ class RDFGraph:
 
 
 	def setRedundants(self):
-		for s,p,o in self.g.triples( (None,  SKOS.broader, None) ):
+		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
 			self.g.add((o,SKOS.narrower,s))
 
-		for s,p,o in self.g.triples( (None,  ONTOLEX.evokes, None) ):
+		for s,p,o in self.g.triples( (None, ONTOLEX.evokes, None) ):
 			self.g.add((o,ONTOLEX.isEvokedBy,s))
+
+		for s,p,o in self.g.triples( (None, ONTOLEX.canonicalForm, None) ):
+			self.g.add((s,ONTOLEX.lexicalForm,o))
+
+		for s,p,o in self.g.triples( (None, ONTOLEX.otherForm, None) ):
+			self.g.add((s,ONTOLEX.lexicalForm,o))
 
 
 	def printGraph(self):
