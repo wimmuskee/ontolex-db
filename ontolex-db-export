@@ -15,7 +15,8 @@ parser.add_argument('-v', '--value', nargs=1, help='word', metavar='value', dest
 parser.add_argument('-p', '--pos', nargs=1, help='partOfSpeech', metavar='partOfSpeech', dest='pos')
 
 parser.add_argument('--lexicon', help="build lexicon definition", action="store_true")
-parser.add_argument('--redundant', help="set redundant inverse relations", action="store_true")
+parser.add_argument('--redundant', help="set redundant relations", action="store_true")
+parser.add_argument('--inverse', help="set inverse relations", action="store_true")
 
 
 args = parser.parse_args()
@@ -26,6 +27,7 @@ value = ""
 pos = ""
 buildlexicon = False
 buildredundants = False
+buildinverses = False
 
 if args.format:
 	format = args.format[0]
@@ -48,6 +50,8 @@ if args.lexicon:
 if args.redundant:
 	buildredundants = True
 
+if args.inverse:
+	buildinverses = True
 
 # load config file
 with open(configfile) as f:
@@ -103,5 +107,8 @@ output.setSenseReferences(db.senseReferences)
 
 if buildredundants:
 	output.setRedundants()
+
+if buildinverses:
+	output.setInverses()
 
 output.printGraph()

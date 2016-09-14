@@ -96,7 +96,7 @@ class RDFGraph:
 					self.g.add((lexicalSenseIdentifier,URIRef(SKOSTHES + reference["property"]),URIRef(reference["reference"])))
 
 
-	def setRedundants(self):
+	def setInverses(self):
 		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
 			self.g.add((o,SKOS.narrower,s))
 
@@ -106,11 +106,20 @@ class RDFGraph:
 		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
 			self.g.add((o,SKOSTHES.narrowerInstantial,s))
 
+
+	def setRedundants(self):
+		""" Not setting inverse relations, so if you want those, execute this before setInverses. """
 		for s,p,o in self.g.triples( (None, ONTOLEX.canonicalForm, None) ):
 			self.g.add((s,ONTOLEX.lexicalForm,o))
 
 		for s,p,o in self.g.triples( (None, ONTOLEX.otherForm, None) ):
 			self.g.add((s,ONTOLEX.lexicalForm,o))
+
+		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
+			self.g.add((s,SKOS.broader,o))
+
+		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
+			self.g.add((s,SKOS.broader,o))
 
 
 	def printGraph(self):
