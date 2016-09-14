@@ -88,21 +88,18 @@ if format == "xml" or format == "turtle":
 if identifier:
 	db.setLexicalEntry(identifier)
 	db.setLexicalForm(identifier,db.languages[language])
-	db.setLexicalFormProperties()
 	db.setLexicalSensesByID(identifier)
-	db.setSenseReferences()
 elif pos:
 	db.setLexicalEntriesByPOS(db.posses[pos])
 	db.setLexicalFormsByEntries(db.languages[language])
-	db.setLexicalFormProperties()
 	db.setLexicalSensesByEntries()
-	db.setSenseReferences()
 else:
 	db.setLexicalEntries()
 	db.setLexicalForms(db.languages[language])
-	db.setLexicalFormProperties()
 	db.setLexicalSenses()
-	db.setSenseReferences()
+
+db.setLexicalFormProperties()
+db.setSenseReferences()
 
 
 output.setLexicalEntries(db.lexicalEntries)

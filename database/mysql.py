@@ -10,7 +10,6 @@ class Database:
 		self.passwd = config["passwd"]
 		self.name = config["name"]
 		self.lexicalEntries = []
-		self.lexicalEntryIDs = []
 		self.lexicalForms = []
 		self.lexicalProperties = []
 		self.lexicalSenses = []
