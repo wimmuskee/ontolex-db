@@ -159,8 +159,8 @@ class Database:
 			query = "SELECT lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
 				LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
 				WHERE sense.lexicalEntryID = %s"
-		c.execute(query, (entry["lexicalEntryID"]))
-		self.lexicalSenses = c.fetchall()
+			c.execute(query, (entry["lexicalEntryID"]))
+			self.lexicalSenses.extend(c.fetchall())
 		c.close()
 
 
