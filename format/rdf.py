@@ -93,8 +93,14 @@ class RDFGraph:
 				elif reference["namespace"] == "skos-thes":
 					self.g.add((lexicalSenseIdentifier,URIRef(SKOSTHES + reference["property"]),URIRef(reference["reference"])))
 
+				elif reference["namespace"] == "lexinfo":
+					self.g.add((lexicalSenseIdentifier,URIRef(LEXINFO + reference["property"]),URIRef(reference["reference"])))
+
 
 	def setInverses(self):
+		for s,p,o in self.g.triples( (None, ONTOLEX.sense, None) ):
+			self.g.add((o,ONTOLEX.isSenseOf,s))
+
 		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
 			self.g.add((o,SKOS.narrower,s))
 
@@ -103,6 +109,9 @@ class RDFGraph:
 
 		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
 			self.g.add((o,SKOSTHES.narrowerInstantial,s))
+
+		for s,p,o in self.g.triples( (None, LEXINFO.antonym, None) ):
+			self.g.add((o,LEXINFO.antonym,s))
 
 
 	def setRedundants(self):
