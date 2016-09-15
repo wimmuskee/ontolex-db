@@ -306,9 +306,13 @@ class Database:
 
 	def __storeLexicalEntry(self,word,pos_id):
 		c = self.DB.cursor()
+		entryclass = "Word"
+		if word.count(" ") > 0:
+			entryclass = "MultiwordExpression"
+
 		identifier = "urn:uuid:" + str(uuid.uuid4())
-		query = "INSERT INTO lexicalEntry (value,identifier,partOfSpeechID) VALUES (%s,%s,%s)"
-		c.execute(query, (word,identifier,pos_id))
+		query = "INSERT INTO lexicalEntry (value,identifier,partOfSpeechID,class) VALUES (%s,%s,%s,%s)"
+		c.execute(query, (word,identifier,pos_id,entryclass))
 		lexicalEntryID = c.lastrowid
 		c.close()
 		return lexicalEntryID
