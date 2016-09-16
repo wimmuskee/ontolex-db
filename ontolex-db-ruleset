@@ -1,0 +1,33 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import argparse
+import json
+from importlib import import_module
+
+parser = argparse.ArgumentParser(description='manager script for ontolox-db rulesets')
+parser.add_argument('language', help="language key")
+parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
+rules = parser.add_argument_group('rules')
+rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", action="store_true")
+
+
+args = parser.parse_args()
+configfile = "config.json"
+
+if args.config:
+	configfile = args.config[0]
+
+# load config file
+with open(configfile) as f:
+	config = json.loads(f.read())
+
+
+# import language module
+# check for language existence later
+mod = import_module('rulesets.' + args.language)
+Ruleset = getattr(mod, "Ruleset")
+r = Ruleset(config)
+
+if args.adjective_antonyms:
+	r.adjectiveAntonyms()
