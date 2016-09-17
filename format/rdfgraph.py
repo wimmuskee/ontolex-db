@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from rdflib import Graph
-from rdflib.namespace import XSD, VOID, SKOS
+from rdflib.namespace import XSD, VOID, SKOS, DCTERMS
 from rdflib import URIRef, Literal, Namespace
 
 
@@ -17,6 +17,7 @@ class RDFGraph():
 		self.g = Graph()
 		self.g.bind("skos", SKOS)
 		self.g.bind("skosthes", SKOSTHES)
+		self.g.bind("dct", DCTERMS)
 
 		if self.buildpackage:
 			self.g.bind("void", VOID)
@@ -25,6 +26,9 @@ class RDFGraph():
 	def setInverses(self):
 		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
 			self.g.add((o,SKOS.narrower,s))
+
+		for s,p,o in self.g.triples( (None, SKOS.related, None) ):
+			self.g.add((o,SKOS.related,s))
 
 		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
 			self.g.add((o,SKOSTHES.narrowerPartitive,s))
@@ -44,6 +48,8 @@ class RDFGraph():
 
 	def printGraph(self):
 		if self.buildpackage:
-			self.g.add((URIRef("urn:" + self.name),VOID.triples,Literal(str(len(self.g)), datatype=XSD.integer)))
+			import datetime
+			self.g.add((URIRef("urn:" + self.name),DCTERMS.date,Literal(str(datetime.date.today()))))
+			self.g.add((URIRef("urn:" + self.name),VOID.triples,Literal(str(len(self.g)+1), datatype=XSD.integer)))
 
 		print(bytes.decode(self.g.serialize(format=self.format)))

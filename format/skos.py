@@ -9,8 +9,6 @@ class SKOSGraph(RDFGraph):
 	def __init__(self,name,language,buildpackage):
 		RDFGraph.__init__(self, name,language,"turtle",buildpackage)
 
-		self.g.bind("dct", DCTERMS)
-
 		if self.buildpackage:
 			self.g.add((URIRef("urn:" + name),RDF.type,SKOS.ConceptScheme))
 			self.g.add((URIRef("urn:" + name),DCTERMS.language,Literal(language)))
