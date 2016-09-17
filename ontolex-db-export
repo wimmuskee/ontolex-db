@@ -4,7 +4,6 @@
 import argparse
 import json
 from database.mysql import Database
-from format.rdf import RDFGraph
 
 parser = argparse.ArgumentParser(description='export script for ontolox-db')
 parser.add_argument('-f', '--format', nargs=1, help='output format', metavar='format', dest='format')
@@ -82,8 +81,7 @@ if language not in db.languages:
 	parser.error("invalid language: " + language)
 
 
-if format == "xml" or format == "turtle":
-	output = RDFGraph("mylexicon",language,format,buildlexicon)
+
 
 if identifier:
 	db.setLexicalEntry(identifier)
@@ -102,16 +100,27 @@ db.setLexicalFormProperties()
 db.setSenseReferences()
 
 
-output.setLexicalEntries(db.lexicalEntries)
-output.setLexicalForms(db.lexicalForms)
-output.setLexicalProperties(db.lexicalProperties)
-output.setLexicalSenses(db.lexicalSenses,db.lexicalEntryLabels)
-output.setSenseReferences(db.senseReferences)
+if format == "xml" or format == "turtle":
+	from format.rdf import RDFGraph
+	output = RDFGraph("mylexicon",language,format,buildlexicon)
+	output.setLexicalEntries(db.lexicalEntries)
+	output.setLexicalForms(db.lexicalForms)
+	output.setLexicalProperties(db.lexicalProperties)
+	output.setLexicalSenses(db.lexicalSenses,db.lexicalEntryLabels)
+	output.setSenseReferences(db.senseReferences)
+
+elif format == "skos":
+	from format.skos import SKOSGraph
+	output = SKOSGraph("myconceptscheme",language)
+	output.setConcepts(db.lexicalSenses,db.lexicalEntryLabels)
+	output.setConceptRelations(db.senseReferences)
+
 
 if buildredundants:
 	output.setRedundants()
 
 if buildinverses:
 	output.setInverses()
+
 
 output.printGraph()
