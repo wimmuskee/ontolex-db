@@ -4,7 +4,7 @@ from rdflib import URIRef, Literal, Namespace
 from rdflib.namespace import SKOS, RDFS, RDF, XSD
 from rdflib import Graph
 from database.mysql import Database
-
+from nltk.corpus import alpino
 
 ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
@@ -35,6 +35,9 @@ class Ruleset:
 		# later, check if language is correct
 		# lexicon definition with lime language
 		# later also check on first lexical entry rdfs language
+
+		# for now use alpino, we should be able to configure this
+		self.worddb = alpino.words()
 
 
 	def adjectiveAntonyms(self):
@@ -71,8 +74,51 @@ class Ruleset:
 				self.db.addSense(source_value,pos_id,"lexinfo","antonym",guess_antonym,pos_id)
 
 
+	def verbRelatedNouns(self):
+		""" example. delen -> deling """
+		lang_id = self.db.languages[LANGUAGE]
+		source_pos_id = self.db.posses["verb"]
+		target_pos_id = self.db.posses["noun"]
+		lexicalEntryIDs = {}
+
+		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.verb):
+			label = str(self.g.value(URIRef(lexicalEntryIdentifier),RDFS.label,None))
+			lexicalEntryIDs[lexicalEntryIdentifier] = label
+
+		for lexicalEntryIdentifier in lexicalEntryIDs:
+			source_value = lexicalEntryIDs[lexicalEntryIdentifier]
+			guess_noun = source_value[:-2] + "ing"
+
+			# also, perhaps make this configurable as well
+			if guess_noun in self.worddb:
+				answer = input("gerelateerd? " + source_value + " :: " + guess_noun + " ")
+				if answer == "y":
+					sensecount = self.__countLexicalenses(lexicalEntryIdentifier)
+					if sensecount > 1:
+						print("multiple senses detected, store manually")
+						continue
+					elif sensecount == 1:
+						# check if relation to term exists
+						if self.__checkLexicalEntryExists(guess_noun, LEXINFO.noun):
+							# bit lazy here, but just playing now
+							print("entry found for target, so maybe it is connected already")
+							continue
+					
+					# at this point sensecount is 0, or it is safe to move on
+					self.db.storeCanonical(guess_noun,lang_id,target_pos_id)
+					self.db.addSense(source_value,source_pos_id,"skos","related",guess_noun,target_pos_id)
+
+
 	def __countLexicalenses(self,lexicalEntryIdentifier):
 		c = 0
 		for lexicalSenseIdentifier in self.g.objects(URIRef(lexicalEntryIdentifier),ONTOLEX.sense):
 			c = c + 1
 		return c
+
+
+	def __checkLexicalEntryExists(self,word,partOfSpeech):
+		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
+			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=LANGUAGE)) in self.g:
+				return True
+		
+		return False
