@@ -39,11 +39,11 @@ class Ruleset:
 
 		# for now use alpino, we should be able to configure this
 		self.worddb = alpino.words()
+		self.lang_id = self.db.languages[LANGUAGE]
 
 
 	def adjectiveAntonyms(self):
 		""" Based on word characteristics. Trying to prefix 'on' to a word. """
-		lang_id = self.db.languages[LANGUAGE]
 		pos_id = self.db.posses["adjective"]
 		lexicalEntryIDs = {}
 		
@@ -55,9 +55,8 @@ class Ruleset:
 		for lexicalEntryIdentifier in lexicalEntryIDs:
 			source_value = lexicalEntryIDs[lexicalEntryIdentifier]
 			guess_antonym = "on" + source_value
-			
-			answer = input("tegenstelling? " + source_value + " :: " + guess_antonym + " ")
-			if answer == "y":
+
+			if self.__userCheck("tegenstelling", source_value, guess_antonym):
 				sensecount = self.__countLexicalenses(lexicalEntryIdentifier)
 				if sensecount > 1:
 					print("multiple senses detected, store manually")
@@ -71,13 +70,12 @@ class Ruleset:
 				
 				# at this point sensecount is 0, or it is safe to move on
 				# we might want to store now, first the guess antonym lexicalEntry, then the sense
-				self.db.storeCanonical(guess_antonym,lang_id,pos_id)
+				self.db.storeCanonical(guess_antonym,self.lang_id,pos_id)
 				self.db.addSense(source_value,pos_id,"lexinfo","antonym",guess_antonym,pos_id)
 
 
 	def verbRelatedNouns(self):
 		""" example. delen -> deling """
-		lang_id = self.db.languages[LANGUAGE]
 		source_pos_id = self.db.posses["verb"]
 		target_pos_id = self.db.posses["noun"]
 		lexicalEntryIDs = {}
@@ -92,8 +90,7 @@ class Ruleset:
 
 			# also, perhaps make this configurable as well
 			if guess_noun in self.worddb:
-				answer = input("gerelateerd? " + source_value + " :: " + guess_noun + " ")
-				if answer == "y":
+				if self.__userCheck("gerelateerd", source_value, guess_noun):
 					sensecount = self.__countLexicalenses(lexicalEntryIdentifier)
 					if sensecount > 1:
 						print("multiple senses detected, store manually")
@@ -106,12 +103,11 @@ class Ruleset:
 							continue
 					
 					# at this point sensecount is 0, or it is safe to move on
-					self.db.storeCanonical(guess_noun,lang_id,target_pos_id)
+					self.db.storeCanonical(guess_noun,self.lang_id,target_pos_id)
 					self.db.addSense(source_value,source_pos_id,"skos","related",guess_noun,target_pos_id)
 
 
 	def nounPlurals(self):
-		lang_id = self.db.languages[LANGUAGE]
 		source_pos_id = self.db.posses["noun"]
 		target_pos_id = self.db.posses["noun"]
 		lexicalEntryIDs = {}
@@ -127,17 +123,24 @@ class Ruleset:
 			guess_plural = self.__getNounStemToPlural(label) + "en"
 
 			if guess_plural in self.worddb:
-				answer = input("meervoud? " + label + " :: " + guess_plural + " ")
-				if answer == "y":
+				if self.__userCheck("meervoud", label, guess_plural):
 					# first get the database identifier and store the plural
 					lex_id = self.db.getLexicalEntryIDByIdentifier(str(lexicalEntryID))
-					self.db.storeOtherForm(lex_id,guess_plural,lang_id,["number:plural"])
+					self.db.storeOtherForm(lex_id,guess_plural,self.lang_id,["number:plural"])
 					
 					# then do the same for the canonicalForm, and store the singular
 					lexicalFormID = self.g.value(URIRef(lexicalEntryID),ONTOLEX.canonicalForm,None)
 					form_id = self.db.getLexicalFormID(str(lexicalFormID))
 					self.db.storeFormProperty(form_id,self.db.morphosyntactics["number:singular"])
 					self.db.DB.commit()
+
+
+	def __userCheck(self,question,source,target):
+		answer = input(question + "? " + source + " :: " + target + " ")
+		if answer == "y":
+			return True
+		else:
+			return False
 
 
 	def __countLexicalenses(self,lexicalEntryIdentifier):
