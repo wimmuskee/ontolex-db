@@ -1,40 +1,33 @@
 # -*- coding: utf-8 -*-
 
 from rdflib import URIRef, Literal, Namespace
-from rdflib.namespace import SKOS, RDFS, RDF, XSD, VOID
-from rdflib import Graph
+from rdflib.namespace import SKOS, RDFS, RDF, XSD
+from format.rdfgraph import RDFGraph
 
-ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
-LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
-LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
-SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 
-class RDFGraph:
-	def __init__(self,name,language,format,buildlexicon):
+class LexiconGraph(RDFGraph):
+	def __init__(self,name,language,format,buildpackage):
+		RDFGraph.__init__(self, name,language,format,buildpackage)
+
 		global ONTOLEX
 		global LEXINFO
-		global LIME
 		global SKOSTHES
-
-		self.name = name
-		self.language = language
-		self.format = format
-		self.buildlexicon = buildlexicon
-		self.g = Graph()
+		ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
+		LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
+		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 		self.g.bind("ontolex", ONTOLEX)
 		self.g.bind("lexinfo", LEXINFO)
-		self.g.bind("skos", SKOS)
-		self.g.bind("skosthes", SKOSTHES)
 
-		if buildlexicon:
+		if self.buildpackage:
+			global LIME
+			LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
 			self.g.bind("lime", LIME)
-			self.g.bind("void", VOID)
 			self.g.add((URIRef("urn:" + name),RDF.type,LIME.lexicon))
 			self.g.add((URIRef("urn:" + name),LIME.language,Literal(language)))
 
 
 	def setLexicalEntries(self,lexicalEntries):
-		if self.buildlexicon:
+		if self.buildpackage:
 			self.g.add((URIRef("urn:" + self.name),LIME.lexicalEntries,Literal(str(len(lexicalEntries)), datatype=XSD.integer)))
 
 		for entry in lexicalEntries:
@@ -43,7 +36,7 @@ class RDFGraph:
 			self.g.add((lexicalEntryIdentifier,RDF.type,ONTOLEX.LexicalEntry))
 			self.g.add((lexicalEntryIdentifier,RDF.type,URIRef(ONTOLEX + entry["class"])))
 			self.g.add((lexicalEntryIdentifier,LEXINFO.partOfSpeech,URIRef(LEXINFO + entry["pos_value"])))
-			if self.buildlexicon:
+			if self.buildpackage:
 				self.g.add((URIRef("urn:" + self.name),LIME.entry,lexicalEntryIdentifier))
 
 
@@ -98,17 +91,10 @@ class RDFGraph:
 
 
 	def setInverses(self):
+		RDFGraph.setInverses(self)
+
 		for s,p,o in self.g.triples( (None, ONTOLEX.sense, None) ):
 			self.g.add((o,ONTOLEX.isSenseOf,s))
-
-		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
-			self.g.add((o,SKOS.narrower,s))
-
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
-			self.g.add((o,SKOSTHES.narrowerPartitive,s))
-
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
-			self.g.add((o,SKOSTHES.narrowerInstantial,s))
 
 		for s,p,o in self.g.triples( (None, LEXINFO.antonym, None) ):
 			self.g.add((o,LEXINFO.antonym,s))
@@ -116,24 +102,13 @@ class RDFGraph:
 
 	def setRedundants(self):
 		""" Not setting inverse relations, so if you want those, execute this before setInverses. """
+		RDFGraph.setRedundants(self)
+
 		for s,p,o in self.g.triples( (None, ONTOLEX.canonicalForm, None) ):
 			self.g.add((s,ONTOLEX.lexicalForm,o))
 
 		for s,p,o in self.g.triples( (None, ONTOLEX.otherForm, None) ):
 			self.g.add((s,ONTOLEX.lexicalForm,o))
 
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
-			self.g.add((s,SKOS.broader,o))
-
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
-			self.g.add((s,SKOS.broader,o))
-		
 		for s,p,o in self.g.triples( (None, ONTOLEX.writtenRep, None) ):
 			self.g.add((s,RDFS.label,o))
-
-
-	def printGraph(self):
-		if self.buildlexicon:
-			self.g.add((URIRef("urn:" + self.name),VOID.triples,Literal(str(len(self.g)), datatype=XSD.integer)))
-
-		print(bytes.decode(self.g.serialize(format=self.format)))

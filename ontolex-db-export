@@ -13,7 +13,7 @@ parser.add_argument('-i', '--identifier', nargs=1, help='local identifier', meta
 parser.add_argument('-v', '--value', nargs=1, help='word', metavar='value', dest='value')
 parser.add_argument('-p', '--pos', nargs=1, help='partOfSpeech', metavar='partOfSpeech', dest='pos')
 
-parser.add_argument('--lexicon', help="build lexicon definition", action="store_true")
+parser.add_argument('--package', help="build format package", action="store_true")
 parser.add_argument('--redundant', help="set redundant relations", action="store_true")
 parser.add_argument('--inverse', help="set inverse relations", action="store_true")
 
@@ -24,7 +24,7 @@ configfile = "config.json"
 identifier = ""
 value = ""
 pos = ""
-buildlexicon = False
+buildpackage = False
 buildredundants = False
 buildinverses = False
 
@@ -43,8 +43,8 @@ if args.value:
 if args.pos:
 	pos = args.pos[0]
 
-if args.lexicon:
-	buildlexicon = True
+if args.package:
+	buildpackage = True
 
 if args.redundant:
 	buildredundants = True
@@ -101,8 +101,8 @@ db.setSenseReferences()
 
 
 if format == "xml" or format == "turtle":
-	from format.rdf import RDFGraph
-	output = RDFGraph("mylexicon",language,format,buildlexicon)
+	from format.lexicon import LexiconGraph
+	output = LexiconGraph("mylexicon",language,format,buildpackage)
 	output.setLexicalEntries(db.lexicalEntries)
 	output.setLexicalForms(db.lexicalForms)
 	output.setLexicalProperties(db.lexicalProperties)
@@ -111,7 +111,7 @@ if format == "xml" or format == "turtle":
 
 elif format == "skos":
 	from format.skos import SKOSGraph
-	output = SKOSGraph("myconceptscheme",language)
+	output = SKOSGraph("myconceptscheme",language,buildpackage)
 	output.setConcepts(db.lexicalSenses,db.lexicalEntryLabels)
 	output.setConceptRelations(db.senseReferences)
 

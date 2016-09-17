@@ -2,23 +2,18 @@
 
 from rdflib import URIRef, Literal, Namespace
 from rdflib.namespace import SKOS, RDF, XSD, DCTERMS
-from rdflib import Graph
-
-SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
+from format.rdfgraph import RDFGraph
 
 
-class SKOSGraph:
-	def __init__(self,name,language):
-		global SKOSTHES
+class SKOSGraph(RDFGraph):
+	def __init__(self,name,language,buildpackage):
+		RDFGraph.__init__(self, name,language,"turtle",buildpackage)
 
-		self.name = name
-		self.language = language
-		self.g = Graph()
-		self.g.bind("skos", SKOS)
 		self.g.bind("dct", DCTERMS)
-		self.g.bind("skosthes", SKOSTHES)
-		self.g.add((URIRef("urn:" + name),RDF.type,SKOS.ConceptScheme))
-		self.g.add((URIRef("urn:" + name),DCTERMS.language,Literal(language)))
+
+		if self.buildpackage:
+			self.g.add((URIRef("urn:" + name),RDF.type,SKOS.ConceptScheme))
+			self.g.add((URIRef("urn:" + name),DCTERMS.language,Literal(language)))
 
 
 	def setConcepts(self,concepts,conceptLabels):
@@ -26,11 +21,14 @@ class SKOSGraph:
 			conceptidentifier = URIRef(concept["sense_identifier"])
 
 			self.g.add((conceptidentifier,RDF.type,SKOS.Concept))
-			self.g.add((conceptidentifier,SKOS.inScheme,URIRef("urn:" + self.name)))
 			self.g.add((conceptidentifier,SKOS.label,Literal(conceptLabels[concept["lexicalEntryID"]], lang=self.language)))
+			if self.buildpackage:
+				self.g.add((conceptidentifier,SKOS.inScheme,URIRef("urn:" + self.name)))
 
 
 	def setConceptRelations(self,conceptrelations):
+		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
+		
 		for conceptrel in conceptrelations:
 			conceptidentifier = URIRef(conceptrel["sense_identifier"])
 			for reference in conceptrel["references"]:
@@ -45,25 +43,7 @@ class SKOSGraph:
 
 
 	def setInverses(self):
-		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
-			self.g.add((o,SKOS.narrower,s))
-
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
-			self.g.add((o,SKOSTHES.narrowerPartitive,s))
-
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
-			self.g.add((o,SKOSTHES.narrowerInstantial,s))
-
+		RDFGraph.setInverses(self)
 
 	def setRedundants(self):
-		""" Not setting inverse relations, so if you want those, execute this before setInverses. """
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
-			self.g.add((s,SKOS.broader,o))
-
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
-			self.g.add((s,SKOS.broader,o))
-
-
-
-	def printGraph(self):
-		print(bytes.decode(self.g.serialize(format="turtle")))
+		RDFGraph.setRedundants(self)
