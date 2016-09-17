@@ -16,6 +16,7 @@ parser.add_argument('-p', '--pos', nargs=1, help='partOfSpeech', metavar='partOf
 parser.add_argument('--package', help="build format package", action="store_true")
 parser.add_argument('--redundant', help="set redundant relations", action="store_true")
 parser.add_argument('--inverse', help="set inverse relations", action="store_true")
+parser.add_argument('--transitive', help="set transitive relations, implies inverse and redundant", action="store_true")
 
 
 args = parser.parse_args()
@@ -27,6 +28,7 @@ pos = ""
 buildpackage = False
 buildredundants = False
 buildinverses = False
+buildtransitives = False
 
 if args.format:
 	format = args.format[0]
@@ -51,6 +53,12 @@ if args.redundant:
 
 if args.inverse:
 	buildinverses = True
+
+if args.transitive:
+	buildinverses = True
+	buildredundants = True
+	buildtransitives = True
+
 
 # load config file
 with open(configfile) as f:
@@ -121,6 +129,9 @@ if buildredundants:
 
 if buildinverses:
 	output.setInverses()
+
+if buildtransitives:
+	output.setTransitives(config["transativeSenseIdentifiers"])
 
 
 output.printGraph()
