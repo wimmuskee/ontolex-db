@@ -10,6 +10,7 @@ parser.add_argument('language', help="language key")
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
 rules = parser.add_argument_group('rules')
 rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", action="store_true")
+rules.add_argument('--noun-plural', help="find plurals for canonical nouns", action="store_true")
 rules.add_argument('--verb-related-nouns', help="find related nouns for verbs", action="store_true")
 
 
@@ -32,6 +33,9 @@ r = Ruleset(config)
 
 if args.adjective_antonyms:
 	r.adjectiveAntonyms()
+
+if args.noun_plural:
+	r.nounPlurals()
 
 if args.verb_related_nouns:
 	r.verbRelatedNouns()

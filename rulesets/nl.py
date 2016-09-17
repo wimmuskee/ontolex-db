@@ -29,6 +29,7 @@ class Ruleset:
 		self.db.connect()
 		self.db.setPosses()
 		self.db.setLanguages()
+		self.db.setMorphoSyntactics()
 
 		self.g = Graph()
 		self.g.parse("export.ttl", format="turtle")
@@ -109,6 +110,36 @@ class Ruleset:
 					self.db.addSense(source_value,source_pos_id,"skos","related",guess_noun,target_pos_id)
 
 
+	def nounPlurals(self):
+		lang_id = self.db.languages[LANGUAGE]
+		source_pos_id = self.db.posses["noun"]
+		target_pos_id = self.db.posses["noun"]
+		lexicalEntryIDs = {}
+		
+		# first find the entries without a plural
+		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.noun):
+			if self.__checkFormRelation(lexicalEntryID,LEXINFO.number,LEXINFO.plural):
+				continue
+			lexicalEntryIDs[lexicalEntryID] = str(self.g.value(URIRef(lexicalEntryID),RDFS.label,None))
+
+		for lexicalEntryID in lexicalEntryIDs:
+			label = lexicalEntryIDs[lexicalEntryID]
+			guess_plural = self.__getNounStemToPlural(label) + "en"
+
+			if guess_plural in self.worddb:
+				answer = input("meervoud? " + label + " :: " + guess_plural + " ")
+				if answer == "y":
+					# first get the database identifier and store the plural
+					lex_id = self.db.getLexicalEntryIDByIdentifier(str(lexicalEntryID))
+					self.db.storeOtherForm(lex_id,guess_plural,lang_id,["number:plural"])
+					
+					# then do the same for the canonicalForm, and store the singular
+					lexicalFormID = self.g.value(URIRef(lexicalEntryID),ONTOLEX.canonicalForm,None)
+					form_id = self.db.getLexicalFormID(str(lexicalFormID))
+					self.db.storeFormProperty(form_id,self.db.morphosyntactics["number:singular"])
+					self.db.DB.commit()
+
+
 	def __countLexicalenses(self,lexicalEntryIdentifier):
 		c = 0
 		for lexicalSenseIdentifier in self.g.objects(URIRef(lexicalEntryIdentifier),ONTOLEX.sense):
@@ -120,5 +151,18 @@ class Ruleset:
 		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
 			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=LANGUAGE)) in self.g:
 				return True
-		
 		return False
+	
+	def __checkFormRelation(self,lexicalEntryID,checkPredicate,checkObject):
+		for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.otherForm):
+			if (URIRef(lexicalFormID),checkPredicate,checkObject) in self.g:
+				return True
+		return False
+
+
+	def __getNounStemToPlural(self,word):
+		""" For example, boom -> bom -> bom + en = bomen."""
+		if word[-3:-1] in [ "aa", "ee", "oo" ]:
+			  return word[-3:-2] + word[-1]
+		else:
+			return word
