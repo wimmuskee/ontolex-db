@@ -71,6 +71,16 @@ class Database:
 		c.close()
 
 
+	def setLexicalEntry(self,lexicalEntryID):
+		c = self.DB.cursor()
+		query = "SELECT lexicalEntryID, class, pos.value AS pos_value, identifier AS lex_identifier FROM lexicalEntry AS lex \
+			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id \
+			WHERE lexicalEntryID = %s"
+		c.execute(query, (lexicalEntryID))
+		self.lexicalEntries = c.fetchall()
+		c.close()
+
+
 	def setLexicalForms(self,lang_id):
 		c = self.DB.cursor()
 		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier FROM lexicalForm AS form \
@@ -79,17 +89,6 @@ class Database:
 			WHERE rep.languageID = %s"
 		c.execute(query, (lang_id))
 		self.lexicalForms = c.fetchall()
-		c.close()
-		self.__setLexicalEntryLabels()
-
-
-	def setLexicalEntry(self,lexicalEntryID):
-		c = self.DB.cursor()
-		query = "SELECT lexicalEntryID, class, pos.value AS pos_value, identifier AS lex_identifier FROM lexicalEntry AS lex \
-			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id \
-			WHERE lexicalEntryID = %s"
-		c.execute(query, (lexicalEntryID))
-		self.lexicalEntries = c.fetchall()
 		c.close()
 
 
@@ -101,23 +100,21 @@ class Database:
 			WHERE form.lexicalEntryID = %s \
 			AND rep.languageID = %s"
 		c.execute(query, (lexicalEntryID,lang_id))
-		self.lexicalForms = c.fetchall()
+		self.lexicalForms.extend(c.fetchall())
 		c.close()
-		self.__setLexicalEntryLabels()
 
 
 	def setLexicalFormsByEntries(self,lang_id):
-		c = self.DB.cursor()
 		for entry in self.lexicalEntries:
-			query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier FROM lexicalForm AS form \
-				LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
-				LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
-				WHERE form.lexicalEntryID = %s \
-				AND rep.languageID = %s"
-			c.execute(query, (entry["lexicalEntryID"],lang_id))
-			self.lexicalForms.extend(c.fetchall())
-		c.close()
-		self.__setLexicalEntryLabels()
+			self.setLexicalForm(entry["lexicalEntryID"],lang_id)
+
+
+	def setLexicalEntryLabels(self):
+		""" Sets easy lookup labels for use in setLexicalSenses without needing big joins.
+		Called seperately because setLexicalFormsByEntries calls setLexicalForm. """
+		for form in self.lexicalForms:
+			if form["type"] == "canonicalForm":
+				self.lexicalEntryLabels[form["lexicalEntryID"]] = form["rep_value"]
 
 
 	def setLexicalFormProperties(self):
@@ -153,6 +150,7 @@ class Database:
 		self.lexicalSenses = c.fetchall()
 		c.close()
 
+
 	def setLexicalSensesByEntries(self):
 		c = self.DB.cursor()
 		for entry in self.lexicalEntries:
@@ -176,6 +174,7 @@ class Database:
 
 			self.senseReferences.append( propertydict )
 		c.close()
+
 
 	def getLexicalEntryID(self,value,partOfSpeechID):
 		c = self.DB.cursor()
@@ -353,8 +352,3 @@ class Database:
 		row = c.fetchone()
 		c.close()
 		return row["identifier"]
-
-	def __setLexicalEntryLabels(self):
-		for form in self.lexicalForms:
-			if form["type"] == "canonicalForm":
-				self.lexicalEntryLabels[form["lexicalEntryID"]] = form["rep_value"]
