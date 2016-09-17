@@ -131,7 +131,7 @@ if buildinverses:
 	output.setInverses()
 
 if buildtransitives:
-	output.setTransitives(config["transativeSenseIdentifiers"])
+	output.setTransitives(config["transitiveSenseIdentifiers"])
 
 
 output.printGraph()
