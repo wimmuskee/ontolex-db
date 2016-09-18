@@ -56,6 +56,29 @@ class Ruleset(RulesetCommon):
 				self.db.addSense(source_value,pos_id,"lexinfo","antonym",guess_antonym,pos_id)
 
 
+	def adjectiveMaterialNouns(self):
+		""" Get all material nouns, based on being part of material category."""
+		materialSenseIDs = self.getLexicalSenseIDsByReference(["http://www.wikidata.org/entity/Q11344"])
+		source_pos_id = self.db.posses["noun"]
+		target_pos_id = self.db.posses["adjective"]
+
+		# now get all specific values in lexicalEntries
+		for mID in materialSenseIDs:
+			for senseID in self.g.objects(URIRef(mID),SKOSTHES.narrowerInstantial):
+				label = str(self.g.value(URIRef(senseID),SKOS.label,None))
+				lexicalEntryID = str(self.g.value(None,ONTOLEX.sense,URIRef(senseID)))
+				self.lexicalEntries[lexicalEntryID] = label
+
+		for lexicalEntryID in self.lexicalEntries:
+			label = self.lexicalEntries[lexicalEntryID]
+			guess_adjective = self.__getNounStem(label) + "en"
+
+			if guess_adjective in self.worddb:
+				if self.userCheck("bijvoegelijk naamwoord", label, guess_adjective):
+					self.db.storeCanonical(guess_adjective,self.lang_id,target_pos_id)
+					self.db.addSense(label,source_pos_id,"skos","related",guess_adjective,target_pos_id)
+
+
 	def verbRelatedNouns(self):
 		""" example. delen -> deling """
 		source_pos_id = self.db.posses["verb"]
@@ -101,7 +124,7 @@ class Ruleset(RulesetCommon):
 			if label[-2:] == "er" or label[-2:] == "ie":
 				guess_plural = label + "s"
 			else:
-				guess_plural = self.__getNounStemToPlural(label) + "en"
+				guess_plural = self.__getNounStem(label) + "en"
 
 			if guess_plural in self.worddb:
 				if self.userCheck("meervoud", label, guess_plural):
@@ -170,7 +193,7 @@ class Ruleset(RulesetCommon):
 		return False
 
 
-	def __getNounStemToPlural(self,word):
+	def __getNounStem(self,word):
 		""" For example, boom -> bom -> bom + en = bomen."""
 		if word[-3:-1] in [ "aa", "ee", "oo" ]:
 			  return word[:-3] + word[-3:-2] + word[-1]
