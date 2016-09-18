@@ -2,40 +2,22 @@
 
 from rdflib import URIRef, Literal, Namespace
 from rdflib.namespace import SKOS, RDFS, RDF, XSD
-from rdflib import Graph
-from database.mysql import Database
+from rulesets.ruleset import RulesetCommon
 from nltk.corpus import alpino
 
 ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
-LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
 SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 LANGUAGE = "nl"
 
-# always ask first, then check if the thing can be stored, if problem, we can do something later
-# also later, we can do more checks, for instance, not checking for possibilities that already exists
-#  or checking for words in actual corpora
 
-
-class Ruleset:
+class Ruleset(RulesetCommon):
 	def __init__(self,config):
+		RulesetCommon.__init__(self,config)
 		global ONTOLEX
 		global LEXINFO
-		global LIME
 		global SKOSTHES
 		global LANGUAGE
-
-		self.db = Database(config)
-		self.db.connect()
-		self.db.setPosses()
-		self.db.setLanguages()
-		self.db.setMorphoSyntactics()
-
-		self.g = Graph()
-		self.g.parse("export.ttl", format="turtle")
-		# later, check if language is correct
-		# lexicon definition with lime language
-		# later also check on first lexical entry rdfs language
 
 		# for now use alpino, we should be able to configure this
 		self.worddb = alpino.words()
@@ -56,7 +38,7 @@ class Ruleset:
 			source_value = lexicalEntryIDs[lexicalEntryIdentifier]
 			guess_antonym = "on" + source_value
 
-			if self.__userCheck("tegenstelling", source_value, guess_antonym):
+			if self.userCheck("tegenstelling", source_value, guess_antonym):
 				sensecount = self.__countLexicalenses(lexicalEntryIdentifier)
 				if sensecount > 1:
 					print("multiple senses detected, store manually")
@@ -90,7 +72,7 @@ class Ruleset:
 
 			# also, perhaps make this configurable as well
 			if guess_noun in self.worddb:
-				if self.__userCheck("gerelateerd", source_value, guess_noun):
+				if self.userCheck("gerelateerd", source_value, guess_noun):
 					sensecount = self.__countLexicalenses(lexicalEntryIdentifier)
 					if sensecount > 1:
 						print("multiple senses detected, store manually")
@@ -123,7 +105,7 @@ class Ruleset:
 			guess_plural = self.__getNounStemToPlural(label) + "en"
 
 			if guess_plural in self.worddb:
-				if self.__userCheck("meervoud", label, guess_plural):
+				if self.userCheck("meervoud", label, guess_plural):
 					# first get the database identifier and store the plural
 					lex_id = self.db.getLexicalEntryIDByIdentifier(str(lexicalEntryID))
 					self.db.storeOtherForm(lex_id,guess_plural,self.lang_id,["number:plural"])
@@ -135,12 +117,36 @@ class Ruleset:
 					self.db.DB.commit()
 
 
-	def __userCheck(self,question,source,target):
-		answer = input(question + "? " + source + " :: " + target + " ")
-		if answer == "y":
-			return True
-		else:
-			return False
+	def nounGender(self):
+		""" Using rules from http://www.inventio.nl/genus/uitleg.html to detect word gender. """
+		# Finding gender for noun forms without a gender.
+		self.setProcessableForms(LEXINFO.noun,LEXINFO.gender)
+		geoSenseIDs = self.getLexicalSenseIDsByReference(["http://www.wikidata.org/entity/Q6256"])
+		
+		for lexicalFormID in self.lexicalForms:
+			label = self.lexicalForms[lexicalFormID]["label"]
+			lexicalEntryID = self.lexicalForms[lexicalFormID]["lexicalEntryID"]
+			guess_gender = ""
+
+			# we want to check all forms, unless the sense gives us other info (only in the case of countries and placenames)
+			# when first char is uppercase, we're gonna assume sense lookup first
+			if label[0].isupper():
+				guess_gender = self.__getNounGenderBySense(lexicalEntryID,geoSenseIDs)
+			else:
+				# find by label rules
+				pass
+			
+			if self.userCheck("geslacht",label,guess_gender):
+				form_id = self.db.getLexicalFormID(str(lexicalFormID))
+				self.db.storeFormProperty(form_id,self.db.morphosyntactics["gender:" + guess_gender])
+				self.db.DB.commit()
+
+
+	def __getNounGenderBySense(self,lexicalEntryID,geoSenseIDs):
+		for geoSenseID in geoSenseIDs:
+			if self.__checkSenseRelation(URIRef(lexicalEntryID),SKOSTHES.broaderInstantial,URIRef(geoSenseID)):
+				return "neuter"
+		return ""
 
 
 	def __countLexicalenses(self,lexicalEntryIdentifier):
@@ -155,10 +161,20 @@ class Ruleset:
 			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=LANGUAGE)) in self.g:
 				return True
 		return False
-	
+
+
 	def __checkFormRelation(self,lexicalEntryID,checkPredicate,checkObject):
+		""" Given a lexicalEntryID, check all related forms to see if the requested relation is present."""
 		for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.otherForm):
 			if (URIRef(lexicalFormID),checkPredicate,checkObject) in self.g:
+				return True
+		return False
+
+
+	def __checkSenseRelation(self,lexicalEntryID,checkPredicate,checkObject):
+		""" Given a lexicalEntryID, check all related senses to see if the requested relation is present."""
+		for lexicalSenseID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.sense):
+			if (URIRef(lexicalSenseID),checkPredicate,checkObject) in self.g:
 				return True
 		return False
 
