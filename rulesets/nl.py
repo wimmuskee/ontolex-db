@@ -18,7 +18,7 @@ class Ruleset(RulesetCommon):
 		global SKOSTHES
 
 		# for now use alpino, we should be able to configure this
-		self.worddb = alpino.words()
+		self.worddb = set(alpino.words())
 		self.language = LANGUAGE
 		self.lang_id = self.db.languages[LANGUAGE]
 
