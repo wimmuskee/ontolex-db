@@ -40,7 +40,6 @@ class RulesetCommon:
 		self.lexicalForms = {}
 
 
-
 	def userCheck(self,question,source,target):
 		if not target:
 			return False
@@ -59,7 +58,7 @@ class RulesetCommon:
 		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
 			if self.__checkFormRelation(lexicalEntryID,checkPredicate,checkObject):
 				continue
-			self.lexicalEntries[str(lexicalEntryID)] = str(self.g.value(URIRef(lexicalEntryID),RDFS.label,None))
+			self.lexicalEntries[str(lexicalEntryID)] = self.getLabel(lexicalEntryID)
 
 
 	def setProcessableForms(self,partOfSpeech,checkPredicate):
@@ -70,7 +69,7 @@ class RulesetCommon:
 			for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.lexicalForm):
 				if not (URIRef(lexicalFormID),checkPredicate,None) in self.g:
 					store = {
-						"label": str(self.g.value(URIRef(lexicalFormID),ONTOLEX.writtenRep)),
+						"label": self.getLabel(lexicalFormID),
 						"lexicalEntryID": str(lexicalEntryID) }
 					self.lexicalForms[str(lexicalFormID)] = store
 
@@ -82,6 +81,17 @@ class RulesetCommon:
 			for lexicalSenseID in self.g.subjects(ONTOLEX.reference,URIRef(reference)):
 				lexicalSenseIDs.append(str(lexicalSenseID))
 		return lexicalSenseIDs
+
+
+	def getLabel(self,identifier):
+		return str(self.g.value(URIRef(identifier),RDFS.label,None))
+
+
+	def checkLexicalEntryExists(self,word,partOfSpeech):
+		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
+			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=self.language)) in self.g:
+				return True
+		return False
 
 
 	def __checkFormRelation(self,lexicalEntryID,checkPredicate,checkObject):

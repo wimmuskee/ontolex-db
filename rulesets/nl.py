@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from rdflib import URIRef, Literal, Namespace
-from rdflib.namespace import SKOS, RDFS, RDF, XSD
 from rulesets.ruleset import RulesetCommon
 from nltk.corpus import alpino
 
@@ -17,10 +16,10 @@ class Ruleset(RulesetCommon):
 		global ONTOLEX
 		global LEXINFO
 		global SKOSTHES
-		global LANGUAGE
 
 		# for now use alpino, we should be able to configure this
 		self.worddb = alpino.words()
+		self.language = LANGUAGE
 		self.lang_id = self.db.languages[LANGUAGE]
 
 
@@ -30,7 +29,7 @@ class Ruleset(RulesetCommon):
 		lexicalEntryIDs = {}
 		
 		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.adjective):
-			label = str(self.g.value(URIRef(lexicalEntryIdentifier),RDFS.label,None))
+			label = self.getLabel(lexicalEntryIdentifier)
 			if label[:2] != "on":
 				lexicalEntryIDs[lexicalEntryIdentifier] = label
 	
@@ -65,9 +64,8 @@ class Ruleset(RulesetCommon):
 		# now get all specific values in lexicalEntries
 		for mID in materialSenseIDs:
 			for senseID in self.g.objects(URIRef(mID),SKOSTHES.narrowerInstantial):
-				label = str(self.g.value(URIRef(senseID),SKOS.label,None))
 				lexicalEntryID = str(self.g.value(None,ONTOLEX.sense,URIRef(senseID)))
-				self.lexicalEntries[lexicalEntryID] = label
+				self.lexicalEntries[lexicalEntryID] = self.getLabel(senseID)
 
 		for lexicalEntryID in self.lexicalEntries:
 			label = self.lexicalEntries[lexicalEntryID]
@@ -86,11 +84,10 @@ class Ruleset(RulesetCommon):
 		lexicalEntryIDs = {}
 
 		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.verb):
-			label = str(self.g.value(URIRef(lexicalEntryIdentifier),RDFS.label,None))
-			lexicalEntryIDs[lexicalEntryIdentifier] = label
+			self.lexicalEntries[lexicalEntryIdentifier] = self.getLabel(lexicalEntryIdentifier)
 
-		for lexicalEntryIdentifier in lexicalEntryIDs:
-			source_value = lexicalEntryIDs[lexicalEntryIdentifier]
+		for lexicalEntryIdentifier in self.lexicalEntries:
+			source_value = self.lexicalEntries[lexicalEntryIdentifier]
 			guess_noun = source_value[:-2] + "ing"
 
 			# also, perhaps make this configurable as well
@@ -102,7 +99,7 @@ class Ruleset(RulesetCommon):
 						continue
 					elif sensecount == 1:
 						# check if relation to term exists
-						if self.__checkLexicalEntryExists(guess_noun, LEXINFO.noun):
+						if self.checkLexicalEntryExists(guess_noun, LEXINFO.noun):
 							# bit lazy here, but just playing now
 							print("entry found for target, so maybe it is connected already")
 							continue
@@ -155,7 +152,7 @@ class Ruleset(RulesetCommon):
 			if label[0].isupper():
 				guess_gender = self.__getNounGenderBySense(lexicalEntryID,geoSenseIDs)
 			else:
-				if label[-3:] == "ing" and self.__checkLexicalEntryExists(label[:-3] + "en",LEXINFO.verb):
+				if label[-3:] == "ing" and self.checkLexicalEntryExists(label[:-3] + "en",LEXINFO.verb):
 					guess_gender = "feminine"
 
 			if self.userCheck("geslacht",label,guess_gender):
@@ -176,13 +173,6 @@ class Ruleset(RulesetCommon):
 		for lexicalSenseIdentifier in self.g.objects(URIRef(lexicalEntryIdentifier),ONTOLEX.sense):
 			c = c + 1
 		return c
-
-
-	def __checkLexicalEntryExists(self,word,partOfSpeech):
-		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
-			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=LANGUAGE)) in self.g:
-				return True
-		return False
 
 
 	def __checkSenseRelation(self,lexicalEntryID,checkPredicate,checkObject):

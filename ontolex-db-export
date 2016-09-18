@@ -94,14 +94,17 @@ if language not in db.languages:
 if identifier:
 	db.setLexicalEntry(identifier)
 	db.setLexicalForm(identifier,db.languages[language])
+	db.setLexicalEntryLabels()
 	db.setLexicalSensesByID(identifier)
 elif pos:
 	db.setLexicalEntriesByPOS(db.posses[pos])
 	db.setLexicalFormsByEntries(db.languages[language])
+	db.setLexicalEntryLabels()
 	db.setLexicalSensesByEntries()
 else:
 	db.setLexicalEntries()
 	db.setLexicalForms(db.languages[language])
+	db.setLexicalEntryLabels()
 	db.setLexicalSenses()
 
 db.setLexicalFormProperties()
