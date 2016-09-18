@@ -90,18 +90,13 @@ class Ruleset(RulesetCommon):
 
 
 	def nounPlurals(self):
+		# Finding plurals for nouns without a plural form. """
+		self.setProcessableEntries(LEXINFO.noun,LEXINFO.number,LEXINFO.plural)
 		source_pos_id = self.db.posses["noun"]
 		target_pos_id = self.db.posses["noun"]
-		lexicalEntryIDs = {}
-		
-		# first find the entries without a plural
-		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.noun):
-			if self.__checkFormRelation(lexicalEntryID,LEXINFO.number,LEXINFO.plural):
-				continue
-			lexicalEntryIDs[lexicalEntryID] = str(self.g.value(URIRef(lexicalEntryID),RDFS.label,None))
 
-		for lexicalEntryID in lexicalEntryIDs:
-			label = lexicalEntryIDs[lexicalEntryID]
+		for lexicalEntryID in self.lexicalEntries:
+			label = self.lexicalEntries[lexicalEntryID]
 			guess_plural = self.__getNounStemToPlural(label) + "en"
 
 			if guess_plural in self.worddb:
@@ -159,14 +154,6 @@ class Ruleset(RulesetCommon):
 	def __checkLexicalEntryExists(self,word,partOfSpeech):
 		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
 			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=LANGUAGE)) in self.g:
-				return True
-		return False
-
-
-	def __checkFormRelation(self,lexicalEntryID,checkPredicate,checkObject):
-		""" Given a lexicalEntryID, check all related forms to see if the requested relation is present."""
-		for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.otherForm):
-			if (URIRef(lexicalFormID),checkPredicate,checkObject) in self.g:
 				return True
 		return False
 

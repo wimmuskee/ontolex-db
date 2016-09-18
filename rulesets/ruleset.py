@@ -34,8 +34,11 @@ class RulesetCommon:
 		# lexicon definition with lime language
 		# later also check on first lexical entry rdfs language
 
+		# store lexicalForms, ID is key, value label
+		self.lexicalEntries = {}
 		# store lexicalForms, ID is key, value is dict with label and lexicalEntryID
 		self.lexicalForms = {}
+
 
 
 	def userCheck(self,question,source,target):
@@ -47,6 +50,16 @@ class RulesetCommon:
 			return True
 		else:
 			return False
+
+
+	def setProcessableEntries(self,partOfSpeech,checkPredicate,checkObject):
+		""" Find entries that do not have a form with the specified relation.
+		We're gonna try to find new forms with that relation. 
+		"""
+		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
+			if self.__checkFormRelation(lexicalEntryID,checkPredicate,checkObject):
+				continue
+			self.lexicalEntries[str(lexicalEntryID)] = str(self.g.value(URIRef(lexicalEntryID),RDFS.label,None))
 
 
 	def setProcessableForms(self,partOfSpeech,checkPredicate):
@@ -69,3 +82,11 @@ class RulesetCommon:
 			for lexicalSenseID in self.g.subjects(ONTOLEX.reference,URIRef(reference)):
 				lexicalSenseIDs.append(str(lexicalSenseID))
 		return lexicalSenseIDs
+
+
+	def __checkFormRelation(self,lexicalEntryID,checkPredicate,checkObject):
+		""" Given a lexicalEntryID, check all related forms to see if the requested relation is present."""
+		for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.otherForm):
+			if (URIRef(lexicalFormID),checkPredicate,checkObject) in self.g:
+				return True
+		return False
