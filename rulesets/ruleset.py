@@ -12,7 +12,7 @@ from rdflib.namespace import SKOS, RDFS, RDF, XSD
 """
 
 class RulesetCommon:
-	def __init__(self,config):
+	def __init__(self,config,dont_ask=False):
 		self.db = Database(config)
 		self.db.connect()
 		self.db.setPosses()
@@ -22,7 +22,6 @@ class RulesetCommon:
 		global ONTOLEX
 		global LEXINFO
 		global LIME
-		global LANGUAGE
 
 		ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 		LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
@@ -34,6 +33,8 @@ class RulesetCommon:
 		# lexicon definition with lime language
 		# later also check on first lexical entry rdfs language
 
+		self.dont_ask = dont_ask
+
 		# store lexicalForms, ID is key, value label
 		self.lexicalEntries = {}
 		# store lexicalForms, ID is key, value is dict with label and lexicalEntryID
@@ -43,6 +44,9 @@ class RulesetCommon:
 	def userCheck(self,question,source,target):
 		if not target:
 			return False
+
+		if self.dont_ask:
+			return True
 
 		answer = input(question + "? " + source + " :: " + target + " ")
 		if answer == "y":

@@ -8,6 +8,7 @@ from importlib import import_module
 parser = argparse.ArgumentParser(description='manager script for ontolox-db rulesets')
 parser.add_argument('language', help="language key")
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
+parser.add_argument('--dont-ask', help="asume yes at questions", action="store_true")
 rules = parser.add_argument_group('rules')
 rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", action="store_true")
 rules.add_argument('--adjective-material-nouns', help="find adjectives for material nouns", action="store_true")
@@ -18,9 +19,13 @@ rules.add_argument('--verb-related-nouns', help="find related nouns for verbs", 
 
 args = parser.parse_args()
 configfile = "config.json"
+dont_ask = False
 
 if args.config:
 	configfile = args.config[0]
+
+if args.dont_ask:
+	dont_ask = True
 
 # load config file
 with open(configfile) as f:
@@ -31,7 +36,7 @@ with open(configfile) as f:
 # check for language existence later
 mod = import_module('rulesets.' + args.language)
 Ruleset = getattr(mod, "Ruleset")
-r = Ruleset(config)
+r = Ruleset(config,dont_ask)
 
 if args.adjective_antonyms:
 	r.adjectiveAntonyms()

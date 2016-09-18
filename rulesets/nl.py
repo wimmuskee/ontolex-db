@@ -11,8 +11,8 @@ LANGUAGE = "nl"
 
 
 class Ruleset(RulesetCommon):
-	def __init__(self,config):
-		RulesetCommon.__init__(self,config)
+	def __init__(self,config,dont_ask=False):
+		RulesetCommon.__init__(self,config,dont_ask)
 		global ONTOLEX
 		global LEXINFO
 		global SKOSTHES
@@ -118,7 +118,7 @@ class Ruleset(RulesetCommon):
 		for lexicalEntryID in self.lexicalEntries:
 			label = self.lexicalEntries[lexicalEntryID]
 
-			if label[-2:] == "er" or label[-2:] == "ie":
+			if label[-2:] == "er" or label[-2:] == "ie" or label[-2:] == "en":
 				guess_plural = label + "s"
 			else:
 				guess_plural = self.__getNounStem(label) + "en"
