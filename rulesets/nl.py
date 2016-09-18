@@ -155,9 +155,9 @@ class Ruleset(RulesetCommon):
 			if label[0].isupper():
 				guess_gender = self.__getNounGenderBySense(lexicalEntryID,geoSenseIDs)
 			else:
-				# find by label rules
-				pass
-			
+				if label[-3:] == "ing" and self.__checkLexicalEntryExists(label[:-3] + "en",LEXINFO.verb):
+					guess_gender = "feminine"
+
 			if self.userCheck("geslacht",label,guess_gender):
 				form_id = self.db.getLexicalFormID(str(lexicalFormID))
 				self.db.storeFormProperty(form_id,self.db.morphosyntactics["gender:" + guess_gender])
