@@ -70,7 +70,7 @@ class LexiconGraph(RDFGraph):
 			self.g.add((lexicalEntryIdentifier,ONTOLEX.sense,lexicalSenseIdentifier))
 			self.g.add((lexicalSenseIdentifier,RDF.type,ONTOLEX.LexicalSense))
 			self.g.add((lexicalSenseIdentifier,RDF.type,SKOS.Concept))
-			self.g.add((lexicalSenseIdentifier,SKOS.label,Literal(lexicalEntryLabels[sense["lexicalEntryID"]], lang=self.language)))
+			self.g.add((lexicalSenseIdentifier,RDFS.label,Literal(lexicalEntryLabels[sense["lexicalEntryID"]], lang=self.language)))
 
 
 	def setSenseReferences(self,senseReferences):
