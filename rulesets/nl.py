@@ -97,7 +97,11 @@ class Ruleset(RulesetCommon):
 
 		for lexicalEntryID in self.lexicalEntries:
 			label = self.lexicalEntries[lexicalEntryID]
-			guess_plural = self.__getNounStemToPlural(label) + "en"
+
+			if label[-2:] == "er" or label[-2:] == "ie":
+				guess_plural = label + "s"
+			else:
+				guess_plural = self.__getNounStemToPlural(label) + "en"
 
 			if guess_plural in self.worddb:
 				if self.userCheck("meervoud", label, guess_plural):
@@ -169,6 +173,6 @@ class Ruleset(RulesetCommon):
 	def __getNounStemToPlural(self,word):
 		""" For example, boom -> bom -> bom + en = bomen."""
 		if word[-3:-1] in [ "aa", "ee", "oo" ]:
-			  return word[-3:-2] + word[-1]
+			  return word[:-3] + word[-3:-2] + word[-1]
 		else:
 			return word
