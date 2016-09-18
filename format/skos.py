@@ -39,9 +39,3 @@ class SKOSGraph(RDFGraph):
 				if reference["namespace"] == "ontolex" and reference["property"] == "reference":
 					self.g.add((conceptidentifier,DCTERMS.identifier,URIRef(reference["reference"])))
 
-
-	def setInverses(self):
-		RDFGraph.setInverses(self)
-
-	def setRedundants(self):
-		RDFGraph.setRedundants(self)

@@ -17,5 +17,5 @@ INSERT INTO morphoSyntacticsVocabulary (property,value) VALUES ('tense','future'
 INSERT INTO morphoSyntacticsVocabulary (property,value) VALUES ('degree','comparative');
 INSERT INTO morphoSyntacticsVocabulary (property,value) VALUES ('degree','superlative');
 INSERT INTO morphoSyntacticsVocabulary (property,value) VALUES ('gender','neuter');
-INSERT INTO morphoSyntacticsVocabulary (property,value) VALUES ('gender','female');
+INSERT INTO morphoSyntacticsVocabulary (property,value) VALUES ('gender','feminine');
 INSERT INTO morphoSyntacticsVocabulary (property,value) VALUES ('gender','masculine');
