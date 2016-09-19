@@ -21,6 +21,7 @@ class Ruleset(RulesetCommon):
 		self.worddb = set(alpino.words())
 		self.language = LANGUAGE
 		self.lang_id = self.db.languages[LANGUAGE]
+		self.vowels = [ "a", "e", "i", "u", "o" ]
 
 
 	def adjectiveAntonyms(self):
@@ -120,6 +121,8 @@ class Ruleset(RulesetCommon):
 
 			if label[-2:] == "er" or label[-2:] == "ie" or label[-2:] == "en":
 				guess_plural = label + "s"
+			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
+				guess_plural = label + label[-1:] + "en"
 			else:
 				guess_plural = self.__getNounStem(label) + "en"
 
@@ -152,7 +155,12 @@ class Ruleset(RulesetCommon):
 			if label[0].isupper():
 				guess_gender = self.__getNounGenderBySense(lexicalEntryID,geoSenseIDs)
 			else:
+				# later look if we can make a function for these lookups
 				if label[-3:] == "ing" and self.checkLexicalEntryExists(label[:-3] + "en",LEXINFO.verb):
+					guess_gender = "feminine"
+				elif label[-3:] == "pje" or label[-3:] == "tje":
+					guess_gender = "neuter"
+				elif len(label) > 4 and label[-4:] in [ "heid", "teit", "tuur", "suur" ]:
 					guess_gender = "feminine"
 
 			if self.userCheck("geslacht",label,guess_gender):
