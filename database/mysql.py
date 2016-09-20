@@ -131,33 +131,39 @@ class Database:
 			self.lexicalProperties.append(propertydict)
 		c.close()
 
-	def setLexicalSenses(self):
+	def setLexicalSenses(self,lang_id):
 		c = self.DB.cursor()
-		query = "SELECT lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
-			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID"
-		c.execute(query)
+		query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier, def.value AS def_value FROM lexicalSense AS sense \
+			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
+			LEFT JOIN senseDefinition AS def ON sense.lexicalSenseID = def.lexicalSenseID \
+			WHERE def.languageID = %s"
+		c.execute(query, (lang_id))
 		self.lexicalSenses = c.fetchall()
 		c.close()
 
 
-	def setLexicalSensesByID(self,lexicalEntryID):
+	def setLexicalSensesByID(self,lexicalEntryID,lang_id):
 		self.lexicalSenses = []
 		c = self.DB.cursor()
-		query = "SELECT lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
+		query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier, def.value AS def_value FROM lexicalSense AS sense \
 			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
-			WHERE sense.lexicalEntryID = %s"
-		c.execute(query, (lexicalEntryID))
+			LEFT JOIN senseDefinition AS def ON sense.lexicalSenseID = def.lexicalSenseID \
+			WHERE sense.lexicalEntryID = %s \
+			AND def.languageID = %s"
+		c.execute(query, (lexicalEntryID,lang_id))
 		self.lexicalSenses = c.fetchall()
 		c.close()
 
 
-	def setLexicalSensesByEntries(self):
+	def setLexicalSensesByEntries(self,lang_id):
 		c = self.DB.cursor()
 		for entry in self.lexicalEntries:
-			query = "SELECT lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
+			query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier, def.value AS def_value FROM lexicalSense AS sense \
 				LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
-				WHERE sense.lexicalEntryID = %s"
-			c.execute(query, (entry["lexicalEntryID"]))
+				LEFT JOIN senseDefinition AS def ON sense.lexicalSenseID = def.lexicalSenseID \
+				WHERE sense.lexicalEntryID = %s \
+				AND def.languageID = %s"
+			c.execute(query, (entry["lexicalEntryID"],lang_id))
 			self.lexicalSenses.extend(c.fetchall())
 		c.close()
 

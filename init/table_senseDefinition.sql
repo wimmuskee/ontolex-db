@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS senseDefinition;
+
+CREATE TABLE senseDefinition (
+lexicalSenseID INT UNSIGNED NOT NULL,
+languageID TINYINT UNSIGNED NOT NULL,
+value VARCHAR(255) NOT NULL
+);

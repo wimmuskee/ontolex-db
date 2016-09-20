@@ -20,6 +20,8 @@ class SKOSGraph(RDFGraph):
 
 			self.g.add((conceptidentifier,RDF.type,SKOS.Concept))
 			self.g.add((conceptidentifier,SKOS.label,Literal(conceptLabels[concept["lexicalEntryID"]], lang=self.language)))
+			if concept["def_value"]:
+				self.g.add((conceptidentifier,SKOS.definition,Literal(concept["def_value"], lang=self.language)))
 			if self.buildpackage:
 				self.g.add((conceptidentifier,SKOS.inScheme,URIRef("urn:" + self.name)))
 
