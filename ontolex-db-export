@@ -109,6 +109,7 @@ else:
 
 db.setLexicalFormProperties()
 db.setSenseReferences()
+db.setSenseDefinitions(db.languages[language])
 
 
 if format == "xml" or format == "turtle":
@@ -117,13 +118,13 @@ if format == "xml" or format == "turtle":
 	output.setLexicalEntries(db.lexicalEntries)
 	output.setLexicalForms(db.lexicalForms)
 	output.setLexicalProperties(db.lexicalProperties)
-	output.setLexicalSenses(db.lexicalSenses,db.lexicalEntryLabels)
+	output.setLexicalSenses(db.lexicalSenses,db.lexicalEntryLabels,db.lexicalSenseDefinitions)
 	output.setSenseReferences(db.senseReferences)
 
 elif format == "skos":
 	from format.skos import SKOSGraph
 	output = SKOSGraph("myconceptscheme",language,buildpackage)
-	output.setConcepts(db.lexicalSenses,db.lexicalEntryLabels)
+	output.setConcepts(db.lexicalSenses,db.lexicalEntryLabels,db.lexicalSenseDefinitions)
 	output.setConceptRelations(db.senseReferences)
 
 

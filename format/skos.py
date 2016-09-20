@@ -14,16 +14,17 @@ class SKOSGraph(RDFGraph):
 			self.g.add((URIRef("urn:" + name),DCTERMS.language,Literal(language)))
 
 
-	def setConcepts(self,concepts,conceptLabels):
+	def setConcepts(self,concepts,conceptLabels,conceptDefinitions):
 		for concept in concepts:
-			conceptidentifier = URIRef(concept["sense_identifier"])
+			conceptIdentifier = URIRef(concept["sense_identifier"])
+			concept_identifier = concept["sense_identifier"]
 
-			self.g.add((conceptidentifier,RDF.type,SKOS.Concept))
-			self.g.add((conceptidentifier,SKOS.label,Literal(conceptLabels[concept["lexicalEntryID"]], lang=self.language)))
-			if concept["def_value"]:
-				self.g.add((conceptidentifier,SKOS.definition,Literal(concept["def_value"], lang=self.language)))
+			self.g.add((conceptIdentifier,RDF.type,SKOS.Concept))
+			self.g.add((conceptIdentifier,SKOS.label,Literal(conceptLabels[concept["lexicalEntryID"]], lang=self.language)))
+			if concept_identifier in conceptDefinitions:
+				self.g.add((conceptIdentifier,SKOS.definition,Literal(conceptDefinitions[concept_identifier], lang=self.language)))
 			if self.buildpackage:
-				self.g.add((conceptidentifier,SKOS.inScheme,URIRef("urn:" + self.name)))
+				self.g.add((conceptIdentifier,SKOS.inScheme,URIRef("urn:" + self.name)))
 
 
 	def setConceptRelations(self,conceptrelations):

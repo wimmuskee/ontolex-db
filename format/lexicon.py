@@ -62,17 +62,18 @@ class LexiconGraph(RDFGraph):
 					self.g.add((lexicalFormIdentifier,URIRef(LEXINFO + property["property"]),URIRef(LEXINFO + property["value"])))
 
 
-	def setLexicalSenses(self,lexicalSenses,lexicalEntryLabels):
+	def setLexicalSenses(self,lexicalSenses,lexicalEntryLabels,lexicalSenseDefinitions):
 		for sense in lexicalSenses:
 			lexicalEntryIdentifier = URIRef(sense["lex_identifier"])
 			lexicalSenseIdentifier = URIRef(sense["sense_identifier"])
+			sense_identifier = sense["sense_identifier"]
 
 			self.g.add((lexicalEntryIdentifier,ONTOLEX.sense,lexicalSenseIdentifier))
 			self.g.add((lexicalSenseIdentifier,RDF.type,ONTOLEX.LexicalSense))
 			self.g.add((lexicalSenseIdentifier,RDF.type,SKOS.Concept))
 			self.g.add((lexicalSenseIdentifier,RDFS.label,Literal(lexicalEntryLabels[sense["lexicalEntryID"]], lang=self.language)))
-			if sense["def_value"]:
-				self.g.add((lexicalSenseIdentifier,SKOS.definition,Literal(sense["def_value"], lang=self.language)))
+			if sense_identifier in lexicalSenseDefinitions:
+				self.g.add((lexicalSenseIdentifier,SKOS.definition,Literal(lexicalSenseDefinitions[sense_identifier], lang=self.language)))
 
 
 	def setSenseReferences(self,senseReferences):

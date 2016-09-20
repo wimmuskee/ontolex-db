@@ -15,6 +15,7 @@ class Database:
 		self.lexicalSenses = []
 		self.senseReferences = []
 		self.lexicalEntryLabels = {}
+		self.lexicalSenseDefinitions = {}
 		self.posses = {}
 		self.languages = {}
 		self.morphosyntactics = {}
@@ -131,40 +132,47 @@ class Database:
 			self.lexicalProperties.append(propertydict)
 		c.close()
 
-	def setLexicalSenses(self,lang_id):
+	def setLexicalSenses(self):
 		c = self.DB.cursor()
-		query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier, def.value AS def_value FROM lexicalSense AS sense \
-			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
-			LEFT JOIN senseDefinition AS def ON sense.lexicalSenseID = def.lexicalSenseID \
-			WHERE def.languageID = %s"
-		c.execute(query, (lang_id))
+		query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
+			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID"
+		c.execute(query)
 		self.lexicalSenses = c.fetchall()
 		c.close()
 
 
-	def setLexicalSensesByID(self,lexicalEntryID,lang_id):
+	def setLexicalSensesByID(self,lexicalEntryID):
 		self.lexicalSenses = []
 		c = self.DB.cursor()
-		query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier, def.value AS def_value FROM lexicalSense AS sense \
+		query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
 			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
-			LEFT JOIN senseDefinition AS def ON sense.lexicalSenseID = def.lexicalSenseID \
-			WHERE sense.lexicalEntryID = %s \
-			AND def.languageID = %s"
-		c.execute(query, (lexicalEntryID,lang_id))
+			WHERE sense.lexicalEntryID = %s"
+		c.execute(query, (lexicalEntryID))
 		self.lexicalSenses = c.fetchall()
 		c.close()
 
 
-	def setLexicalSensesByEntries(self,lang_id):
+	def setLexicalSensesByEntries(self):
 		c = self.DB.cursor()
 		for entry in self.lexicalEntries:
-			query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier, def.value AS def_value FROM lexicalSense AS sense \
+			query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
 				LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
-				LEFT JOIN senseDefinition AS def ON sense.lexicalSenseID = def.lexicalSenseID \
-				WHERE sense.lexicalEntryID = %s \
-				AND def.languageID = %s"
-			c.execute(query, (entry["lexicalEntryID"],lang_id))
+				WHERE sense.lexicalEntryID = %s"
+			c.execute(query, (entry["lexicalEntryID"]))
 			self.lexicalSenses.extend(c.fetchall())
+		c.close()
+
+
+	def setSenseDefinitions(self,lang_id):
+		""" Definition is optional."""
+		c = self.DB.cursor()
+		for sense in self.lexicalSenses:
+			query = "SELECT value FROM senseDefinition WHERE lexicalSenseID = %s AND languageID = %s"
+			c.execute(query, (sense["lexicalSenseID"],lang_id))
+			row = c.fetchone()
+			
+			if row:
+				self.lexicalSenseDefinitions[sense["sense_identifier"]] = row["value"]
 		c.close()
 
 
