@@ -82,32 +82,29 @@ class Ruleset(RulesetCommon):
 		""" example. delen -> deling """
 		source_pos_id = self.db.posses["verb"]
 		target_pos_id = self.db.posses["noun"]
-		lexicalEntryIDs = {}
 
-		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.verb):
-			self.lexicalEntries[lexicalEntryIdentifier] = self.getLabel(lexicalEntryIdentifier)
+		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.verb):
+			self.lexicalEntries[lexicalEntryID] = self.getLabel(lexicalEntryID)
 
-		for lexicalEntryIdentifier in self.lexicalEntries:
-			source_value = self.lexicalEntries[lexicalEntryIdentifier]
+		for lexicalEntryID in self.lexicalEntries:
+			source_value = self.lexicalEntries[lexicalEntryID]
 			guess_noun = source_value[:-2] + "ing"
 
-			# also, perhaps make this configurable as well
-			if guess_noun in self.worddb:
-				if self.userCheck("gerelateerd", source_value, guess_noun):
-					sensecount = self.__countLexicalenses(lexicalEntryIdentifier)
-					if sensecount > 1:
-						print("multiple senses detected, store manually")
-						continue
-					elif sensecount == 1:
-						# check if relation to term exists
-						if self.checkLexicalEntryExists(guess_noun, LEXINFO.noun):
-							# bit lazy here, but just playing now
-							print("entry found for target, so maybe it is connected already")
-							continue
-					
-					# at this point sensecount is 0, or it is safe to move on
+			if guess_noun in self.worddb and self.userCheck("gerelateerd", source_value, guess_noun):
+				if not self.checkLexicalEntryExists(guess_noun,LEXINFO.noun):
+					# target entry does not exist, add target and add relation
 					self.db.storeCanonical(guess_noun,self.lang_id,target_pos_id)
+					targetSenseCount = 0
+				else:
+					targetLexicalEntryID = self.findLexicalEntry(guess_noun,LEXINFO.noun)
+					targetSenseCount = self.__countLexicalenses(targetLexicalEntryID)
+				
+				# this is horrific otherwise to check, think of something better later
+				sensecount = self.__countLexicalenses(lexicalEntryID)
+				if sensecount == 0 and targetSenseCount == 0:
 					self.db.addSense(source_value,source_pos_id,"skos","related",guess_noun,target_pos_id)
+				else:
+					print("either source or target has a sense, not storing relation")
 
 
 	def nounPlurals(self):

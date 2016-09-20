@@ -60,7 +60,7 @@ class RulesetCommon:
 		We're gonna try to find new forms with that relation. 
 		"""
 		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
-			if self.__checkFormRelation(lexicalEntryID,checkPredicate,checkObject):
+			if self.checkFormRelation(lexicalEntryID,checkPredicate,checkObject):
 				continue
 			self.lexicalEntries[str(lexicalEntryID)] = self.getLabel(lexicalEntryID)
 
@@ -97,8 +97,13 @@ class RulesetCommon:
 				return True
 		return False
 
+	def findLexicalEntry(self,word,partOfSpeech):
+		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
+			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=self.language)) in self.g:
+				return str(lexicalEntryIdentifier)
 
-	def __checkFormRelation(self,lexicalEntryID,checkPredicate,checkObject):
+
+	def checkFormRelation(self,lexicalEntryID,checkPredicate,checkObject):
 		""" Given a lexicalEntryID, check all related forms to see if the requested relation is present."""
 		for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.otherForm):
 			if (URIRef(lexicalFormID),checkPredicate,checkObject) in self.g:
