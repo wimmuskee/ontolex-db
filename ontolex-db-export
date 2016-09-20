@@ -25,6 +25,7 @@ configfile = "config.json"
 identifier = ""
 value = ""
 pos = ""
+license = ""
 buildpackage = False
 buildredundants = False
 buildinverses = False
@@ -68,6 +69,8 @@ language = config["language"]
 if args.language:
 	language = args.language[0]
 
+if "license" in config:
+	license = config["license"]
 
 db = Database(config)
 db.connect()
@@ -114,7 +117,7 @@ db.setSenseDefinitions(db.languages[language])
 
 if format == "xml" or format == "turtle":
 	from format.lexicon import LexiconGraph
-	output = LexiconGraph("mylexicon",language,format,buildpackage)
+	output = LexiconGraph("mylexicon",language,format,license,buildpackage)
 	output.setLexicalEntries(db.lexicalEntries)
 	output.setLexicalForms(db.lexicalForms)
 	output.setLexicalProperties(db.lexicalProperties)
@@ -123,7 +126,7 @@ if format == "xml" or format == "turtle":
 
 elif format == "skos":
 	from format.skos import SKOSGraph
-	output = SKOSGraph("myconceptscheme",language,buildpackage)
+	output = SKOSGraph("myconceptscheme",language,license,buildpackage)
 	output.setConcepts(db.lexicalSenses,db.lexicalEntryLabels,db.lexicalSenseDefinitions)
 	output.setConceptRelations(db.senseReferences)
 

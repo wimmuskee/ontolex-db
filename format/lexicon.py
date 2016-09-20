@@ -6,8 +6,8 @@ from format.rdfgraph import RDFGraph
 
 
 class LexiconGraph(RDFGraph):
-	def __init__(self,name,language,format,buildpackage):
-		RDFGraph.__init__(self, name,language,format,buildpackage)
+	def __init__(self,name,language,format,license,buildpackage):
+		RDFGraph.__init__(self, name,language,format,license,buildpackage)
 
 		global ONTOLEX
 		global LEXINFO

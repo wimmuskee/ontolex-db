@@ -6,13 +6,14 @@ from rdflib import URIRef, Literal, Namespace
 
 
 class RDFGraph():
-	def __init__(self,name,language,format,buildpackage):
+	def __init__(self,name,language,format,license,buildpackage):
 		global SKOSTHES
 		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 
 		self.name = name
 		self.language = language
 		self.format = format
+		self.license = license
 		self.buildpackage = buildpackage
 		self.g = Graph()
 		self.g.bind("skos", SKOS)
@@ -60,6 +61,8 @@ class RDFGraph():
 		if self.buildpackage:
 			import datetime
 			self.g.add((URIRef("urn:" + self.name),DCTERMS.date,Literal(str(datetime.date.today()))))
+			if self.license:
+				self.g.add((URIRef("urn:" + self.name),DCTERMS.license,Literal(self.license)))
 			self.g.add((URIRef("urn:" + self.name),VOID.triples,Literal(str(len(self.g)+1), datatype=XSD.integer)))
 
 		print(bytes.decode(self.g.serialize(format=self.format)))
