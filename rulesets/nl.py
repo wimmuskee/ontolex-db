@@ -132,8 +132,7 @@ class Ruleset(RulesetCommon):
 					# then do the same for the canonicalForm, and store the singular
 					lexicalFormID = self.g.value(URIRef(lexicalEntryID),ONTOLEX.canonicalForm,None)
 					form_id = self.db.getLexicalFormID(str(lexicalFormID))
-					self.db.storeFormProperty(form_id,self.db.morphosyntactics["number:singular"])
-					self.db.DB.commit()
+					self.db.insertFormProperty(form_id,self.db.morphosyntactics["number:singular"],True)
 
 
 	def nounGender(self):
@@ -162,8 +161,7 @@ class Ruleset(RulesetCommon):
 
 			if self.userCheck("geslacht",label,guess_gender):
 				form_id = self.db.getLexicalFormID(str(lexicalFormID))
-				self.db.storeFormProperty(form_id,self.db.morphosyntactics["gender:" + guess_gender])
-				self.db.DB.commit()
+				self.db.insertFormProperty(form_id,self.db.morphosyntactics["gender:" + guess_gender],True)
 
 
 	def __getNounGenderBySense(self,lexicalEntryID,geoSenseIDs):

@@ -3,6 +3,16 @@
 import pymysql.cursors
 import uuid
 
+"""
+Some explanation for this set of functions.
+
+set: put a partical subset in a class var
+insert: insert one row without checks and dependencies, optionally commit
+store: insert multiples and calling separate insert functions, always commits and has optional safemode
+
+todo, add, find and get
+"""
+
 class Database:
 	def __init__(self,config):
 		self.host = config["host"]
@@ -217,28 +227,46 @@ class Database:
 		return row["lexicalFormID"]
 
 
-	def storeCanonical(self,word,lang_id,pos_id):
+	def getID(self,identifier,table):
+		""" Return the real database ID from either entry, form or sense, based on identifier. """
+		c = self.DB.cursor()
+		field = table + "ID"
+		query = "SELECT " + field + " FROM " + table + " WHERE identifier = %s"
+		c.execute(query,(identifier))
+		row = c.fetchone()
+		c.close()
+		return row[field]
+
+
+	def storeCanonical(self,word,lang_id,pos_id,safemode=True):
 		""" Stores new lexicalEntry and canonicalForm if entry does not exist."""
-		if self.findLexicalEntry(word,pos_id):
+		if self.findLexicalEntry(word,pos_id) and safemode:
+			print("found this entry already: " + word)
 			return None
-		
-		lexicalEntryID = self.__storeLexicalEntry(word,pos_id)
-		lexicalFormID = self.storeForm(lexicalEntryID,"canonicalForm")
-		self.storeWrittenRep(lexicalFormID,word,lang_id)
+
+		lexicalEntryID = self.insertLexicalEntry(word,pos_id)
+		lexicalFormID = self.insertLexicalForm(lexicalEntryID,"canonicalForm")
+		self.insertWrittenRep(lexicalFormID,word,lang_id)
 		self.DB.commit()
 		return lexicalEntryID
 
 
-	def storeOtherForm(self,lexicalEntryID,word,lang_id,properties,safemode=True):
+	def storeOtherForm(self,lexicalEntryID,word,lang_id,safemode=True):
 		if self.findlexicalForm(lexicalEntryID,word,lang_id) and safemode:
 			print("found this form already: " + word)
-			return
+			return None
 
-		lexicalFormID = self.storeForm(lexicalEntryID,"otherForm")
-		self.storeWrittenRep(lexicalFormID,word,lang_id)
+		lexicalFormID = self.insertLexicalForm(lexicalEntryID,"otherForm")
+		self.insertWrittenRep(lexicalFormID,word,lang_id)
+		self.DB.commit()
+		return lexicalFormID
+
+	def storeFormProperties(self,lexicalFormID,properties,safemode=True):
+		# no safemode yet
+
 		for property in properties:
 			# p in form <property>:<value>
-			self.storeFormProperty(lexicalFormID,self.morphosyntactics[property])
+			self.insertFormProperty(lexicalFormID,self.morphosyntactics[property])
 		self.DB.commit()
 
 
@@ -258,16 +286,6 @@ class Database:
 		self.DB.commit()
 
 
-	def storeForm(self,lexicalEntryID,type):
-		c = self.DB.cursor()
-		identifier = "urn:uuid:" + str(uuid.uuid4())
-		query = "INSERT INTO lexicalForm (lexicalEntryID,identifier,type) VALUES (%s,%s,%s)"
-		c.execute(query, (lexicalEntryID,identifier,type))
-		lexicalFormID = c.lastrowid
-		c.close()
-		return lexicalFormID
-
-
 	def storeLexicalSense(self,lexicalEntryID):
 		""" This safely stores max 1 lexicalSense for the lexicalEntryID. """
 		self.setLexicalSensesByID(lexicalEntryID)
@@ -278,24 +296,10 @@ class Database:
 		elif sensecount == 1:
 			lexicalSenseID = self.lexicalSenses[0]["lexicalSenseID"]
 		elif sensecount == 0:
-			lexicalSenseID = self.__storeLexicalSense(lexicalEntryID)
+			lexicalSenseID = self.insertLexicalSense(lexicalEntryID)
 
 		self.DB.commit()
 		return lexicalSenseID
-
-
-	def storeWrittenRep(self,lexicalFormID,word,lang_id):
-		c = self.DB.cursor()
-		query = "INSERT INTO writtenRep (lexicalFormID,languageID,value) VALUES (%s,%s,%s)"
-		c.execute(query, (lexicalFormID,lang_id,word))
-		c.close()
-
-
-	def storeFormProperty(self,lexicalFormID,morphoSyntacticsID):
-		c = self.DB.cursor()
-		query = "INSERT INTO formMorphoSyntactics (lexicalFormID,morphoSyntacticsID) VALUES (%s,%s)"
-		c.execute(query, (lexicalFormID,morphoSyntacticsID))
-		c.close()
 
 
 	def storeSenseReference(self,lexicalSenseID,namespace,property,reference):
@@ -335,7 +339,7 @@ class Database:
 			return None
 
 
-	def __storeLexicalEntry(self,word,pos_id):
+	def insertLexicalEntry(self,word,pos_id,commit=False):
 		c = self.DB.cursor()
 		entryclass = "Word"
 		if word.count(" ") > 0:
@@ -346,17 +350,64 @@ class Database:
 		c.execute(query, (word,identifier,pos_id,entryclass))
 		lexicalEntryID = c.lastrowid
 		c.close()
+		if commit:
+			self.DB.commit()
+
 		return lexicalEntryID
 
 
-	def __storeLexicalSense(self,lexicalEntryID):
+	def insertLexicalForm(self,lexicalEntryID,type,commit=False):
+		c = self.DB.cursor()
+		identifier = "urn:uuid:" + str(uuid.uuid4())
+		query = "INSERT INTO lexicalForm (lexicalEntryID,identifier,type) VALUES (%s,%s,%s)"
+		c.execute(query, (lexicalEntryID,identifier,type))
+		lexicalFormID = c.lastrowid
+		c.close()
+		if commit:
+			self.DB.commit()
+
+		return lexicalFormID
+
+
+	def insertWrittenRep(self,lexicalFormID,word,lang_id,commit=False):
+		c = self.DB.cursor()
+		query = "INSERT INTO writtenRep (lexicalFormID,languageID,value) VALUES (%s,%s,%s)"
+		c.execute(query, (lexicalFormID,lang_id,word))
+		c.close()
+		if commit:
+			self.DB.commit()
+
+
+	def insertFormProperty(self,lexicalFormID,morphoSyntacticsID,commit=False):
+		c = self.DB.cursor()
+		query = "INSERT INTO formMorphoSyntactics (lexicalFormID,morphoSyntacticsID) VALUES (%s,%s)"
+		c.execute(query, (lexicalFormID,morphoSyntacticsID))
+		c.close()
+		if commit:
+			self.DB.commit()
+
+
+	def insertLexicalSense(self,lexicalEntryID,commit=False):
+		""" Insert lexicalSense, and optionally commit."""
 		c = self.DB.cursor()
 		identifier = "urn:uuid:" + str(uuid.uuid4())
 		query = "INSERT INTO lexicalSense (lexicalEntryID,identifier) VALUES (%s,%s)"
 		c.execute(query, (lexicalEntryID,identifier))
 		lexicalSenseID = c.lastrowid
 		c.close()
+		if commit:
+			self.DB.commit()
+
 		return lexicalSenseID
+
+
+	def insertLexicalSenseDefinition(self,lexicalSenseID,languageID,definition,commit=False):
+		c = self.DB.cursor()
+		query = "INSERT INTO senseDefinition (lexicalSenseID,languageID,value) VALUES (%s,%s,%s)"
+		c.execute(query, (lexicalSenseID,languageID,definition))
+		c.close()
+		if commit:
+			self.DB.commit()
 
 
 	def __getLexicalSenseIdentifier(self,lexicalSenseID):

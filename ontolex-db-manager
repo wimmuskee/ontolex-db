@@ -8,86 +8,125 @@ from database.mysql import Database
 
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
-parser.add_argument('mode', choices=['entry','form'], help="main operating mode, add stuff")
-parser.add_argument('word', help="word to add")
+parser.add_argument('action', choices=['add','update'], help="main operating mode, add or update stuff")
+parser.add_argument('mode', choices=['entry','form','formprops','sense','definition'], help="where to operate")
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='path', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
-parser.add_argument('-e', '--entryid', type=int, nargs=1, help='lexicalEntryID', metavar='entryid', dest='entryid')
+commongroup = parser.add_argument_group('common options')
+commongroup.add_argument('-s', '--source', nargs=1, help='source identifier', metavar='source', dest='source')
+commongroup.add_argument('-w', '--word', nargs=1, help='word to add', metavar='word', dest='word')
 entrygroup = parser.add_argument_group('entry options')
 entrygroup.add_argument('-p', '--pos', nargs=1, help='part of speech', metavar='pos', dest='pos')
 formgroup = parser.add_argument_group('form options')
-formgroup.add_argument('-x', '--props', nargs='+', help='form properties, in format: property:value', metavar='props', dest='props')
+formgroup.add_argument('-f', '--formprops', nargs='+', help='form properties, in format: property:value', metavar='formprops', dest='formprops')
+sensegroup = parser.add_argument_group('sense options')
+sensegroup.add_argument('-d', '--definition', nargs=1, help='sense definition', metavar='definition', dest='definition')
 
 # set initial vars
 args = parser.parse_args()
 configfile = "config.json"
-pos = ""
-lexicalEntryID = 0
-properties = []
-
-
-# check input vars
-mode = args.mode
-word = args.word.strip(' \t\n\r')
 
 if args.config:
 	configfile = args.config[0]
-
-if args.pos:
-	pos = args.pos[0]
-
-if args.entryid:
-	lexicalEntryID = args.entryid[0]
-
-
-if args.props:
-	propertyregex = re.compile(r'^[a-z]+:[a-zA-Z]+$')
-	for property in args.props:
-		if propertyregex.match(property):
-			properties.append(property)
-
-
-# validate group dependencies
-if mode == "entry" and not pos:
-	parser.error("need part of speech when adding an entry")
-
-if mode == "form" and not lexicalEntryID:
-	parser.error("need lexicalEntryID when adding a form")
-
 
 # load config file
 with open(configfile) as f:
 	config = json.loads(f.read())
 
+# connect to database and set all vocabularies
+db = Database(config)
+db.connect()
+db.setLanguages()
+db.setPosses()
+db.setMorphoSyntactics()
+
+# some generic validation
 language = config["language"]
 if args.language:
 	language = args.language[0]
 
-
-
-db = Database(config)
-db.connect()
-
-# language validation
-db.setLanguages()
 if language not in db.languages:
 	parser.error("invalid language: " + language)
 
+if args.mode != "entry":
+	if args.source:
+		sourceID = args.source[0]
+	else:
+		parser.error("we need a source identifier for this operation")
 
-if mode == "entry":
-	# pos validation
-	db.setPosses()
+	if not sourceID:
+		parser.error("we really need a source identifier")
+
+
+# now do specific operation mode checks
+if args.action == "add" and args.mode == "entry":
+	if args.word:
+		word = args.word[0].strip(' \t\n\r')
+	else:
+		parser.error("we need a word to add")
+
+	if args.pos:
+		pos = args.pos[0]
+	else:
+		parser.error("we need a partOfSpeech to add a word")
+
+	if not word or not pos:
+		parser.error("to add an entry we need a word and a partOfSpeech")
+
 	if pos not in db.posses:
 		parser.error("invalid partOfSpeech: " + pos)
 
 	lexicalEntryID = db.storeCanonical(word,db.languages[language],db.posses[pos])
 	print("Stored lexicalEntryID: " + str(lexicalEntryID))
 
-elif mode == "form":
-	db.setMorphoSyntactics()
+elif args.action == "add" and args.mode == "form":
+	if args.word:
+		word = args.word[0].strip(' \t\n\r')
+	else:
+		parser.error("we need a word to add")
+
+	if not word:
+		parser.error("to add another form we need a word")
+
+	lexicalEntryID = db.getID(sourceID, "lexicalEntry")
+	lexicalFormID = db.storeOtherForm(lexicalEntryID,word,db.languages[language])
+	print("Stored lexicalFormID: " + str(lexicalFormID))
+
+elif args.action == "add" and args.mode == "formprops":
+	if args.formprops:
+		properties = []
+		propertyregex = re.compile(r'^[a-z]+:[a-zA-Z]+$')
+		for property in args.formprops:
+			if propertyregex.match(property):
+				properties.append(property)
+	else:
+		parser.error("we need properties to add")
+
 	for p in properties:
 		if p not in db.morphosyntactics:
 			parser.error("invalid property provided: " + p)
 	
-	db.storeOtherForm(lexicalEntryID,word,db.languages[language],properties)
-	print("Stored otherForm for: " + str(lexicalEntryID))
+	lexicalFormID = db.getID(sourceID,"lexicalForm")
+	db.storeFormProperties(lexicalFormID,properties)
+	print("Stored properties")
+
+elif args.action == "add" and args.mode == "sense":
+	lexicalEntryID = db.getID(sourceID, "lexicalEntry")
+	lexicalSenseID = db.insertLexicalSense(lexicalEntryID,True)
+	print("Stored lexicalSenseID: " + str(lexicalSenseID))
+
+elif args.action == "add" and args.mode == "definition":
+	if args.definition:
+		definition = args.definition[0]
+	else:
+		parser.error("we need a definition to add")
+
+	if not definition:
+		parser.error("we need a definition to add")
+
+	lexicalSenseID = db.getID(sourceID,"lexicalSense")
+	db.insertLexicalSenseDefinition(lexicalSenseID,db.languages[language],definition,True)
+	print("definition stored: " + definition)
+
+else:
+	print("something is wrong")
