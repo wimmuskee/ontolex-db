@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import json
 from database.mysql import Database
+from functions.common import validateInput, getConfig
 
 parser = argparse.ArgumentParser(description='export script for ontolox-db')
 parser.add_argument('-f', '--format', nargs=1, help='output format', metavar='format', dest='format')
@@ -20,12 +20,13 @@ parser.add_argument('--transitive', help="set transitive relations, implies inve
 
 
 args = parser.parse_args()
+argsdict = vars(args)
 format = "turtle"
-configfile = "config.json"
-identifier = ""
-value = ""
-pos = ""
 license = ""
+config = getConfig(argsdict)
+identifier = validateInput(argsdict,"identifier")
+value = validateInput(argsdict,"value")
+pos = validateInput(argsdict,"pos")
 buildpackage = False
 buildredundants = False
 buildinverses = False
@@ -33,18 +34,6 @@ buildtransitives = False
 
 if args.format:
 	format = args.format[0]
-
-if args.config:
-	configfile = args.config[0]
-
-if args.identifier:
-	identifier = args.identifier[0]
-
-if args.value:
-	value = args.value[0]
-
-if args.pos:
-	pos = args.pos[0]
 
 if args.package:
 	buildpackage = True
@@ -60,10 +49,6 @@ if args.transitive:
 	buildredundants = True
 	buildtransitives = True
 
-
-# load config file
-with open(configfile) as f:
-	config = json.loads(f.read())
 
 language = config["language"]
 if args.language:

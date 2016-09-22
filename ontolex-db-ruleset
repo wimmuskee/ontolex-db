@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import json
 from importlib import import_module
+from functions.common import validateInput, getConfig
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db rulesets')
 parser.add_argument('language', help="language key")
@@ -18,18 +18,12 @@ rules.add_argument('--verb-related-nouns', help="find related nouns for verbs", 
 
 
 args = parser.parse_args()
-configfile = "config.json"
+argsdict = vars(args)
+config = getConfig(argsdict)
 dont_ask = False
-
-if args.config:
-	configfile = args.config[0]
 
 if args.dont_ask:
 	dont_ask = True
-
-# load config file
-with open(configfile) as f:
-	config = json.loads(f.read())
 
 
 # import language module

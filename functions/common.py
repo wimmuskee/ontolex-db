@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
 
+def getConfig(parserArgs):
+	""" Get config path from args or use default. Return loaded dict."""
+	import json
+	configpath = validateInput(parserArgs,"config")
+
+	if not configpath:
+		configpath = "config.json"
+
+	with open(configpath) as f:
+		return json.loads(f.read())
+
+
 def validateInput(parserArgs,key):
 	""" Simple validation for a parser argument. Return value only when non empty value is found for key. """
 	if not parserArgs[key] is None:

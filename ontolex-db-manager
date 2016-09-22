@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import json
 import re
 from database.mysql import Database
-from functions.common import validateInput
+from functions.common import validateInput, getConfig
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
 parser.add_argument('action', choices=['add','update'], help="main operating mode, add or update stuff")
@@ -25,14 +24,7 @@ sensegroup.add_argument('-d', '--definition', nargs=1, help='sense definition', 
 # set initial vars
 args = parser.parse_args()
 argsdict = vars(args)
-configfile = "config.json"
-
-if args.config:
-	configfile = args.config[0]
-
-# load config file
-with open(configfile) as f:
-	config = json.loads(f.read())
+config = getConfig(argsdict)
 
 # connect to database and set all vocabularies
 db = Database(config)
