@@ -209,24 +209,6 @@ class Database:
 		return row["lexicalEntryID"]
 
 
-	def getLexicalEntryIDByIdentifier(self,identifier):
-		c = self.DB.cursor()
-		query = "SELECT lexicalEntryID FROM lexicalEntry WHERE identifier = %s"
-		c.execute(query,(identifier))
-		row = c.fetchone()
-		c.close()
-		return row["lexicalEntryID"]
-
-
-	def getLexicalFormID(self,identifier):
-		c = self.DB.cursor()
-		query = "SELECT lexicalFormID FROM lexicalForm WHERE identifier = %s"
-		c.execute(query,(identifier))
-		row = c.fetchone()
-		c.close()
-		return row["lexicalFormID"]
-
-
 	def getID(self,identifier,table):
 		""" Return the real database ID from either entry, form or sense, based on identifier. """
 		c = self.DB.cursor()

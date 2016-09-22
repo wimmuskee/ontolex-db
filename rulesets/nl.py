@@ -116,23 +116,26 @@ class Ruleset(RulesetCommon):
 		for lexicalEntryID in self.lexicalEntries:
 			label = self.lexicalEntries[lexicalEntryID]
 
-			if label[-2:] == "er" or label[-2:] == "ie" or label[-2:] == "en":
+			if label[-2:] in ["er","ie","en"]:
 				guess_plural = label + "s"
 			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
 				guess_plural = label + label[-1:] + "en"
+			elif label[-3:] in ["eum","ium"]:
+				guess_plural = label[:-2] + "a"
 			else:
 				guess_plural = self.__getNounStem(label) + "en"
 
 			if guess_plural in self.worddb:
 				if self.userCheck("meervoud", label, guess_plural):
 					# first get the database identifier and store the plural
-					lex_id = self.db.getLexicalEntryIDByIdentifier(str(lexicalEntryID))
-					self.db.storeOtherForm(lex_id,guess_plural,self.lang_id,["number:plural"])
+					lex_id = self.db.getID(str(lexicalEntryID),"lexicalEntry")
+					form_id = self.db.storeOtherForm(lex_id,guess_plural,self.lang_id)
+					self.db.insertFormProperty(form_id,self.db.morphosyntactics["number:plural"],True)
 					
 					# then do the same for the canonicalForm, and store the singular
 					lexicalFormID = self.g.value(URIRef(lexicalEntryID),ONTOLEX.canonicalForm,None)
-					form_id = self.db.getLexicalFormID(str(lexicalFormID))
-					self.db.insertFormProperty(form_id,self.db.morphosyntactics["number:singular"],True)
+					canonical_form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
+					self.db.insertFormProperty(canonical_form_id,self.db.morphosyntactics["number:singular"],True)
 
 
 	def nounGender(self):
@@ -154,13 +157,13 @@ class Ruleset(RulesetCommon):
 				# later look if we can make a function for these lookups
 				if label[-3:] == "ing" and self.checkLexicalEntryExists(label[:-3] + "en",LEXINFO.verb):
 					guess_gender = "feminine"
-				elif label[-3:] == "pje" or label[-3:] == "tje":
+				elif label[-3:] in ["pje","tje"] or label[-4:] == "tuig":
 					guess_gender = "neuter"
-				elif len(label) > 4 and label[-4:] in [ "heid", "teit", "tuur", "suur" ]:
+				elif len(label) > 5 and label[-4:] in [ "heid", "teit", "tuur", "suur" ]:
 					guess_gender = "feminine"
 
 			if self.userCheck("geslacht",label,guess_gender):
-				form_id = self.db.getLexicalFormID(str(lexicalFormID))
+				form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
 				self.db.insertFormProperty(form_id,self.db.morphosyntactics["gender:" + guess_gender],True)
 
 
