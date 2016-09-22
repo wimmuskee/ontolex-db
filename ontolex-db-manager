@@ -5,7 +5,7 @@ import argparse
 import json
 import re
 from database.mysql import Database
-
+from functions.common import validateInput
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
 parser.add_argument('action', choices=['add','update'], help="main operating mode, add or update stuff")
@@ -24,6 +24,7 @@ sensegroup.add_argument('-d', '--definition', nargs=1, help='sense definition', 
 
 # set initial vars
 args = parser.parse_args()
+argsdict = vars(args)
 configfile = "config.json"
 
 if args.config:
@@ -49,26 +50,16 @@ if language not in db.languages:
 	parser.error("invalid language: " + language)
 
 if args.mode != "entry":
-	if args.source:
-		sourceID = args.source[0]
-	else:
-		parser.error("we need a source identifier for this operation")
+	sourceID = validateInput(argsdict, "source")
 
 	if not sourceID:
-		parser.error("we really need a source identifier")
+		parser.error("we need a source identifier for this operation")
 
 
 # now do specific operation mode checks
 if args.action == "add" and args.mode == "entry":
-	if args.word:
-		word = args.word[0].strip(' \t\n\r')
-	else:
-		parser.error("we need a word to add")
-
-	if args.pos:
-		pos = args.pos[0]
-	else:
-		parser.error("we need a partOfSpeech to add a word")
+	word = validateInput(argsdict, "word")
+	pos = validateInput(argsdict, "pos")
 
 	if not word or not pos:
 		parser.error("to add an entry we need a word and a partOfSpeech")
@@ -80,10 +71,7 @@ if args.action == "add" and args.mode == "entry":
 	print("Stored lexicalEntryID: " + str(lexicalEntryID))
 
 elif args.action == "add" and args.mode == "form":
-	if args.word:
-		word = args.word[0].strip(' \t\n\r')
-	else:
-		parser.error("we need a word to add")
+	word = validateInput(argsdict, "word")
 
 	if not word:
 		parser.error("to add another form we need a word")
@@ -116,10 +104,7 @@ elif args.action == "add" and args.mode == "sense":
 	print("Stored lexicalSenseID: " + str(lexicalSenseID))
 
 elif args.action == "add" and args.mode == "definition":
-	if args.definition:
-		definition = args.definition[0]
-	else:
-		parser.error("we need a definition to add")
+	definition = validateInput(argsdict, "definition")
 
 	if not definition:
 		parser.error("we need a definition to add")
