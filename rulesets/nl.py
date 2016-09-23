@@ -167,6 +167,8 @@ class Ruleset(RulesetCommon):
 					guess_gender = "neuter"
 				elif len(label) > 5 and label[-4:] in [ "heid", "teit", "tuur", "suur" ]:
 					guess_gender = "feminine"
+				elif len(label) > 6 and (label[-3:] in ["aar","erd"] or label[-4:] == "aard"):
+					guess_gender = "masculine"
 
 			if self.userCheck("geslacht",label,guess_gender):
 				form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
