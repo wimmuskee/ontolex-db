@@ -9,8 +9,10 @@ Some explanation for this set of functions.
 set: put a partical subset in a class var
 insert: insert one row without checks and dependencies, optionally commit
 store: insert multiples and calling separate insert functions, always commits and has optional safemode
+check: returns True or False
+get: get an individual value
 
-todo, add, find and get
+todo, find and get
 """
 
 class Database:
@@ -161,25 +163,18 @@ class Database:
 
 
 	def setLexicalSensesByID(self,lexicalEntryID):
-		self.lexicalSenses = []
 		c = self.DB.cursor()
 		query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
 			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
 			WHERE sense.lexicalEntryID = %s"
 		c.execute(query, (lexicalEntryID))
-		self.lexicalSenses = c.fetchall()
+		self.lexicalSenses.extend(c.fetchall())
 		c.close()
 
 
 	def setLexicalSensesByEntries(self):
-		c = self.DB.cursor()
 		for entry in self.lexicalEntries:
-			query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
-				LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
-				WHERE sense.lexicalEntryID = %s"
-			c.execute(query, (entry["lexicalEntryID"]))
-			self.lexicalSenses.extend(c.fetchall())
-		c.close()
+			self.setLexicalSensesByID(entry["lexicalEntryID"])
 
 
 	def setSenseDefinitions(self,lang_id):
@@ -218,6 +213,14 @@ class Database:
 		return row["lexicalEntryID"]
 
 
+	def getLexicalSenseID(self,lexicalEntryID):
+		c = self.DB.cursor()
+		query = "SELECT lexicalSenseID FROM lexicalSense WHERE lexicalEntryID = %s"
+		c.execute(query,(lexicalEntryID))
+		c.close()
+		return row["lexicalSenseID"]
+
+
 	def getID(self,identifier,table):
 		""" Return the real database ID from either entry, form or sense, based on identifier. """
 		c = self.DB.cursor()
@@ -227,6 +230,28 @@ class Database:
 		row = c.fetchone()
 		c.close()
 		return row[field]
+
+
+	def getCountlexicalSenses(self,lexicalEntryID):
+		c = self.DB.cursor()
+		query = "SELECT count(*) AS count FROM lexicalSense WHERE lexicalEntryID = %s"
+		c.execute(query,(lexicalEntryID))
+		row = c.fetchone()
+		c.close()
+		return int(row["count"])
+
+
+	def checkSenseReferenceExists(self,lexicalSenseID,relation,reference):
+		c = self.DB.cursor()
+		namespace = relation.split(":")[0]
+		property = relation.split(":")[1]
+		query = "SELECT * FROM senseReference WHERE lexicalSenseID = %s AND namespace = %s AND property = %s AND reference = %s"
+		c.execute(query,(lexicalSenseID,namespace,property,reference))
+		row = c.fetchone()
+		if row:
+			return True
+		else:
+			return False
 
 
 	def storeCanonical(self,word,lang_id,pos_id,safemode=True):
@@ -252,6 +277,7 @@ class Database:
 		self.DB.commit()
 		return lexicalFormID
 
+
 	def storeFormProperties(self,lexicalFormID,properties,safemode=True):
 		# no safemode yet
 
@@ -261,43 +287,24 @@ class Database:
 		self.DB.commit()
 
 
-	def addSense(self,source_value,source_pos_id,namespace,property,target_value,target_pos_id):
-		# property and namespace are not validated right now
-		sourceLexicalEntryID = self.getLexicalEntryID(source_value,source_pos_id)
-		sourceLexicalSenseID = self.storeLexicalSense(sourceLexicalEntryID)
-
-		if target_pos_id:
-			targetLexicalEntryID = self.getLexicalEntryID(target_value,target_pos_id)
-			targetLexicalSenseID = self.storeLexicalSense(targetLexicalEntryID)
-			reference = self.__getLexicalSenseIdentifier(targetLexicalSenseID)
-		else:
-			reference = target_value
+	def storeLexicalSense(self,lexicalEntryID,relation,reference,safemode=True):
+		""" Adds lexicalSense to lexicxalEntry, and adds a relation. """
+		senseCount = self.getCountlexicalSenses(lexicalEntryID)
 		
-		self.storeSenseReference(sourceLexicalSenseID,namespace,property,reference)
-		self.DB.commit()
-
-
-	def storeLexicalSense(self,lexicalEntryID):
-		""" This safely stores max 1 lexicalSense for the lexicalEntryID. """
-		self.setLexicalSensesByID(lexicalEntryID)
-		sensecount = len(self.lexicalSenses) 
-		if sensecount > 1:
-			print("error, more senses")
-			exit()
-		elif sensecount == 1:
-			lexicalSenseID = self.lexicalSenses[0]["lexicalSenseID"]
-		elif sensecount == 0:
+		if senseCount == 0:
+			# no senses yet, we can safely add a sense and a relation
 			lexicalSenseID = self.insertLexicalSense(lexicalEntryID)
+			self.insertSenseReference(lexicalSenseID,relation,reference)
+		elif senseCount == 1:
+			# asume we're adding to this sense, retrieve the senseID and add reference if not exists
+			lexicalSenseID = self.getLexicalSenseID(lexicalEntryID)
+			if not self.checkSenseReferenceExists(lexicalSenseID,relation,reference):
+				self.insertSenseReference(lexicalSenseID,relation,reference)
+		else:
+			lexicalSenseID = None
 
 		self.DB.commit()
 		return lexicalSenseID
-
-
-	def storeSenseReference(self,lexicalSenseID,namespace,property,reference):
-		c = self.DB.cursor()
-		query = "INSERT INTO senseReference (lexicalSenseID,namespace,property,reference) VALUES (%s,%s,%s,%s)"
-		c.execute(query, (lexicalSenseID,namespace,property,reference))
-		c.close()
 
 
 	def findLexicalEntry(self,word,pos_id):
@@ -410,12 +417,3 @@ class Database:
 		c.close()
 		if commit:
 			self.DB.commit()
-
-
-	def __getLexicalSenseIdentifier(self,lexicalSenseID):
-		c = self.DB.cursor()
-		query = "SELECT identifier FROM lexicalSense WHERE lexicalSenseID = %s"
-		c.execute(query, (lexicalSenseID))
-		row = c.fetchone()
-		c.close()
-		return row["identifier"]

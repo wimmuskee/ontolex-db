@@ -25,6 +25,8 @@ class Ruleset(RulesetCommon):
 
 
 	def adjectiveAntonyms(self):
+		print("first redesign")
+		exit()
 		""" Based on word characteristics. Trying to prefix 'on' to a word. """
 		pos_id = self.db.posses["adjective"]
 		lexicalEntryIDs = {}
@@ -57,6 +59,8 @@ class Ruleset(RulesetCommon):
 
 
 	def adjectiveMaterialNouns(self):
+		print("first redesign")
+		exit()
 		""" Get all material nouns, based on being part of material category."""
 		materialSenseIDs = self.getLexicalSenseIDsByReference(["http://www.wikidata.org/entity/Q11344"])
 		source_pos_id = self.db.posses["noun"]
@@ -79,6 +83,8 @@ class Ruleset(RulesetCommon):
 
 
 	def verbRelatedNouns(self):
+		print("first redesign")
+		exit()
 		""" example. delen -> deling """
 		source_pos_id = self.db.posses["verb"]
 		target_pos_id = self.db.posses["noun"]
