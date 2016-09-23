@@ -8,7 +8,7 @@ from functions.common import validateInput, getConfig
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
 parser.add_argument('action', choices=['add','update'], help="main operating mode, add or update stuff")
-parser.add_argument('mode', choices=['entry','form','formprops','sense','definition'], help="where to operate")
+parser.add_argument('mode', choices=['entry','form','formprops','sense','definition','relation'], help="where to operate")
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='path', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
 commongroup = parser.add_argument_group('common options')
@@ -17,9 +17,12 @@ commongroup.add_argument('-w', '--word', nargs=1, help='word to add', metavar='w
 entrygroup = parser.add_argument_group('entry options')
 entrygroup.add_argument('-p', '--pos', nargs=1, help='part of speech', metavar='pos', dest='pos')
 formgroup = parser.add_argument_group('form options')
-formgroup.add_argument('-f', '--formprops', nargs='+', help='form properties, in format: property:value', metavar='formprops', dest='formprops')
+formgroup.add_argument('-f', '--formprops', nargs='+', help='form properties', metavar='property:value', dest='formprops')
 sensegroup = parser.add_argument_group('sense options')
-sensegroup.add_argument('-d', '--definition', nargs=1, help='sense definition', metavar='definition', dest='definition')
+sensegroup.add_argument('-d', '--definition', nargs=1, help='sense definition', metavar='string', dest='definition')
+sensegroup.add_argument('-r', '--relation', nargs=1, help='sense relation', metavar='namespace:property', dest='relation')
+sensegroup.add_argument('-t', '--target', nargs=1, help='sense relation target', metavar='uri', dest='target')
+
 
 # set initial vars
 args = parser.parse_args()
@@ -32,6 +35,7 @@ db.connect()
 db.setLanguages()
 db.setPosses()
 db.setMorphoSyntactics()
+db.setSenseRelations()
 
 # some generic validation
 language = config["language"]
@@ -94,6 +98,20 @@ elif args.action == "add" and args.mode == "sense":
 	lexicalEntryID = db.getID(sourceID, "lexicalEntry")
 	lexicalSenseID = db.insertLexicalSense(lexicalEntryID,True)
 	print("Stored lexicalSenseID: " + str(lexicalSenseID))
+
+elif args.action == "add" and args.mode == "relation":
+	target = validateInput(argsdict, "target")
+	relation = validateInput(argsdict, "relation")
+	
+	if not target or not relation:
+		parser.error("we need a target and a relation to continue")
+
+	if relation not in db.senserelations:
+		parser.error("invalid relation provided")
+
+	lexicalSenseID = db.getID(sourceID,"lexicalSense")
+	db.insertSenseReference(lexicalSenseID,relation,target,True)
+	print("Stored sense reference")
 
 elif args.action == "add" and args.mode == "definition":
 	definition = validateInput(argsdict, "definition")

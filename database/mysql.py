@@ -29,6 +29,7 @@ class Database:
 		self.posses = {}
 		self.languages = {}
 		self.morphosyntactics = {}
+		self.senserelations = []
 
 
 	def connect(self):
@@ -61,6 +62,14 @@ class Database:
 			key = row["property"] + ":" + row["value"]
 			self.morphosyntactics[key] = row["id"]
 		c.close()
+
+
+	def setSenseRelations(self):
+		""" Should not be manual, but for now there is validation. """
+		self.senserelations.extend( ["ontolex:reference"] )
+		self.senserelations.extend( ["skos:broader", "skos:related", "skos:exactMatch"] )
+		self.senserelations.extend( ["skos-thes:broaderInstantial", "skos-thes:broaderPartitive"] )
+		self.senserelations.extend( ["lexinfo:antonym"] )
 
 
 	def setLexicalEntries(self):
@@ -387,6 +396,17 @@ class Database:
 		c = self.DB.cursor()
 		query = "INSERT INTO senseDefinition (lexicalSenseID,languageID,value) VALUES (%s,%s,%s)"
 		c.execute(query, (lexicalSenseID,languageID,definition))
+		c.close()
+		if commit:
+			self.DB.commit()
+
+
+	def insertSenseReference(self,lexicalSenseID,relation,reference,commit=False):
+		c = self.DB.cursor()
+		namespace = relation.split(":")[0]
+		property = relation.split(":")[1]
+		query = "INSERT INTO senseReference (lexicalSenseID,namespace,property,reference) VALUES (%s,%s,%s,%s)"
+		c.execute(query, (lexicalSenseID,namespace,property,reference))
 		c.close()
 		if commit:
 			self.DB.commit()
