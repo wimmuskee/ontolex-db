@@ -1,0 +1,8 @@
+DROP TABLE IF EXISTS component;
+
+CREATE TABLE component (
+componentID INT UNSIGNED NOT NULL PRIMARY KEY auto_increment,
+identifier VARCHAR(150) NOT NULL UNIQUE,
+lexicalEntryID INT UNSIGNED NOT NULL,
+lexicalFormID INT UNSIGNED NOT NULL
+);

@@ -26,6 +26,8 @@ class Database:
 		self.lexicalProperties = []
 		self.lexicalSenses = []
 		self.senseReferences = []
+		self.lexicalEntryComponents = []
+		self.components = []
 		self.lexicalEntryLabels = {}
 		self.lexicalSenseDefinitions = {}
 		self.posses = {}
@@ -153,6 +155,7 @@ class Database:
 			self.lexicalProperties.append(propertydict)
 		c.close()
 
+
 	def setLexicalSenses(self):
 		c = self.DB.cursor()
 		query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
@@ -201,6 +204,51 @@ class Database:
 				propertydict["references"] = c.fetchall()
 
 			self.senseReferences.append( propertydict )
+		c.close()
+
+
+	def setLexicalComponents(self):
+		c = self.DB.cursor()
+		query = "SELECT lex.identifier AS lex_identifier, comp.identifier AS comp_identifier, position FROM lexicalEntryComponent AS lexcomp \
+			LEFT JOIN lexicalEntry AS lex ON lexcomp.lexicalEntryID = lex.lexicalEntryID \
+			LEFT JOIN component AS comp ON lexcomp.componentID = comp.componentID"
+		c.execute(query)
+		self.lexicalEntryComponents.extend(c.fetchall())
+		c.close()
+
+
+	def setLexicalComponentsByID(self,lexicalEntryID):
+		c = self.DB.cursor()
+		query = "SELECT lex.identifier AS lex_identifier, comp.identifier AS comp_identifier, position FROM lexicalEntryComponent AS lexcomp \
+			LEFT JOIN lexicalEntry AS lex ON lexcomp.lexicalEntryID = lex.lexicalEntryID \
+			LEFT JOIN component AS comp ON lexcomp.componentID = comp.componentID \
+			WHERE lexcomp.lexicalEntryID = %s"
+		c.execute(query, (lexicalEntryID))
+		self.lexicalEntryComponents.extend(c.fetchall())
+		c.close()
+
+
+	def setComponents(self):
+		c = self.DB.cursor()
+		query = "SELECT DISTINCT comp.identifier AS comp_identifier, lex.identifier AS lex_identifier, form.identifier AS form_identifier FROM component AS comp \
+			LEFT JOIN lexicalEntry AS lex ON comp.lexicalEntryID = lex.lexicalEntryID \
+			LEFT JOIN lexicalForm AS form ON comp.lexicalFormID = form.lexicalFormID"
+		c.execute(query)
+		self.components.extend(c.fetchall())
+		c.close()
+
+
+	def setComponentsByID(self,lexicalEntryID,lang_id):
+		c = self.DB.cursor()
+		query = "SELECT DISTINCT comp.identifier AS comp_identifier, lex.identifier AS lex_identifier, form.identifier AS form_identifier, rep.value AS rep_value FROM component AS comp \
+			LEFT JOIN lexicalEntryComponent AS lexcomp ON comp.componentID = lexcomp.componentID \
+			LEFT JOIN lexicalEntry AS lex ON comp.lexicalEntryID = lex.lexicalEntryID \
+			LEFT JOIN lexicalForm AS form ON comp.lexicalFormID = form.lexicalFormID \
+			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
+			WHERE lexcomp.lexicalEntryID = %s \
+			AND rep.languageID = %s"
+		c.execute(query, (lexicalEntryID,lang_id))
+		self.components.extend(c.fetchall())
 		c.close()
 
 

@@ -84,6 +84,8 @@ if identifier:
 	db.setLexicalForm(identifier,db.languages[language])
 	db.setLexicalEntryLabels()
 	db.setLexicalSensesByID(identifier)
+	db.setLexicalComponentsByID(identifier)
+	db.setComponentsByID(identifier,db.languages[language])
 elif pos:
 	db.setLexicalEntriesByPOS(db.posses[pos])
 	db.setLexicalFormsByEntries(db.languages[language])
@@ -94,6 +96,8 @@ else:
 	db.setLexicalForms(db.languages[language])
 	db.setLexicalEntryLabels()
 	db.setLexicalSenses()
+	db.setLexicalComponents()
+	db.setComponents()
 
 db.setLexicalFormProperties()
 db.setSenseReferences()
@@ -108,6 +112,8 @@ if format == "xml" or format == "turtle":
 	output.setLexicalProperties(db.lexicalProperties)
 	output.setLexicalSenses(db.lexicalSenses,db.lexicalEntryLabels,db.lexicalSenseDefinitions)
 	output.setSenseReferences(db.senseReferences)
+	output.setLexicalComponents(db.lexicalEntryComponents)
+	output.setComponents(db.components)
 
 elif format == "skos":
 	from format.skos import SKOSGraph

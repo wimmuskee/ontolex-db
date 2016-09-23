@@ -12,11 +12,14 @@ class LexiconGraph(RDFGraph):
 		global ONTOLEX
 		global LEXINFO
 		global SKOSTHES
+		global DECOMP
 		ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 		LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
 		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
+		DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
 		self.g.bind("ontolex", ONTOLEX)
 		self.g.bind("lexinfo", LEXINFO)
+		self.g.bind("decomp", DECOMP)
 
 		if self.buildpackage:
 			global LIME
@@ -91,6 +94,35 @@ class LexiconGraph(RDFGraph):
 
 				elif reference["namespace"] == "lexinfo":
 					self.g.add((lexicalSenseIdentifier,URIRef(LEXINFO + reference["property"]),URIRef(reference["reference"])))
+
+
+	def setLexicalComponents(self,lexicalComponents):
+		for lexicalComponent in lexicalComponents:
+			lexicalEntryID = URIRef(lexicalComponent["lex_identifier"])
+			componentID = URIRef(lexicalComponent["comp_identifier"])
+			positionPreficate = URIRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#_" + str(lexicalComponent["position"]))
+
+			self.g.add((lexicalEntryID,DECOMP.constituent,componentID))
+			self.g.add((lexicalEntryID,positionPreficate,componentID))
+
+
+	def setComponents(self,components):
+		for component in components:
+			lexicalEntryID = URIRef(component["lex_identifier"])
+			componentID = URIRef(component["comp_identifier"])
+			lexicalFormID = URIRef(component["form_identifier"])
+			value = str(self.g.value(lexicalFormID,ONTOLEX.writtenRep,None))
+			
+			self.g.add((componentID,RDF.type,DECOMP.Component))
+			self.g.add((componentID,DECOMP.correspondsTo,lexicalEntryID))
+			if "rep_value" in component:
+				self.g.add((componentID,RDFS.label,Literal(component["rep_value"], lang=self.language)))
+			elif value:
+				# add the value and look up the lexinfo properties in the graph
+				self.g.add((componentID,RDFS.label,Literal(value, lang=self.language)))
+				for s,p,o in self.g.triples((lexicalFormID,None,None)):
+					if str(p)[:44] == "http://www.lexinfo.net/ontology/2.0/lexinfo#":
+						self.g.add((componentID,p,o))
 
 
 	def setInverses(self):
