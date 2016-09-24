@@ -465,3 +465,40 @@ class Database:
 		c.close()
 		if commit:
 			self.DB.commit()
+
+
+	def insertComponent(self,lexicalEntryID,lexicalFormID,commit=False):
+		c = self.DB.cursor()
+		
+		# we should have a checkExists for this
+		query = "SELECT componentID FROM component WHERE lexicalEntryID = %s AND lexicalFormID = %s"
+		c.execute(query,(lexicalEntryID,lexicalFormID))
+		row = c.fetchone()
+		
+		if row:
+			return row["componentID"]
+		else:
+			identifier = "urn:uuid:" + str(uuid.uuid4())
+			query = "INSERT INTO component (identifier,lexicalEntryID,lexicalFormID) VALUES (%s,%s,%s)"
+			c.execute(query,(identifier,lexicalEntryID,lexicalFormID))
+			componentID = c.lastrowid
+			c.close()
+			if commit:
+				self.DB.commit()
+			return componentID
+
+
+	def insertLexicalEntryComponent(self,lexicalEntryID,componentID,position,commit=False):
+		c = self.DB.cursor()
+		
+		# more another checkExists, where nothing is returned
+		query = "SELECT * FROM lexicalEntryComponent WHERE lexicalEntryID = %s AND componentID = %s AND position = %s"
+		c.execute(query,(lexicalEntryID,componentID,position))
+		row = c.fetchone()
+		
+		if not row:
+			query = "INSERT INTO lexicalEntryComponent (lexicalEntryID,componentID,position) VALUES (%s,%s,%s)"
+			c.execute(query,(lexicalEntryID,componentID,position))
+			c.close()
+			if commit:
+				self.DB.commit()

@@ -12,6 +12,7 @@ parser.add_argument('--dont-ask', help="asume yes at questions", action="store_t
 rules = parser.add_argument_group('rules')
 rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", action="store_true")
 rules.add_argument('--adjective-material-nouns', help="find adjectives for material nouns", action="store_true")
+rules.add_argument('--noun-components', nargs=1, help="find components in nouns", metavar="componentID", dest="noun_components")
 rules.add_argument('--noun-genders', help="find gender for noun forms", action="store_true")
 rules.add_argument('--noun-plurals', help="find plurals for canonical nouns", action="store_true")
 rules.add_argument('--verb-related-nouns', help="find related nouns for verbs", action="store_true")
@@ -37,6 +38,9 @@ if args.adjective_antonyms:
 
 if args.adjective_material_nouns:
 	r.adjectiveMaterialNouns()
+
+if args.noun_components:
+	r.nounComponents(args.noun_components[0])
 
 if args.noun_genders:
 	r.nounGender()

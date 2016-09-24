@@ -21,10 +21,12 @@ class RulesetCommon:
 
 		global ONTOLEX
 		global LEXINFO
+		global DECOMP
 		global LIME
 
 		ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 		LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
+		DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
 		LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
 
 		self.g = Graph()
@@ -39,6 +41,41 @@ class RulesetCommon:
 		self.lexicalEntries = {}
 		# store lexicalForms, ID is key, value is dict with label and lexicalEntryID
 		self.lexicalForms = {}
+
+
+	def nounComponents(self,componentID):
+		""" Try to match a component to a postfix on nouns."""
+		searchterm = self.getLabel(componentID)
+		searchtermCount = len(searchterm)
+
+		# only add those entries that postfix match on the searchterm, and do not have a match to the component.
+		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.noun):
+			label = self.getLabel(lexicalEntryID)
+			if len(label) > searchtermCount and label[-searchtermCount:] == searchterm:
+				if not (URIRef(lexicalEntryID),DECOMP.constituent,URIRef(componentID)) in self.g:
+					self.lexicalEntries[str(lexicalEntryID)] = label
+
+		# now see if we can find a match for the prefix
+		for lexicalEntryID in self.lexicalEntries:
+			label = self.lexicalEntries[lexicalEntryID]
+			prefix = label[:-searchtermCount]
+			
+			if (None,ONTOLEX.writtenRep,Literal(prefix, lang=self.language)) in self.g:
+				# for each found form, we need to ask to add the specific form and entry
+				for lexicalFormID in self.g.subjects(ONTOLEX.writtenRep,Literal(prefix, lang=self.language)):
+					formEntryID = self.g.value(None,ONTOLEX.lexicalForm,URIRef(lexicalFormID))
+					formEntryPos = self.g.value(URIRef(formEntryID),LEXINFO.partOfSpeech,None)
+					
+					if self.userCheck("components", label, prefix + " - " + str(formEntryPos)[44:]):
+						form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
+						entry_id = self.db.getID(str(formEntryID),"lexicalEntry")
+						post_comp_id = self.db.getID(componentID,"component")
+						base_entry_id = self.db.getID(str(lexicalEntryID),"lexicalEntry")
+						pre_comp_id = self.db.insertComponent(entry_id,form_id,True)
+						self.db.insertLexicalEntryComponent(base_entry_id,pre_comp_id,1)
+						self.db.insertLexicalEntryComponent(base_entry_id,post_comp_id,2,True)
+			else:
+				print("prefix not found as writtenRep: " + prefix)
 
 
 	def userCheck(self,question,source,target):
