@@ -355,6 +355,19 @@ class Database:
 		return lexicalSenseID
 
 
+	def storeComponent(self,lexicalFormID):
+		""" Stores component, based on lexicalFormID. """
+		c = self.DB.cursor()
+		query = "SELECT lexicalEntryID FROM lexicalForm WHERE lexicalFormID = %s"
+		c.execute(query,(lexicalFormID))
+		row = c.fetchone()
+		
+		if row:
+			return self.insertComponent(row["lexicalEntryID"],lexicalFormID,True)
+		else:
+			return "failed"
+
+
 	def findLexicalEntry(self,word,pos_id):
 		c = self.DB.cursor()
 		query = "SELECT lexicalEntryID FROM lexicalEntry WHERE value = %s AND partOfSpeechID = %s"
