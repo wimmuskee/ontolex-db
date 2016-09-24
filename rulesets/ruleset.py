@@ -78,6 +78,12 @@ class RulesetCommon:
 				print("prefix not found as writtenRep: " + prefix)
 
 
+	def refreshComponents(self):
+		components = self.getTopUsedComponents()
+		for c in components:
+			self.nounComponents(c)
+
+
 	def userCheck(self,question,source,target):
 		if not target:
 			return False
@@ -146,3 +152,20 @@ class RulesetCommon:
 			if (URIRef(lexicalFormID),checkPredicate,checkObject) in self.g:
 				return True
 		return False
+
+
+	def getTopUsedComponents(self,min_threshold=2):
+		components = {}
+		for s,p,o in self.g.triples((None,DECOMP.constituent,None)):
+			componentID = str(o)
+			if not componentID in components:
+				components[componentID] = 0
+		
+			components[componentID] = components[componentID] + 1
+
+		components_top = {}
+		for i in components:
+			if components[i] > min_threshold:
+				components_top[i] = components[i]
+
+		return components_top

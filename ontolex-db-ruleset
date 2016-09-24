@@ -12,7 +12,8 @@ parser.add_argument('--dont-ask', help="asume yes at questions", action="store_t
 rules = parser.add_argument_group('rules')
 rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", action="store_true")
 rules.add_argument('--adjective-material-nouns', help="find adjectives for material nouns", action="store_true")
-rules.add_argument('--noun-components', nargs=1, help="find components in nouns", metavar="componentID", dest="noun_components")
+rules.add_argument('--noun-components', nargs=1, help="init finding components in nouns", metavar="componentID", dest="noun_components")
+rules.add_argument('--noun-components-refresh', help="walk all frequently used components and recheck", action="store_true")
 rules.add_argument('--noun-genders', help="find gender for noun forms", action="store_true")
 rules.add_argument('--noun-plurals', help="find plurals for canonical nouns", action="store_true")
 rules.add_argument('--verb-related-nouns', help="find related nouns for verbs", action="store_true")
@@ -32,7 +33,7 @@ if args.dont_ask:
 mod = import_module('rulesets.' + args.language)
 Ruleset = getattr(mod, "Ruleset")
 r = Ruleset(config,dont_ask)
-
+r.getTopUsedComponents()
 if args.adjective_antonyms:
 	r.adjectiveAntonyms()
 
@@ -42,6 +43,9 @@ if args.adjective_material_nouns:
 if args.noun_components:
 	r.nounComponents(args.noun_components[0])
 
+if args.noun_components_refresh:
+	r.refreshComponents()
+
 if args.noun_genders:
 	r.nounGender()
 
@@ -50,3 +54,4 @@ if args.noun_plurals:
 
 if args.verb_related_nouns:
 	r.verbRelatedNouns()
+
