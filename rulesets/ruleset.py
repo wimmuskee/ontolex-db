@@ -82,6 +82,7 @@ class RulesetCommon:
 		components = self.getTopUsedComponents()
 		for c in components:
 			self.nounComponents(c)
+			self.self.lexicalEntries = []
 
 
 	def userCheck(self,question,source,target):

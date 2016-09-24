@@ -7,6 +7,7 @@ from nltk.corpus import alpino
 ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
 SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
+DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
 LANGUAGE = "nl"
 
 
@@ -16,6 +17,7 @@ class Ruleset(RulesetCommon):
 		global ONTOLEX
 		global LEXINFO
 		global SKOSTHES
+		global DECOMP
 
 		# for now use alpino, we should be able to configure this
 		self.worddb = set(alpino.words())
@@ -173,6 +175,19 @@ class Ruleset(RulesetCommon):
 			if self.userCheck("geslacht",label,guess_gender):
 				form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
 				self.db.insertFormProperty(form_id,self.db.morphosyntactics["gender:" + guess_gender],True)
+
+
+	def nounComponentsFind(self):
+		pos_id = self.db.posses["noun"]
+		components = self.getTopUsedComponents()
+		for componentID in components:
+			label = self.getLabel(componentID)
+			label_len = len(label)
+			
+			for word in self.worddb:
+				if len(word) > label_len and word[-label_len:] == label and not self.checkLexicalEntryExists(word,LEXINFO.noun):
+					if self.userCheck("add as noun", label, word):
+						self.db.storeCanonical(word,self.lang_id,pos_id)
 
 
 	def __getNounGenderBySense(self,lexicalEntryID,geoSenseIDs):

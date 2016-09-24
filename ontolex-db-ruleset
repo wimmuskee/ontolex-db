@@ -14,6 +14,7 @@ rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", a
 rules.add_argument('--adjective-material-nouns', help="find adjectives for material nouns", action="store_true")
 rules.add_argument('--noun-components', nargs=1, help="init finding components in nouns", metavar="componentID", dest="noun_components")
 rules.add_argument('--noun-components-refresh', help="walk all frequently used components and recheck", action="store_true")
+rules.add_argument('--noun-components-find', help="find new nouns based on frequently used components", action="store_true")
 rules.add_argument('--noun-genders', help="find gender for noun forms", action="store_true")
 rules.add_argument('--noun-plurals', help="find plurals for canonical nouns", action="store_true")
 rules.add_argument('--verb-related-nouns', help="find related nouns for verbs", action="store_true")
@@ -45,6 +46,9 @@ if args.noun_components:
 
 if args.noun_components_refresh:
 	r.refreshComponents()
+
+if args.noun_components_find:
+	r.nounComponentsFind()
 
 if args.noun_genders:
 	r.nounGender()
