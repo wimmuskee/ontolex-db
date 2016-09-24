@@ -24,6 +24,7 @@ class Ruleset(RulesetCommon):
 		self.language = LANGUAGE
 		self.lang_id = self.db.languages[LANGUAGE]
 		self.vowels = [ "a", "e", "i", "u", "o" ]
+		self.double_chars = [ "oe", "ou", "au", "ij", "ui", "ie", "ei", "eu", "oi", "ai" ]
 
 
 	def adjectiveAntonyms(self):
@@ -113,6 +114,61 @@ class Ruleset(RulesetCommon):
 					self.db.addSense(source_value,source_pos_id,"skos","related",guess_noun,target_pos_id)
 				else:
 					print("either source or target has a sense, not storing relation")
+
+
+	def verbStems(self):
+		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.verb):
+			use = True
+			for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.lexicalForm):
+				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.present) in self.g and (URIRef(lexicalFormID),LEXINFO.person,LEXINFO.firstPerson) in self.g:
+					use = False
+			if use:
+				self.lexicalEntries[str(lexicalEntryID)] = self.getLabel(lexicalEntryID)
+
+		for lexicalEntryID in self.lexicalEntries:
+			label = self.lexicalEntries[lexicalEntryID]
+			base = label[:-2]
+			guess_stem = ""
+
+			# roeien, hooien and bijten, roepen
+			if base[-2:] in self.double_chars or base[-3:-1] in self.double_chars:
+				guess_stem = base
+
+			# beschermen, zetten
+			elif not base[-2:-1] in self.vowels and not base[-1:] in self.vowels:
+				if base[-2:-1] == base[-1:]:
+					guess_stem = base[:-1]
+				else:
+					guess_stem = base
+
+			# hanteren, benaderen, keren, handelen, uitwisselen, delen, nemen, ademen
+			elif base[-2:] in ["er","em","el","en"]:
+				print("do this manually: " + label)
+				continue
+
+			# horen, vermenigvuldigen
+			elif base[-2:-1] in self.vowels and not base[-1:] in self.vowels:
+				if base[-2:-1] in ["a","o","e"]:
+					guess_stem = base[:-1] + base[-2:-1] + base[-1:]
+				else:
+					guess_stem = base
+
+			else:
+				print("don't know: " + label)
+				continue
+
+			if guess_stem[-1:] == "v":
+				guess_stem = guess_stem[:-1] + "f"
+			elif guess_stem[-1:] == "z":
+				guess_stem = guess_stem[:-1] + "s"
+
+			if guess_stem in self.worddb:
+				if self.userCheck("stam", label, "ik " + guess_stem):
+					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+					form_id = self.db.storeOtherForm(lex_id,guess_stem,self.lang_id)
+					self.db.insertFormProperty(form_id,self.db.morphosyntactics["number:singular"],True)
+					self.db.insertFormProperty(form_id,self.db.morphosyntactics["tense:present"],True)
+					self.db.insertFormProperty(form_id,self.db.morphosyntactics["person:firstPerson"],True)
 
 
 	def nounPlurals(self):

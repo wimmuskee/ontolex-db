@@ -18,6 +18,7 @@ rules.add_argument('--noun-components-find', help="find new nouns based on frequ
 rules.add_argument('--noun-genders', help="find gender for noun forms", action="store_true")
 rules.add_argument('--noun-plurals', help="find plurals for canonical nouns", action="store_true")
 rules.add_argument('--verb-related-nouns', help="find related nouns for verbs", action="store_true")
+rules.add_argument('--verb-stems', help="find stems for verbs", action="store_true")
 
 
 args = parser.parse_args()
@@ -59,3 +60,5 @@ if args.noun_plurals:
 if args.verb_related_nouns:
 	r.verbRelatedNouns()
 
+if args.verb_stems:
+	r.verbStems()
