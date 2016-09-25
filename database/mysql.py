@@ -265,6 +265,7 @@ class Database:
 		c = self.DB.cursor()
 		query = "SELECT lexicalSenseID FROM lexicalSense WHERE lexicalEntryID = %s"
 		c.execute(query,(lexicalEntryID))
+		row = c.fetchone()
 		c.close()
 		return row["lexicalSenseID"]
 

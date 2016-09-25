@@ -4,6 +4,7 @@ from database.mysql import Database
 from rdflib import Graph
 from rdflib import URIRef, Literal, Namespace
 from rdflib.namespace import SKOS, RDFS, RDF, XSD
+from rdflib.plugins.sparql import prepareQuery
 
 """ The pattern all rulesets should follow.
 1. select the entries we want to change
@@ -88,6 +89,48 @@ class RulesetCommon:
 			self.lexicalEntries = {}
 
 
+	def nounComponentsSenses(self):
+		"""For each component, find used compounds and see if they are narrower in meaning."""
+		self.setQuery("countSenses")
+		
+		components = self.getTopUsedComponents()
+		for componentID in components:
+			componentLexicalEntryID = self.g.value(URIRef(componentID),DECOMP.correspondsTo,None)
+			#lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+			componentLabel = self.getLabel(componentLexicalEntryID)
+			componentSenseCount = int(self.g.query(self.q_countSenses, initBindings={'lexicalEntryID': URIRef(componentLexicalEntryID)}).bindings[0]["?count"])
+			if componentSenseCount != 1:
+				print("either too few or too many senses (" + str(componentSenseCount) + "): " + componentLabel)
+				continue
+			else:
+				targetSenseID = str(self.g.value(URIRef(componentLexicalEntryID),ONTOLEX.sense,None))
+
+				# find compounds and their senses
+				for compoundLexicalEntryID in self.g.subjects(DECOMP.constituent,URIRef(componentID)):
+					compoundLabel = self.getLabel(compoundLexicalEntryID)
+					compound_lex_id = self.db.getID(compoundLexicalEntryID,"lexicalEntry")
+					compoundSenseCount = int(self.g.query(self.q_countSenses, initBindings={'lexicalEntryID': URIRef(compoundLexicalEntryID)}).bindings[0]["?count"])
+					if compoundSenseCount == 0:
+						if self.userCheck("add sense", "compoundword", compoundLabel):
+							compound_sense_id = self.db.insertLexicalSense(compound_lex_id,True)
+						else:
+							continue
+					elif compoundSenseCount == 1:
+						# check if relation exists
+						compoundLexicalSenseID = self.g.value(URIRef(compoundLexicalEntryID),ONTOLEX.sense,None)
+						if (URIRef(compoundLexicalSenseID),SKOS.broader,URIRef(targetSenseID)) in self.g:
+							print("relation exists: " + compoundLabel)
+							continue
+						compound_sense_id = self.db.getLexicalSenseID(compound_lex_id)
+					else:
+						print("target has multiple senses: " + compoundLabel)
+						continue
+
+					# we have a compound_sense_id, so we can add the relation
+					if self.userCheck("add broader", componentLabel, compoundLabel):
+						self.db.insertSenseReference(compound_sense_id,"skos:broader",targetSenseID,True)
+
+
 	def userCheck(self,question,source,target):
 		if not target:
 			return False
@@ -144,6 +187,7 @@ class RulesetCommon:
 				return True
 		return False
 
+
 	def findLexicalEntry(self,word,partOfSpeech):
 		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
 			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=self.language)) in self.g:
@@ -156,6 +200,20 @@ class RulesetCommon:
 			if (URIRef(lexicalFormID),checkPredicate,checkObject) in self.g:
 				return True
 		return False
+
+
+	# we have this in prepared form, but not sure which version i will use
+	def countLexicalenses(self,lexicalEntryIdentifier):
+		c = 0
+		for lexicalSenseIdentifier in self.g.objects(URIRef(lexicalEntryIdentifier),ONTOLEX.sense):
+			c = c + 1
+		return c
+
+
+	def setQuery(self,query):
+		""" Set prepared queries. """
+		if query == "countSenses":
+			self.q_countSenses = prepareQuery("""SELECT (count(*) as ?count) WHERE { ?lexicalEntryID ontolex:sense ?o }""", initNs = {"ontolex": ONTOLEX})
 
 
 	def getTopUsedComponents(self,min_threshold=2):
