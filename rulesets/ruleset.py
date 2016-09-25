@@ -31,6 +31,9 @@ class RulesetCommon:
 
 		self.g = Graph()
 		self.g.parse("export.ttl", format="turtle")
+		self.g.bind("ontolex", ONTOLEX)
+		self.g.bind("lexinfo", LEXINFO)
+		self.g.bind("decomp", DECOMP)
 		# later, check if language is correct
 		# lexicon definition with lime language
 		# later also check on first lexical entry rdfs language
@@ -157,16 +160,16 @@ class RulesetCommon:
 
 	def getTopUsedComponents(self,min_threshold=2):
 		components = {}
-		for s,p,o in self.g.triples((None,DECOMP.constituent,None)):
-			componentID = str(o)
-			if not componentID in components:
-				components[componentID] = 0
-		
-			components[componentID] = components[componentID] + 1
+		result = self.g.query( """SELECT ?componentID (COUNT(?componentID) as ?countComponentID) WHERE {
+			?lexicalEntry decomp:constituent ?componentID . }
+			GROUP BY ?componentID
+			ORDER BY desc(?countComponentID)""")
 
-		components_top = {}
-		for i in components:
-			if components[i] > min_threshold:
-				components_top[i] = components[i]
+		for row in result:
+			componentID = str(row[0])
+			count = int(row[1])
+			if count > min_threshold:
+				components[componentID] = count
 
-		return components_top
+		return components
+
