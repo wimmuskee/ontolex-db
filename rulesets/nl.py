@@ -3,6 +3,7 @@
 from rdflib import URIRef, Literal, Namespace
 from rulesets.ruleset import RulesetCommon
 from nltk.corpus import alpino
+from random import randint
 
 ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
@@ -143,8 +144,12 @@ class Ruleset(RulesetCommon):
 
 			# hanteren, benaderen, keren, handelen, uitwisselen, delen, nemen, ademen
 			elif base[-2:] in ["er","em","el","en"]:
-				print("do this manually: " + label)
-				continue
+				# no apparant rule, so check by random choice
+				choice = randint(1,10)
+				if choice > 6:
+					guess_stem = base
+				else:
+					guess_stem = base[:-1] + base[-2:-1] + base[-1:]
 
 			# horen, vermenigvuldigen
 			elif base[-2:-1] in self.vowels and not base[-1:] in self.vowels:
