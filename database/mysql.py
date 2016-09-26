@@ -107,7 +107,7 @@ class Database:
 
 	def setLexicalForms(self,lang_id):
 		c = self.DB.cursor()
-		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier FROM lexicalForm AS form \
+		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier, rep.syllableCount AS syllableCount FROM lexicalForm AS form \
 			LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
 			WHERE rep.languageID = %s"
@@ -118,7 +118,7 @@ class Database:
 
 	def setLexicalForm(self,lexicalEntryID,lang_id):
 		c = self.DB.cursor()
-		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier FROM lexicalForm AS form \
+		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier, rep.syllableCount AS syllableCount FROM lexicalForm AS form \
 			LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
 			WHERE form.lexicalEntryID = %s \

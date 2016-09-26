@@ -13,13 +13,17 @@ class LexiconGraph(RDFGraph):
 		global LEXINFO
 		global SKOSTHES
 		global DECOMP
+		global ISOCAT
 		ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 		LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
 		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 		DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
+		ISOCAT = Namespace("http://www.isocat.org/datcat/")
+
 		self.g.bind("ontolex", ONTOLEX)
 		self.g.bind("lexinfo", LEXINFO)
 		self.g.bind("decomp", DECOMP)
+		self.g.bind("isocat", ISOCAT)
 
 		if self.buildpackage:
 			global LIME
@@ -54,6 +58,10 @@ class LexiconGraph(RDFGraph):
 
 			self.g.add((lexicalFormIdentifier,RDF.type,ONTOLEX.Form))
 			self.g.add((lexicalFormIdentifier,ONTOLEX.writtenRep,Literal(form["rep_value"], lang=self.language)))
+
+			if form["syllableCount"]:
+				self.g.add((lexicalFormIdentifier,URIRef(ISOCAT + "DC-499"),Literal(form["syllableCount"], datatype=XSD.integer)))
+
 
 
 	def setLexicalProperties(self,lexicalProperties):
