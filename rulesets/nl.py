@@ -44,7 +44,7 @@ class Ruleset(RulesetCommon):
 			guess_antonym = "on" + source_value
 
 			if self.userCheck("tegenstelling", source_value, guess_antonym):
-				sensecount = self.__countLexicalenses(lexicalEntryIdentifier)
+				sensecount = self.countLexicalenses(lexicalEntryIdentifier)
 				if sensecount > 1:
 					print("multiple senses detected, store manually")
 					continue
@@ -106,10 +106,10 @@ class Ruleset(RulesetCommon):
 					targetSenseCount = 0
 				else:
 					targetLexicalEntryID = self.findLexicalEntry(guess_noun,LEXINFO.noun)
-					targetSenseCount = self.__countLexicalenses(targetLexicalEntryID)
+					targetSenseCount = self.countLexicalenses(targetLexicalEntryID)
 				
 				# this is horrific otherwise to check, think of something better later
-				sensecount = self.__countLexicalenses(lexicalEntryID)
+				sensecount = self.countLexicalenses(lexicalEntryID)
 				if sensecount == 0 and targetSenseCount == 0:
 					self.db.addSense(source_value,source_pos_id,"skos","related",guess_noun,target_pos_id)
 				else:
@@ -241,7 +241,7 @@ class Ruleset(RulesetCommon):
 			label_len = len(label)
 			
 			for word in self.worddb:
-				if len(word) > label_len and word[-label_len:] == label and not self.checkLexicalEntryExists(word,LEXINFO.noun):
+				if len(word) > label_len and word[-label_len:] == label and not word[0].isupper() and not self.checkLexicalEntryExists(word,LEXINFO.noun):
 					if self.userCheck("add as noun", label, word):
 						self.db.storeCanonical(word,self.lang_id,pos_id)
 
@@ -251,13 +251,6 @@ class Ruleset(RulesetCommon):
 			if self.__checkSenseRelation(URIRef(lexicalEntryID),SKOSTHES.broaderInstantial,URIRef(geoSenseID)):
 				return "neuter"
 		return ""
-
-
-	def __countLexicalenses(self,lexicalEntryIdentifier):
-		c = 0
-		for lexicalSenseIdentifier in self.g.objects(URIRef(lexicalEntryIdentifier),ONTOLEX.sense):
-			c = c + 1
-		return c
 
 
 	def __checkSenseRelation(self,lexicalEntryID,checkPredicate,checkObject):

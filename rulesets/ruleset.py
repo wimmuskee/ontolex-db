@@ -96,7 +96,6 @@ class RulesetCommon:
 		components = self.getTopUsedComponents()
 		for componentID in components:
 			componentLexicalEntryID = self.g.value(URIRef(componentID),DECOMP.correspondsTo,None)
-			#lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
 			componentLabel = self.getLabel(componentLexicalEntryID)
 			componentSenseCount = int(self.g.query(self.q_countSenses, initBindings={'lexicalEntryID': URIRef(componentLexicalEntryID)}).bindings[0]["?count"])
 			if componentSenseCount != 1:
