@@ -6,7 +6,7 @@ from importlib import import_module
 from functions.common import validateInput, getConfig
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db rulesets')
-parser.add_argument('language', help="language key")
+parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
 parser.add_argument('--dont-ask', help="asume yes at questions", action="store_true")
 rules = parser.add_argument_group('rules')
@@ -25,6 +25,7 @@ rules.add_argument('--verb-stems', help="find stems for verbs", action="store_tr
 args = parser.parse_args()
 argsdict = vars(args)
 config = getConfig(argsdict)
+language = validateInput(argsdict,"language",config["language"])
 dont_ask = False
 
 if args.dont_ask:
@@ -33,10 +34,10 @@ if args.dont_ask:
 
 # import language module
 # check for language existence later
-mod = import_module('rulesets.' + args.language)
+mod = import_module('rulesets.' + language)
 Ruleset = getattr(mod, "Ruleset")
 r = Ruleset(config,dont_ask)
-r.getTopUsedComponents()
+
 if args.adjective_antonyms:
 	r.adjectiveAntonyms()
 

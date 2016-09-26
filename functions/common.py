@@ -12,7 +12,7 @@ def getConfig(parserArgs):
 		return json.loads(f.read())
 
 
-def validateInput(parserArgs,key):
+def validateInput(parserArgs,key,default=""):
 	""" Simple validation for a parser argument. Return value only when non empty value is found for key. """
 	if not parserArgs[key] is None:
 		value = parserArgs[key][0].strip(' \t\n\r')
@@ -20,4 +20,4 @@ def validateInput(parserArgs,key):
 		if value:
 			return value
 
-	return ""
+	return default

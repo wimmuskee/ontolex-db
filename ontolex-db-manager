@@ -8,7 +8,7 @@ from functions.common import validateInput, getConfig
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
 parser.add_argument('action', choices=['add','update'], help="main operating mode, add or update stuff")
-parser.add_argument('mode', choices=['entry','form','formprops','sense','definition','relation'], help="where to operate")
+parser.add_argument('mode', choices=['entry','form','formprops','sense','definition','relation','component'], help="where to operate")
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='path', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
 commongroup = parser.add_argument_group('common options')
@@ -28,6 +28,7 @@ sensegroup.add_argument('-t', '--target', nargs=1, help='sense relation target',
 args = parser.parse_args()
 argsdict = vars(args)
 config = getConfig(argsdict)
+language = validateInput(argsdict,"language",config["language"])
 
 # connect to database and set all vocabularies
 db = Database(config)
@@ -38,10 +39,6 @@ db.setMorphoSyntactics()
 db.setSenseRelations()
 
 # some generic validation
-language = config["language"]
-if args.language:
-	language = args.language[0]
-
 if language not in db.languages:
 	parser.error("invalid language: " + language)
 
@@ -122,6 +119,11 @@ elif args.action == "add" and args.mode == "definition":
 	lexicalSenseID = db.getID(sourceID,"lexicalSense")
 	db.insertLexicalSenseDefinition(lexicalSenseID,db.languages[language],definition,True)
 	print("definition stored: " + definition)
+
+elif args.action == "add" and args.mode == "component":
+	lexicalFormID = db.getID(sourceID,"lexicalForm")
+	componentID = db.storeComponent(lexicalFormID)
+	print("Stored component: " + str(componentID))
 
 else:
 	print("something is wrong")

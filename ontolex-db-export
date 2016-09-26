@@ -21,19 +21,17 @@ parser.add_argument('--transitive', help="set transitive relations, implies inve
 
 args = parser.parse_args()
 argsdict = vars(args)
-format = "turtle"
 license = ""
 config = getConfig(argsdict)
 identifier = validateInput(argsdict,"identifier")
 value = validateInput(argsdict,"value")
 pos = validateInput(argsdict,"pos")
+language = validateInput(argsdict,"language",config["language"])
+format = validateInput(argsdict,"format","turtle")
 buildpackage = False
 buildredundants = False
 buildinverses = False
 buildtransitives = False
-
-if args.format:
-	format = args.format[0]
 
 if args.package:
 	buildpackage = True
@@ -50,16 +48,12 @@ if args.transitive:
 	buildtransitives = True
 
 
-language = config["language"]
-if args.language:
-	language = args.language[0]
-
 if "license" in config:
 	license = config["license"]
 
 db = Database(config)
 db.connect()
-
+db.setLanguages()
 
 if pos:
 	db.setPosses()
@@ -70,13 +64,9 @@ if pos:
 if value and pos:
 	identifier = db.getLexicalEntryID(value,db.posses[pos])
 
-
 # language validation
-db.setLanguages()
 if language not in db.languages:
 	parser.error("invalid language: " + language)
-
-
 
 
 if identifier:
