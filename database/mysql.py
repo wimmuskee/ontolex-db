@@ -516,3 +516,11 @@ class Database:
 			c.close()
 			if commit:
 				self.DB.commit()
+
+
+	def updateSyllableCount(self,lexicalFormID,syllableCount,languageID):
+		c = self.DB.cursor()
+		query = "UPDATE writtenRep SET syllableCount = %s WHERE lexicalFormID = %s AND languageID = %s"
+		c.execute(query,(syllableCount,lexicalFormID,languageID))
+		c.close()
+		self.DB.commit()

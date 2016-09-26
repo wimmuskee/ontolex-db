@@ -9,6 +9,7 @@ ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
 SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
+ISOCAT = Namespace("http://www.isocat.org/datcat/")
 LANGUAGE = "nl"
 
 
@@ -19,6 +20,7 @@ class Ruleset(RulesetCommon):
 		global LEXINFO
 		global SKOSTHES
 		global DECOMP
+		global ISOCAT
 
 		# for now use alpino, we should be able to configure this
 		self.worddb = set(alpino.words())
@@ -84,6 +86,23 @@ class Ruleset(RulesetCommon):
 				if self.userCheck("bijvoegelijk naamwoord", label, guess_adjective):
 					self.db.storeCanonical(guess_adjective,self.lang_id,target_pos_id)
 					self.db.addSense(label,source_pos_id,"skos","related",guess_adjective,target_pos_id)
+
+
+	def formSyllableCounts(self):
+		""" Provide a syllable count for all forms. """
+		result = self.g.query( """SELECT ?lexicalFormID ?formLabel WHERE {
+			?lexicalFormID rdf:type ontolex:Form ;
+				ontolex:writtenRep ?formLabel .
+			OPTIONAL { ?lexicalFormID isocat:DC-499 ?syllableCount }
+			FILTER(!bound(?syllableCount)) }""")
+
+		for row in result:
+			lexicalFormID = str(row[0])
+			label = str(row[1])
+			syllableCount = self.__getSyllableCount(label)
+			if self.userCheck("lettergrepen", label, str(syllableCount)):
+				form_id = self.db.getID(lexicalFormID,"lexicalForm")
+				self.db.updateSyllableCount(form_id,syllableCount,self.lang_id)
 
 
 	def verbRelatedNouns(self):
@@ -272,3 +291,32 @@ class Ruleset(RulesetCommon):
 			  return word[:-3] + word[-3:-2] + word[-1]
 		else:
 			return word
+
+
+	def __getSyllableCount(self,word):
+		""" records changes to a vowel """
+		# still have to work on: gourmette, mythe, recyclen, kampioen, roeien, fluor, opruien, praseodymium, Eritrea, biologie, sensationeel
+		# keep checking and finding rules
+		vowel = 0
+		syllableCount = 0
+		previous_char = ""
+
+		for c in word.lower():
+			if c in self.vowels:
+				if vowel == 0:
+					syllableCount += 1
+					vowel = 1
+				# uranium
+				elif c == "u" and previous_char == "i":
+					syllableCount += 1
+				# neon
+				elif c == "o" and previous_char == "e":
+					syllableCount += 1
+			elif c == "ë":
+				syllableCount += 1
+			else: 
+				vowel = 0 
+
+			previous_char = c
+
+		return syllableCount

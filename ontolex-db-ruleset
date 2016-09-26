@@ -12,6 +12,7 @@ parser.add_argument('--dont-ask', help="asume yes at questions", action="store_t
 rules = parser.add_argument_group('rules')
 rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", action="store_true")
 rules.add_argument('--adjective-material-nouns', help="find adjectives for material nouns", action="store_true")
+rules.add_argument('--form-syllable-counts', help="find syllable count for forms", action="store_true")
 rules.add_argument('--noun-components', nargs=1, help="init finding components in nouns", metavar="componentID", dest="noun_components")
 rules.add_argument('--noun-components-refresh', help="walk all frequently used components and recheck", action="store_true")
 rules.add_argument('--noun-components-find', help="find new nouns based on frequently used components", action="store_true")
@@ -43,6 +44,9 @@ if args.adjective_antonyms:
 
 if args.adjective_material_nouns:
 	r.adjectiveMaterialNouns()
+
+if args.form_syllable_counts:
+	r.formSyllableCounts()
 
 if args.noun_components:
 	r.nounComponents(args.noun_components[0])
