@@ -8,7 +8,7 @@ from functions.common import validateInput, getConfig
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
 parser.add_argument('action', choices=['add','update'], help="main operating mode, add or update stuff")
-parser.add_argument('mode', choices=['entry','form','formprops','sense','definition','relation','component'], help="where to operate")
+parser.add_argument('mode', choices=['entry','form','formprops','sense','definition','relation','component','bulksense'], help="where to operate")
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='path', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
 commongroup = parser.add_argument_group('common options')
@@ -22,6 +22,7 @@ sensegroup = parser.add_argument_group('sense options')
 sensegroup.add_argument('-d', '--definition', nargs=1, help='sense definition', metavar='string', dest='definition')
 sensegroup.add_argument('-r', '--relation', nargs=1, help='sense relation', metavar='namespace:property', dest='relation')
 sensegroup.add_argument('-t', '--target', nargs=1, help='sense relation target', metavar='uri', dest='target')
+sensegroup.add_argument('-i', '--input', nargs=1, help='bulk sense input file', metavar='path', dest='input')
 
 
 # set initial vars
@@ -125,5 +126,34 @@ elif args.action == "add" and args.mode == "component":
 	componentID = db.storeComponent(lexicalFormID)
 	print("Stored component: " + str(componentID))
 
+elif args.action == "add" and args.mode == "bulksense":
+	relation = validateInput(argsdict, "relation")
+	inputfile = validateInput(argsdict, "input")
+	pos = validateInput(argsdict, "pos")
+
+	if not relation or not inputfile or not pos:
+		parser.error("we need a relation, a pos and an input file to continue")
+
+	if relation not in db.senserelations:
+		parser.error("invalid relation provided")
+
+	if pos not in db.posses:
+		parser.error("invalid partOfSpeech: " + pos)
+
+	with open(inputfile) as f:
+		content = f.readlines()
+	
+	for word in content:
+		word = word.strip()
+		lexicalEntryID = db.storeCanonical(word,db.languages[language],db.posses[pos])
+		if not lexicalEntryID:
+			lexicalEntryID = db.findLexicalEntry(word,db.posses[pos])
+
+		db.storeLexicalSense(lexicalEntryID,relation,sourceID)
+
+
+	# add storeCanonical
+	# add lexicalSenseID
+	# add reference
 else:
 	print("something is wrong")
