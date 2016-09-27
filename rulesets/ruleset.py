@@ -18,7 +18,7 @@ class RulesetCommon:
 		self.db.connect()
 		self.db.setPosses()
 		self.db.setLanguages()
-		self.db.setMorphoSyntactics()
+		self.db.setProperties()
 
 		global ONTOLEX
 		global LEXINFO

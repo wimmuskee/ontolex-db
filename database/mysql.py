@@ -2,6 +2,7 @@
 
 import pymysql.cursors
 import uuid
+from urllib.parse import urlparse
 
 """
 Some explanation for this set of functions.
@@ -32,7 +33,7 @@ class Database:
 		self.lexicalSenseDefinitions = {}
 		self.posses = {}
 		self.languages = {}
-		self.morphosyntactics = {}
+		self.properties = {}
 		self.senserelations = []
 
 
@@ -58,13 +59,13 @@ class Database:
 		c.close()
 
 
-	def setMorphoSyntactics(self):
+	def setProperties(self):
 		c = self.DB.cursor()
-		query = "SELECT * FROM morphoSyntacticsVocabulary"
+		query = "SELECT * FROM propertyVocabulary"
 		c.execute(query)
 		for row in c.fetchall():
-			key = row["property"] + ":" + row["value"]
-			self.morphosyntactics[key] = row["id"]
+			key = self.__getUrlPart(row["property"]) + ":" + self.__getUrlPart(row["value"])
+			self.properties[key] = row["id"]
 		c.close()
 
 
@@ -146,7 +147,7 @@ class Database:
 		for form in self.lexicalForms:
 			propertydict = { "form_identifier": form["form_identifier"], "properties": [] }
 			query = "SELECT vocab.property, vocab.value FROM formMorphoSyntactics AS formprop \
-				LEFT JOIN morphoSyntacticsVocabulary AS vocab ON formprop.morphoSyntacticsID = vocab.id \
+				LEFT JOIN propertyVocabulary AS vocab ON formprop.morphoSyntacticsID = vocab.id \
 				WHERE formprop.lexicalFormID = %s"
 			c.execute(query, (form["lexicalFormID"]))
 			if c.rowcount > 0:
@@ -332,7 +333,7 @@ class Database:
 
 		for property in properties:
 			# p in form <property>:<value>
-			self.insertFormProperty(lexicalFormID,self.morphosyntactics[property])
+			self.insertFormProperty(lexicalFormID,self.properties[property])
 		self.DB.commit()
 
 
@@ -524,3 +525,12 @@ class Database:
 		c.execute(query,(syllableCount,lexicalFormID,languageID))
 		c.close()
 		self.DB.commit()
+
+
+	def __getUrlPart(self,url):
+		""" Helper function to get the last part of the property url."""
+		parsed = urlparse(url)
+		if parsed.fragment:
+			return parsed.fragment
+		else:
+			return parsed.path.split('/')[-1]

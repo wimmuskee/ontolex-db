@@ -190,9 +190,9 @@ class Ruleset(RulesetCommon):
 				if self.userCheck("stam", label, "ik " + guess_stem):
 					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
 					form_id = self.db.storeOtherForm(lex_id,guess_stem,self.lang_id)
-					self.db.insertFormProperty(form_id,self.db.morphosyntactics["number:singular"],True)
-					self.db.insertFormProperty(form_id,self.db.morphosyntactics["tense:present"],True)
-					self.db.insertFormProperty(form_id,self.db.morphosyntactics["person:firstPerson"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["tense:present"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["person:firstPerson"],True)
 
 
 	def nounPlurals(self):
@@ -218,12 +218,12 @@ class Ruleset(RulesetCommon):
 					# first get the database identifier and store the plural
 					lex_id = self.db.getID(str(lexicalEntryID),"lexicalEntry")
 					form_id = self.db.storeOtherForm(lex_id,guess_plural,self.lang_id)
-					self.db.insertFormProperty(form_id,self.db.morphosyntactics["number:plural"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["number:plural"],True)
 					
 					# then do the same for the canonicalForm, and store the singular
 					lexicalFormID = self.g.value(URIRef(lexicalEntryID),ONTOLEX.canonicalForm,None)
 					canonical_form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
-					self.db.insertFormProperty(canonical_form_id,self.db.morphosyntactics["number:singular"],True)
+					self.db.insertFormProperty(canonical_form_id,self.db.properties["number:singular"],True)
 
 
 	def nounGender(self):
@@ -248,7 +248,7 @@ class Ruleset(RulesetCommon):
 
 			if self.userCheck("geslacht",label,guess_gender):
 				form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
-				self.db.insertFormProperty(form_id,self.db.morphosyntactics["gender:" + guess_gender],True)
+				self.db.insertFormProperty(form_id,self.db.properties["gender:" + guess_gender],True)
 
 
 	def nounGenderCategory(self):
@@ -269,7 +269,7 @@ class Ruleset(RulesetCommon):
 			if lexicalEntryID in referenceEntryIDs:
 				if self.userCheck("geslacht", label, "neuter"):
 					form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
-					self.db.insertFormProperty(form_id,self.db.morphosyntactics["gender:neuter"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["gender:neuter"],True)
 
 
 	def nounComponentsFind(self):

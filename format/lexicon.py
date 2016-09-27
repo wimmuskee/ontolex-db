@@ -70,7 +70,7 @@ class LexiconGraph(RDFGraph):
 
 			if form["properties"]:
 				for property in form["properties"]:
-					self.g.add((lexicalFormIdentifier,URIRef(LEXINFO + property["property"]),URIRef(LEXINFO + property["value"])))
+					self.g.add((lexicalFormIdentifier,URIRef(property["property"]),URIRef(property["value"])))
 
 
 	def setLexicalSenses(self,lexicalSenses,lexicalEntryLabels,lexicalSenseDefinitions):

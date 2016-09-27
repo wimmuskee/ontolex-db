@@ -36,7 +36,7 @@ db = Database(config)
 db.connect()
 db.setLanguages()
 db.setPosses()
-db.setMorphoSyntactics()
+db.setProperties()
 db.setSenseRelations()
 
 # some generic validation
@@ -85,7 +85,7 @@ elif args.action == "add" and args.mode == "formprops":
 		parser.error("we need properties to add")
 
 	for p in properties:
-		if p not in db.morphosyntactics:
+		if p not in db.properties:
 			parser.error("invalid property provided: " + p)
 	
 	lexicalFormID = db.getID(sourceID,"lexicalForm")
@@ -151,9 +151,5 @@ elif args.action == "add" and args.mode == "bulksense":
 
 		db.storeLexicalSense(lexicalEntryID,relation,sourceID)
 
-
-	# add storeCanonical
-	# add lexicalSenseID
-	# add reference
 else:
 	print("something is wrong")
