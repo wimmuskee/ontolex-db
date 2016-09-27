@@ -19,3 +19,4 @@ INSERT INTO propertyVocabulary (property,value) VALUES ('http://www.lexinfo.net/
 INSERT INTO propertyVocabulary (property,value) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#gender','http://www.lexinfo.net/ontology/2.0/lexinfo#neuter');
 INSERT INTO propertyVocabulary (property,value) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#gender','http://www.lexinfo.net/ontology/2.0/lexinfo#feminine');
 INSERT INTO propertyVocabulary (property,value) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#gender','http://www.lexinfo.net/ontology/2.0/lexinfo#masculine');
+INSERT INTO propertyVocabulary (property,value) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#partOfSpeech','http://www.lexinfo.net/ontology/2.0/lexinfo#diminutiveNoun');
