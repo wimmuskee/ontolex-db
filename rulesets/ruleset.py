@@ -23,11 +23,15 @@ class RulesetCommon:
 		global ONTOLEX
 		global LEXINFO
 		global DECOMP
+		global ISOCAT
+		global SKOSTHES
 		global LIME
 
 		ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 		LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
 		DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
+		ISOCAT = Namespace("http://www.isocat.org/datcat/")
+		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 		LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
 
 		self.g = Graph()
@@ -35,6 +39,9 @@ class RulesetCommon:
 		self.g.bind("ontolex", ONTOLEX)
 		self.g.bind("lexinfo", LEXINFO)
 		self.g.bind("decomp", DECOMP)
+		self.g.bind("skosthes", SKOSTHES)
+		self.g.bind("isocat", ISOCAT)
+
 		# later, check if language is correct
 		# lexicon definition with lime language
 		# later also check on first lexical entry rdfs language
@@ -167,15 +174,6 @@ class RulesetCommon:
 					self.lexicalForms[str(lexicalFormID)] = store
 
 
-	def getLexicalSenseIDsByReference(self,references):
-		""" In case a relation is determined by the word being part of a certain sense group (countries for instance)."""
-		lexicalSenseIDs = []
-		for reference in references:
-			for lexicalSenseID in self.g.subjects(ONTOLEX.reference,URIRef(reference)):
-				lexicalSenseIDs.append(str(lexicalSenseID))
-		return lexicalSenseIDs
-
-
 	def getLabel(self,identifier):
 		return str(self.g.value(URIRef(identifier),RDFS.label,None))
 
@@ -212,7 +210,14 @@ class RulesetCommon:
 	def setQuery(self,query):
 		""" Set prepared queries. """
 		if query == "countSenses":
-			self.q_countSenses = prepareQuery("""SELECT (count(*) as ?count) WHERE { ?lexicalEntryID ontolex:sense ?o }""", initNs = {"ontolex": ONTOLEX})
+			self.q_countSenses = prepareQuery("""SELECT (count(*) as ?count) WHERE {
+				?lexicalEntryID ontolex:sense ?o }""", initNs={"ontolex": ONTOLEX})
+		if query == "getNarrowerInstantialByReference":
+			self.q_getNarrowerInstantialByReference = prepareQuery( """SELECT ?lexicalEntryID WHERE { 
+				?sourceLexicalSenseID ontolex:reference ?reference ;
+					skosthes:narrowerInstantial ?lexicalSenseID .
+				?lexicalEntryID ontolex:sense ?lexicalSenseID }""", initNs={"ontolex": ONTOLEX, "skosthes": SKOSTHES })
+
 
 
 	def getTopUsedComponents(self,min_threshold=2):

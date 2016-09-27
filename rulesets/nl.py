@@ -230,31 +230,46 @@ class Ruleset(RulesetCommon):
 		""" Using rules from http://www.inventio.nl/genus/uitleg.html to detect word gender. """
 		# Finding gender for noun forms without a gender.
 		self.setProcessableForms(LEXINFO.noun,LEXINFO.gender)
-		geoSenseIDs = self.getLexicalSenseIDsByReference(["http://www.wikidata.org/entity/Q6256"])
-		
+
 		for lexicalFormID in self.lexicalForms:
 			label = self.lexicalForms[lexicalFormID]["label"]
 			lexicalEntryID = self.lexicalForms[lexicalFormID]["lexicalEntryID"]
 			guess_gender = ""
 
-			# we want to check all forms, unless the sense gives us other info (only in the case of countries and placenames)
-			# when first char is uppercase, we're gonna assume sense lookup first
-			if label[0].isupper():
-				guess_gender = self.__getNounGenderBySense(lexicalEntryID,geoSenseIDs)
-			else:
-				# later look if we can make a function for these lookups
-				if label[-3:] == "ing" and self.checkLexicalEntryExists(label[:-3] + "en",LEXINFO.verb):
-					guess_gender = "feminine"
-				elif label[-3:] in ["pje","tje"] or label[-4:] == "tuig":
-					guess_gender = "neuter"
-				elif len(label) > 5 and label[-4:] in [ "heid", "teit", "tuur", "suur" ]:
-					guess_gender = "feminine"
-				elif len(label) > 6 and (label[-3:] in ["aar","erd"] or label[-4:] == "aard"):
-					guess_gender = "masculine"
+			# later look if we can make a function for these lookups
+			if label[-3:] == "ing" and self.checkLexicalEntryExists(label[:-3] + "en",LEXINFO.verb):
+				guess_gender = "feminine"
+			elif label[-3:] in ["pje","tje"] or label[-4:] in ["tuig","isme","ment"]:
+				guess_gender = "neuter"
+			elif len(label) > 5 and label[-4:] in [ "heid", "teit", "tuur", "suur" ]:
+				guess_gender = "feminine"
+			elif len(label) > 6 and (label[-3:] in ["aar","erd"] or label[-4:] == "aard"):
+				guess_gender = "masculine"
 
 			if self.userCheck("geslacht",label,guess_gender):
 				form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
 				self.db.insertFormProperty(form_id,self.db.morphosyntactics["gender:" + guess_gender],True)
+
+
+	def nounGenderCategory(self):
+		""" Add noun gender neuter based on category. """
+		# landen, windstreken
+		self.setProcessableForms(LEXINFO.noun,LEXINFO.gender)
+		self.setQuery("getNarrowerInstantialByReference")
+		referenceEntryIDs = []
+
+		for ref in ["http://www.wikidata.org/entity/Q6256", "http://www.wikidata.org/entity/Q23718"]:
+			for row in self.g.query( self.q_getNarrowerInstantialByReference, initBindings={"reference": URIRef(ref)}):
+				referenceEntryIDs.append(str(row[0]))
+		
+		for lexicalFormID in self.lexicalForms:
+			label =  self.lexicalForms[lexicalFormID]["label"]
+			lexicalEntryID = self.lexicalForms[lexicalFormID]["lexicalEntryID"]
+			
+			if lexicalEntryID in referenceEntryIDs:
+				if self.userCheck("geslacht", label, "neuter"):
+					form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
+					self.db.insertFormProperty(form_id,self.db.morphosyntactics["gender:neuter"],True)
 
 
 	def nounComponentsFind(self):
@@ -268,21 +283,6 @@ class Ruleset(RulesetCommon):
 				if len(word) > label_len and word[-label_len:] == label and not word[0].isupper() and not self.checkLexicalEntryExists(word,LEXINFO.noun):
 					if self.userCheck("add as noun", label, word):
 						self.db.storeCanonical(word,self.lang_id,pos_id)
-
-
-	def __getNounGenderBySense(self,lexicalEntryID,geoSenseIDs):
-		for geoSenseID in geoSenseIDs:
-			if self.__checkSenseRelation(URIRef(lexicalEntryID),SKOSTHES.broaderInstantial,URIRef(geoSenseID)):
-				return "neuter"
-		return ""
-
-
-	def __checkSenseRelation(self,lexicalEntryID,checkPredicate,checkObject):
-		""" Given a lexicalEntryID, check all related senses to see if the requested relation is present."""
-		for lexicalSenseID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.sense):
-			if (URIRef(lexicalSenseID),checkPredicate,checkObject) in self.g:
-				return True
-		return False
 
 
 	def __getNounStem(self,word):
