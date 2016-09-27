@@ -253,12 +253,12 @@ class Ruleset(RulesetCommon):
 
 	def nounGenderCategory(self):
 		""" Add noun gender neuter based on category. """
-		# landen, windstreken
+		# landen, windstreken, metalen
 		self.setProcessableForms(LEXINFO.noun,LEXINFO.gender)
 		self.setQuery("getNarrowerInstantialByReference")
 		referenceEntryIDs = []
 
-		for ref in ["http://www.wikidata.org/entity/Q6256", "http://www.wikidata.org/entity/Q23718"]:
+		for ref in ["http://www.wikidata.org/entity/Q6256","http://www.wikidata.org/entity/Q23718","http://www.wikidata.org/entity/Q11426"]:
 			for row in self.g.query( self.q_getNarrowerInstantialByReference, initBindings={"reference": URIRef(ref)}):
 				referenceEntryIDs.append(str(row[0]))
 		
