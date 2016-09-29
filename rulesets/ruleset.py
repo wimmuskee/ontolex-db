@@ -54,6 +54,11 @@ class RulesetCommon:
 		self.lexicalForms = {}
 
 
+	def setWordDbFile(self,filepath):
+		with open(filepath) as f:
+			self.worddb = set(f.read().splitlines())
+
+
 	def nounComponents(self,componentID):
 		""" Try to match a component to a postfix on nouns."""
 		searchterm = self.getLabel(componentID)

@@ -2,7 +2,6 @@
 
 from rdflib import URIRef, Literal, Namespace
 from rulesets.ruleset import RulesetCommon
-from nltk.corpus import alpino
 from random import randint
 
 ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
@@ -22,8 +21,12 @@ class Ruleset(RulesetCommon):
 		global DECOMP
 		global ISOCAT
 
-		# for now use alpino, we should be able to configure this
-		self.worddb = set(alpino.words())
+		if config["worddb"]["type"] == "file":
+			self.setWordDbFile(config["worddb"]["name"])
+		else:
+			from nltk.corpus import alpino
+			self.worddb = set(alpino.words())
+
 		self.language = LANGUAGE
 		self.lang_id = self.db.languages[LANGUAGE]
 		self.vowels = [ "a", "e", "i", "u", "o" ]
