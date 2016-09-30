@@ -139,6 +139,44 @@ class Ruleset(RulesetCommon):
 					print("either source or target has a sense, not storing relation")
 
 
+	def verbSingulars(self):
+		"""Add remaining singulars to verbs with stems set."""
+		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.verb):
+			use = True
+			stem = ""
+			form_identifier = ""
+			for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.otherForm):
+				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.present) in self.g and (URIRef(lexicalFormID),LEXINFO.person,LEXINFO.firstPerson) in self.g:
+					stem = self.getLabel(str(lexicalFormID))
+					form_identifier = str(lexicalFormID)
+				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.present) in self.g and (URIRef(lexicalFormID),LEXINFO.person,LEXINFO.secondPerson) in self.g:
+					use = False
+			if use:
+				self.lexicalForms[form_identifier] = stem
+
+		for lexicalFormID in self.lexicalForms:
+			label = self.lexicalForms[lexicalFormID]
+
+			if label[-1:] == "t":
+				guess_singular = label
+				# no worddb check, but ask to add formprops to form
+				if self.userCheck("enkelvoud", "ik " + label, "jij/hij " + guess_singular):
+					form_id = self.db.getID(lexicalFormID,"lexicalForm")
+					self.db.insertFormProperty(form_id,self.db.properties["person:secondPerson"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["person:thirdPerson"],True)
+			else:
+				guess_singular = label + "t"
+				if guess_singular in self.worddb:
+					if self.userCheck("enkelvoud", "ik " + label, "jij/hij " + guess_singular):
+						lexicalEntryID = self.g.value(None,ONTOLEX.otherForm,URIRef(lexicalFormID))
+						lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+						form_id = self.db.storeOtherForm(lex_id,guess_singular,self.lang_id)
+						self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
+						self.db.insertFormProperty(form_id,self.db.properties["tense:present"],True)
+						self.db.insertFormProperty(form_id,self.db.properties["person:secondPerson"],True)
+						self.db.insertFormProperty(form_id,self.db.properties["person:thirdPerson"],True)
+
+
 	def verbStems(self):
 		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.verb):
 			use = True
