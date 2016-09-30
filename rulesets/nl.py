@@ -229,6 +229,40 @@ class Ruleset(RulesetCommon):
 					self.db.insertFormProperty(canonical_form_id,self.db.properties["number:singular"],True)
 
 
+	def nounDiminutives(self):
+		self.setProcessableEntries(LEXINFO.noun,LEXINFO.partOfSpeech,LEXINFO.diminutiveNoun)
+
+		for lexicalEntryID in self.lexicalEntries:
+			label = self.lexicalEntries[lexicalEntryID]
+			syllableCount = self.__getSyllableCount(label)
+			guess_diminutive = ""
+			
+			# zon
+			if syllableCount == 1 and not label[-3:-2] in self.vowels and label[-2:-1] in self.vowels:
+				guess_diminutive = label + label[-1:] + "etje"
+			# boom
+			elif label[-1:] == "m":
+				guess_diminutive = label + "pje"
+			elif label[-1:] in self.vowels:
+				guess_diminutive = label + "tje"
+			else:
+				guess_diminutive = label + "je"
+
+			if guess_diminutive in self.worddb:
+				if self.userCheck("verkleining",label,guess_diminutive):
+					lex_id = self.db.getID(str(lexicalEntryID),"lexicalEntry")
+					# store singular
+					singular_form_id = self.db.storeOtherForm(lex_id,guess_diminutive,self.lang_id)
+					self.db.insertFormProperty(singular_form_id,self.db.properties["number:singular"],True)
+					self.db.insertFormProperty(singular_form_id,self.db.properties["partOfSpeech:diminutiveNoun"],True)
+					self.db.insertFormProperty(singular_form_id,self.db.properties["gender:neuter"],True)
+					# and plural
+					guess_diminutive = guess_diminutive + "s"
+					plural_form_id = self.db.storeOtherForm(lex_id,guess_diminutive,self.lang_id)
+					self.db.insertFormProperty(plural_form_id,self.db.properties["number:plural"],True)
+					self.db.insertFormProperty(plural_form_id,self.db.properties["partOfSpeech:diminutiveNoun"],True)
+
+
 	def nounGender(self):
 		""" Using rules from http://www.inventio.nl/genus/uitleg.html to detect word gender. """
 		# Finding gender for noun forms without a gender.
