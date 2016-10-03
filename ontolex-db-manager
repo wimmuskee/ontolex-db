@@ -64,6 +64,17 @@ if args.action == "add" and args.mode == "entry":
 	lexicalEntryID = db.storeCanonical(word,db.languages[language],db.posses[pos])
 	print("Stored lexicalEntryID: " + str(lexicalEntryID))
 
+elif args.action == "update" and args.mode == "entry":
+	word = validateInput(argsdict, "word")
+	sourceID = validateInput(argsdict, "source")
+	
+	if not word or not sourceID:
+		parser.error("to update an entry we need a word and a sourceID")
+
+	lexicalEntryID = db.getID(sourceID, "lexicalEntry")
+	db.updateLexicalEntryValue(lexicalEntryID,word,db.languages[language])
+	print("updated")
+
 elif args.action == "add" and args.mode == "form":
 	word = validateInput(argsdict, "word")
 

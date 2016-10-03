@@ -519,6 +519,23 @@ class Database:
 				self.DB.commit()
 
 
+	def updateLexicalEntryValue(self,lexicalEntryID,label,languageID):
+		c = self.DB.cursor()
+
+		# find canonicalForm
+		query = "SELECT * FROM lexicalForm WHERE lexicalEntryID = %s AND type = 'canonicalForm'"
+		c.execute(query, (lexicalEntryID))
+		canonicalform = c.fetchone()
+
+		# update entry and writtenrep
+		query = "UPDATE lexicalEntry SET value = %s WHERE lexicalEntryID = %s"
+		c.execute(query, (label,lexicalEntryID))
+		query = "UPDATE writtenRep SET value = %s WHERE lexicalFormID = %s AND languageID = %s"
+		c.execute(query,(label,canonicalform["lexicalFormID"],languageID))
+
+		self.DB.commit()
+
+
 	def updateSyllableCount(self,lexicalFormID,syllableCount,languageID):
 		c = self.DB.cursor()
 		query = "UPDATE writtenRep SET syllableCount = %s WHERE lexicalFormID = %s AND languageID = %s"
