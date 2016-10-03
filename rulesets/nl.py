@@ -245,12 +245,14 @@ class Ruleset(RulesetCommon):
 		for lexicalEntryID in self.lexicalEntries:
 			label = self.lexicalEntries[lexicalEntryID]
 
-			if label[-2:] in ["er","ie","en"]:
+			if label[-2:] in ["er","ie","en"] or label[-1:] == "e":
 				guess_plural = label + "s"
 			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
 				guess_plural = label + label[-1:] + "en"
 			elif label[-3:] in ["eum","ium"]:
 				guess_plural = label[:-2] + "a"
+			elif label[-1:] in ["a","o"]:
+				guess_plural = label + "'s"
 			else:
 				guess_plural = self.__getNounStem(label) + "en"
 
