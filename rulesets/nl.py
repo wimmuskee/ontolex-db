@@ -244,8 +244,9 @@ class Ruleset(RulesetCommon):
 
 		for lexicalEntryID in self.lexicalEntries:
 			label = self.lexicalEntries[lexicalEntryID]
+			syllableCount = self.__getSyllableCount(label)
 
-			if label[-2:] in ["er","ie","en"] or label[-1:] == "e":
+			if (label[-2:] in ["er","ie","en"] or label[-1:] == "e") and syllableCount > 1:
 				guess_plural = label + "s"
 			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
 				guess_plural = label + label[-1:] + "en"
