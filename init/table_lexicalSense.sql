@@ -5,3 +5,5 @@ lexicalSenseID INT UNSIGNED NOT NULL PRIMARY KEY auto_increment,
 lexicalEntryID INT UNSIGNED NOT NULL,
 identifier VARCHAR(150) NOT NULL UNIQUE
 );
+
+ALTER TABLE lexicalSense ADD INDEX i_lexicalSense_lexicalEntryID ( lexicalEntryID );
