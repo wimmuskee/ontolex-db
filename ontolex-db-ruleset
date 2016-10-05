@@ -21,6 +21,7 @@ rules.add_argument('--noun-diminutives', help="find diminuitives for nouns", act
 rules.add_argument('--noun-genders', help="find gender for noun forms", action="store_true")
 rules.add_argument('--noun-genders-category', help="find gender for noun forms by category", action="store_true")
 rules.add_argument('--noun-plurals', help="find plurals for canonical nouns", action="store_true")
+rules.add_argument('--verb-past-participles', help="find past participles verbs", action="store_true")
 rules.add_argument('--verb-related-nouns', help="find related nouns for verbs", action="store_true")
 rules.add_argument('--verb-singulars', help="find remaing singular forms for verbs with a stem", action="store_true")
 rules.add_argument('--verb-stems', help="find stems for verbs", action="store_true")
@@ -74,6 +75,9 @@ if args.noun_genders_category:
 
 if args.noun_plurals:
 	r.nounPlurals()
+
+if args.verb_past_participles:
+	r.verbPastParticiples()
 
 if args.verb_related_nouns:
 	r.verbRelatedNouns()

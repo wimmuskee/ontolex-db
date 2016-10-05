@@ -108,6 +108,38 @@ class Ruleset(RulesetCommon):
 				self.db.updateSyllableCount(form_id,syllableCount,self.lang_id)
 
 
+	def verbPastParticiples(self):
+		# select verb forms that have a past singular, but not a past participle
+		result = self.g.query("""SELECT ?label ?lexicalFormID ?lexicalEntryID WHERE {
+			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
+				lexinfo:partOfSpeech lexinfo:verb ;
+				ontolex:otherForm ?lexicalFormID .
+			?lexicalFormID lexinfo:number lexinfo:singular ;
+				lexinfo:tense lexinfo:past ;
+				rdfs:label ?label .
+			MINUS { 
+				?lexicalEntryID ontolex:otherForm ?lexicalParticipleID .
+				?lexicalParticipleID lexinfo:verbFormMood lexinfo:participle ;
+					lexinfo:tense lexinfo:past . } }""")
+
+		for row in result:
+			label = str(row[0])
+			lexicalFormID = str(row[1])
+			lexicalEntryID = str(row[2])
+			
+			if label[-3:-1] == "dd" or label[-3:-1] == "tt":
+				guess_participle = "ge" + label[:-2]
+			else:
+				guess_participle = "ge" + label[:-1]
+			
+			if guess_participle in self.worddb:
+				if self.userCheck("voltooid deelwoord", label, "ik ben/heb " + guess_participle):
+					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+					form_id = self.db.storeOtherForm(lex_id,guess_participle,self.lang_id)
+					self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["verbFormMood:participle"],True)
+
+
 	def verbRelatedNouns(self):
 		print("first redesign")
 		exit()
