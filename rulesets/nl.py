@@ -140,6 +140,34 @@ class Ruleset(RulesetCommon):
 					self.db.insertFormProperty(form_id,self.db.properties["verbFormMood:participle"],True)
 
 
+	def verbPastSingulars(self):
+		result = self.g.query("""SELECT ?label ?lexicalEntryID WHERE {
+			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
+				lexinfo:partOfSpeech lexinfo:verb ;
+				rdfs:label ?label .
+			MINUS { 
+				?lexicalEntryID ontolex:otherForm ?lexicalFormID .
+				?lexicalFormID lexinfo:number lexinfo:singular ;
+					lexinfo:tense lexinfo:past . } }""")
+
+		for row in result:
+			label = str(row[0])
+			lexicalEntryID = str(row[1])
+			stem = label[:-2]
+
+			if stem[-1:] in [ "t","k","f","s","c","h","p"]:
+				guess_past = stem + "te"
+			else:
+				guess_past = stem + "de"
+
+			if guess_past in self.worddb:
+				if self.userCheck("verleden tijd", label, guess_past):
+					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+					form_id = self.db.storeOtherForm(lex_id,guess_past,self.lang_id)
+					self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
+
+
 	def verbRelatedNouns(self):
 		print("first redesign")
 		exit()
