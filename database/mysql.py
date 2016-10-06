@@ -42,31 +42,19 @@ class Database:
 
 
 	def setPosses(self):
-		c = self.DB.cursor()
-		query = "SELECT * FROM partOfSpeechVocabulary"
-		c.execute(query)
-		for row in c.fetchall():
+		for row in self.__getRows("SELECT * FROM partOfSpeechVocabulary"):
 			self.posses[row["value"]] = row["id"]
-		c.close()
 
 
 	def setLanguages(self):
-		c = self.DB.cursor()
-		query = "SELECT * FROM languageVocabulary"
-		c.execute(query)
-		for row in c.fetchall():
+		for row in self.__getRows("SELECT * FROM languageVocabulary"):
 			self.languages[row["iso_639_1"]] = row["id"]
-		c.close()
 
 
 	def setProperties(self):
-		c = self.DB.cursor()
-		query = "SELECT * FROM propertyVocabulary"
-		c.execute(query)
-		for row in c.fetchall():
+		for row in self.__getRows("SELECT * FROM propertyVocabulary"):
 			key = self.__getUrlPart(row["property"]) + ":" + self.__getUrlPart(row["value"])
 			self.properties[key] = row["id"]
-		c.close()
 
 
 	def setSenseRelations(self):
@@ -78,55 +66,40 @@ class Database:
 
 
 	def setLexicalEntries(self):
-		c = self.DB.cursor()
 		query = "SELECT lexicalEntryID, class, pos.value AS pos_value, lex.identifier AS lex_identifier FROM lexicalEntry AS lex \
 			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id"
-		c.execute(query)
-		self.lexicalEntries = c.fetchall()
-		c.close()
+		self.lexicalEntries = self.__getRows(query)
 
 
 	def setLexicalEntriesByPOS(self,pos_id):
-		c = self.DB.cursor()
 		query = "SELECT lexicalEntryID, class, pos.value AS pos_value, lex.identifier AS lex_identifier FROM lexicalEntry AS lex \
 			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id \
 			WHERE lex.partOfSpeechID = %s"
-		c.execute(query, (pos_id))
-		self.lexicalEntries = c.fetchall()
-		c.close()
+		self.lexicalEntries = self.__getRows(query,(pos_id))
 
 
 	def setLexicalEntry(self,lexicalEntryID):
-		c = self.DB.cursor()
 		query = "SELECT lexicalEntryID, class, pos.value AS pos_value, identifier AS lex_identifier FROM lexicalEntry AS lex \
 			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id \
 			WHERE lexicalEntryID = %s"
-		c.execute(query, (lexicalEntryID))
-		self.lexicalEntries = c.fetchall()
-		c.close()
+		self.lexicalEntries = self.__getRows(query,(lexicalEntryID))
 
 
 	def setLexicalForms(self,lang_id):
-		c = self.DB.cursor()
 		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier, rep.syllableCount AS syllableCount FROM lexicalForm AS form \
 			LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
 			WHERE rep.languageID = %s"
-		c.execute(query, (lang_id))
-		self.lexicalForms = c.fetchall()
-		c.close()
+		self.lexicalForms = self.__getRows(query,(lang_id))
 
 
 	def setLexicalForm(self,lexicalEntryID,lang_id):
-		c = self.DB.cursor()
 		query = "SELECT form.lexicalEntryID, form.lexicalFormID, type, rep.value AS rep_value, lex.identifier AS lex_identifier, form.identifier AS form_identifier, rep.syllableCount AS syllableCount FROM lexicalForm AS form \
 			LEFT JOIN lexicalEntry AS lex ON form.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
 			WHERE form.lexicalEntryID = %s \
 			AND rep.languageID = %s"
-		c.execute(query, (lexicalEntryID,lang_id))
-		self.lexicalForms.extend(c.fetchall())
-		c.close()
+		self.lexicalForms.extend(self.__getRows(query,(lexicalEntryID,lang_id)))
 
 
 	def setLexicalFormsByEntries(self,lang_id):
@@ -158,22 +131,16 @@ class Database:
 
 
 	def setLexicalSenses(self):
-		c = self.DB.cursor()
 		query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
 			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID"
-		c.execute(query)
-		self.lexicalSenses = c.fetchall()
-		c.close()
+		self.lexicalSenses = self.__getRows(query)
 
 
 	def setLexicalSensesByID(self,lexicalEntryID):
-		c = self.DB.cursor()
 		query = "SELECT sense.lexicalSenseID, sense.lexicalEntryID, lex.identifier AS lex_identifier, sense.identifier AS sense_identifier FROM lexicalSense AS sense \
 			LEFT JOIN lexicalEntry AS lex ON sense.lexicalEntryID = lex.lexicalEntryID \
 			WHERE sense.lexicalEntryID = %s"
-		c.execute(query, (lexicalEntryID))
-		self.lexicalSenses.extend(c.fetchall())
-		c.close()
+		self.lexicalSenses.extend(self.__getRows(query,(lexicalEntryID)))
 
 
 	def setLexicalSensesByEntries(self):
@@ -183,15 +150,11 @@ class Database:
 
 	def setSenseDefinitions(self,lang_id):
 		""" Definition is optional."""
-		c = self.DB.cursor()
 		for sense in self.lexicalSenses:
 			query = "SELECT value FROM senseDefinition WHERE lexicalSenseID = %s AND languageID = %s"
-			c.execute(query, (sense["lexicalSenseID"],lang_id))
-			row = c.fetchone()
-			
+			row = self.__getRow(query,(sense["lexicalSenseID"],lang_id))
 			if row:
 				self.lexicalSenseDefinitions[sense["sense_identifier"]] = row["value"]
-		c.close()
 
 
 	def setSenseReferences(self):
@@ -209,38 +172,28 @@ class Database:
 
 
 	def setLexicalComponents(self):
-		c = self.DB.cursor()
 		query = "SELECT lex.identifier AS lex_identifier, comp.identifier AS comp_identifier, position FROM lexicalEntryComponent AS lexcomp \
 			LEFT JOIN lexicalEntry AS lex ON lexcomp.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN component AS comp ON lexcomp.componentID = comp.componentID"
-		c.execute(query)
-		self.lexicalEntryComponents.extend(c.fetchall())
-		c.close()
+		self.lexicalEntryComponents.extend(self.__getRows(query))
 
 
 	def setLexicalComponentsByID(self,lexicalEntryID):
-		c = self.DB.cursor()
 		query = "SELECT lex.identifier AS lex_identifier, comp.identifier AS comp_identifier, position FROM lexicalEntryComponent AS lexcomp \
 			LEFT JOIN lexicalEntry AS lex ON lexcomp.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN component AS comp ON lexcomp.componentID = comp.componentID \
 			WHERE lexcomp.lexicalEntryID = %s"
-		c.execute(query, (lexicalEntryID))
-		self.lexicalEntryComponents.extend(c.fetchall())
-		c.close()
+		self.lexicalEntryComponents.extend(self.__getRows(query,(lexicalEntryID)))
 
 
 	def setComponents(self):
-		c = self.DB.cursor()
 		query = "SELECT DISTINCT comp.identifier AS comp_identifier, lex.identifier AS lex_identifier, form.identifier AS form_identifier FROM component AS comp \
 			LEFT JOIN lexicalEntry AS lex ON comp.lexicalEntryID = lex.lexicalEntryID \
 			LEFT JOIN lexicalForm AS form ON comp.lexicalFormID = form.lexicalFormID"
-		c.execute(query)
-		self.components.extend(c.fetchall())
-		c.close()
+		self.components.extend(self.__getRows(query))
 
 
 	def setComponentsByID(self,lexicalEntryID,lang_id):
-		c = self.DB.cursor()
 		query = "SELECT DISTINCT comp.identifier AS comp_identifier, lex.identifier AS lex_identifier, form.identifier AS form_identifier, rep.value AS rep_value FROM component AS comp \
 			LEFT JOIN lexicalEntryComponent AS lexcomp ON comp.componentID = lexcomp.componentID \
 			LEFT JOIN lexicalEntry AS lex ON comp.lexicalEntryID = lex.lexicalEntryID \
@@ -248,56 +201,40 @@ class Database:
 			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
 			WHERE lexcomp.lexicalEntryID = %s \
 			AND rep.languageID = %s"
-		c.execute(query, (lexicalEntryID,lang_id))
-		self.components.extend(c.fetchall())
-		c.close()
+		self.components.extend(self.__getRows(query,(lexicalEntryID,lang_id)))
 
 
 	def getLexicalEntryID(self,value,partOfSpeechID):
-		c = self.DB.cursor()
 		query = "SELECT lexicalEntryID FROM lexicalEntry WHERE value = %s AND partOfSpeechID = %s"
-		c.execute(query, (value,partOfSpeechID))
-		row = c.fetchone()
-		c.close()
+		row = self.__getRow(query,(value,partOfSpeechID))
 		return row["lexicalEntryID"]
 
 
 	def getLexicalSenseID(self,lexicalEntryID):
-		c = self.DB.cursor()
 		query = "SELECT lexicalSenseID FROM lexicalSense WHERE lexicalEntryID = %s"
-		c.execute(query,(lexicalEntryID))
-		row = c.fetchone()
-		c.close()
+		row = self.__getRow(query,(lexicalEntryID))
 		return row["lexicalSenseID"]
 
 
 	def getID(self,identifier,table):
 		""" Return the real database ID from either entry, form or sense, based on identifier. """
-		c = self.DB.cursor()
 		field = table + "ID"
 		query = "SELECT " + field + " FROM " + table + " WHERE identifier = %s"
-		c.execute(query,(identifier))
-		row = c.fetchone()
-		c.close()
+		row = self.__getRow(query,(identifier))
 		return row[field]
 
 
 	def getCountlexicalSenses(self,lexicalEntryID):
-		c = self.DB.cursor()
 		query = "SELECT count(*) AS count FROM lexicalSense WHERE lexicalEntryID = %s"
-		c.execute(query,(lexicalEntryID))
-		row = c.fetchone()
-		c.close()
+		row = self.__getRow(query,(lexicalEntryID))
 		return int(row["count"])
 
 
 	def checkSenseReferenceExists(self,lexicalSenseID,relation,reference):
-		c = self.DB.cursor()
 		namespace = relation.split(":")[0]
 		property = relation.split(":")[1]
 		query = "SELECT * FROM senseReference WHERE lexicalSenseID = %s AND namespace = %s AND property = %s AND reference = %s"
-		c.execute(query,(lexicalSenseID,namespace,property,reference))
-		row = c.fetchone()
+		row = self.__getRow(query,(lexicalSenseID,namespace,property,reference))
 		if row:
 			return True
 		else:
@@ -330,7 +267,6 @@ class Database:
 
 	def storeFormProperties(self,lexicalFormID,properties,safemode=True):
 		# no safemode yet
-
 		for property in properties:
 			# p in form <property>:<value>
 			self.insertFormProperty(lexicalFormID,self.properties[property])
@@ -359,11 +295,9 @@ class Database:
 
 	def storeComponent(self,lexicalFormID):
 		""" Stores component, based on lexicalFormID. """
-		c = self.DB.cursor()
 		query = "SELECT lexicalEntryID FROM lexicalForm WHERE lexicalFormID = %s"
-		c.execute(query,(lexicalFormID))
-		row = c.fetchone()
-		
+		row = self.__getRow(query,(lexicalFormID))
+
 		if row:
 			return self.insertComponent(row["lexicalEntryID"],lexicalFormID,True)
 		else:
@@ -371,11 +305,8 @@ class Database:
 
 
 	def findLexicalEntry(self,word,pos_id):
-		c = self.DB.cursor()
 		query = "SELECT lexicalEntryID FROM lexicalEntry WHERE value = %s AND partOfSpeechID = %s"
-		c.execute(query, (word,pos_id))
-		row = c.fetchone()
-		c.close()
+		row = self.__getRow(query,(word,pos_id))
 
 		if row:
 			return row["lexicalEntryID"]
@@ -384,15 +315,12 @@ class Database:
 
 
 	def findlexicalForm(self,lexicalEntryID,word,lang_id):
-		c = self.DB.cursor()
 		query = "SELECT form.lexicalFormID FROM lexicalForm AS form \
 			LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
 			WHERE form.lexicalEntryID = %s \
 			AND rep.value = %s \
 			AND rep.languageID = %s"
-		c.execute(query, (lexicalEntryID,word,lang_id))
-		row = c.fetchone()
-		c.close()
+		row = self.__getRow(query,(lexicalEntryID,word,lang_id))
 
 		if row:
 			return row["lexicalFormID"]
@@ -542,6 +470,22 @@ class Database:
 		c.execute(query,(syllableCount,lexicalFormID,languageID))
 		c.close()
 		self.DB.commit()
+
+
+	def __getRow(self,query,args=None):
+		c = self.DB.cursor()
+		c.execute(query,args)
+		row = c.fetchone()
+		c.close()
+		return row
+
+
+	def __getRows(self,query,args=None):
+		c = self.DB.cursor()
+		c.execute(query,args)
+		rows = c.fetchall()
+		c.close()
+		return rows
 
 
 	def __getUrlPart(self,url):
