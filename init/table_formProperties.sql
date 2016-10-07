@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS formProperties;
+
+CREATE TABLE formProperties (
+lexicalFormID INT UNSIGNED NOT NULL,
+propertyID TINYINT UNSIGNED NOT NULL
+);

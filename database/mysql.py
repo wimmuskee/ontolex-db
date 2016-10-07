@@ -119,8 +119,8 @@ class Database:
 		c = self.DB.cursor()
 		for form in self.lexicalForms:
 			propertydict = { "form_identifier": form["form_identifier"], "properties": [] }
-			query = "SELECT vocab.property, vocab.value FROM formMorphoSyntactics AS formprop \
-				LEFT JOIN propertyVocabulary AS vocab ON formprop.morphoSyntacticsID = vocab.id \
+			query = "SELECT vocab.property, vocab.value FROM formProperties AS formprop \
+				LEFT JOIN propertyVocabulary AS vocab ON formprop.propertyID = vocab.id \
 				WHERE formprop.lexicalFormID = %s"
 			c.execute(query, (form["lexicalFormID"]))
 			if c.rowcount > 0:
@@ -367,10 +367,10 @@ class Database:
 			self.DB.commit()
 
 
-	def insertFormProperty(self,lexicalFormID,morphoSyntacticsID,commit=False):
+	def insertFormProperty(self,lexicalFormID,propertyID,commit=False):
 		c = self.DB.cursor()
-		query = "INSERT INTO formMorphoSyntactics (lexicalFormID,morphoSyntacticsID) VALUES (%s,%s)"
-		c.execute(query, (lexicalFormID,morphoSyntacticsID))
+		query = "INSERT INTO formProperties (lexicalFormID,propertyID) VALUES (%s,%s)"
+		c.execute(query, (lexicalFormID,propertyID))
 		c.close()
 		if commit:
 			self.DB.commit()
