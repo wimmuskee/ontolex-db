@@ -71,13 +71,6 @@ class Database:
 		self.lexicalEntries = self.__getRows(query)
 
 
-	def setLexicalEntriesByPOS(self,pos_id):
-		query = "SELECT lexicalEntryID, class, pos.value AS pos_value, lex.identifier AS lex_identifier FROM lexicalEntry AS lex \
-			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id \
-			WHERE lex.partOfSpeechID = %s"
-		self.lexicalEntries = self.__getRows(query,(pos_id))
-
-
 	def setLexicalEntry(self,lexicalEntryID):
 		query = "SELECT lexicalEntryID, class, pos.value AS pos_value, identifier AS lex_identifier FROM lexicalEntry AS lex \
 			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id \
