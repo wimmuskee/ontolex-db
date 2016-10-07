@@ -84,20 +84,19 @@ class LexiconGraph(RDFGraph):
 
 
 	def setSenseReferences(self,senseReferences):
-		for senseref in senseReferences:
-			lexicalSenseIdentifier = URIRef(senseref["sense_identifier"])
-			for reference in senseref["references"]:
-				if reference["namespace"] == "ontolex":
-					self.g.add((lexicalSenseIdentifier,URIRef(ONTOLEX + reference["property"]),URIRef(reference["reference"])))
+		for reference in senseReferences:
+			lexicalSenseIdentifier = URIRef(reference["sense_identifier"])
+			if reference["namespace"] == "ontolex":
+				self.g.add((lexicalSenseIdentifier,URIRef(ONTOLEX + reference["property"]),URIRef(reference["reference"])))
 
-				elif reference["namespace"] == "skos":
-					self.g.add((lexicalSenseIdentifier,URIRef(SKOS + reference["property"]),URIRef(reference["reference"])))
-				
-				elif reference["namespace"] == "skos-thes":
-					self.g.add((lexicalSenseIdentifier,URIRef(SKOSTHES + reference["property"]),URIRef(reference["reference"])))
+			elif reference["namespace"] == "skos":
+				self.g.add((lexicalSenseIdentifier,URIRef(SKOS + reference["property"]),URIRef(reference["reference"])))
+			
+			elif reference["namespace"] == "skos-thes":
+				self.g.add((lexicalSenseIdentifier,URIRef(SKOSTHES + reference["property"]),URIRef(reference["reference"])))
 
-				elif reference["namespace"] == "lexinfo":
-					self.g.add((lexicalSenseIdentifier,URIRef(LEXINFO + reference["property"]),URIRef(reference["reference"])))
+			elif reference["namespace"] == "lexinfo":
+				self.g.add((lexicalSenseIdentifier,URIRef(LEXINFO + reference["property"]),URIRef(reference["reference"])))
 
 
 	def setLexicalComponents(self,lexicalComponents):

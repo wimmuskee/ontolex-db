@@ -116,7 +116,6 @@ class Database:
 
 
 	def setLexicalFormPropertiesByID(self):
-		""" use """
 		for form in self.lexicalForms:
 			query = "SELECT form.identifier AS form_identifier, vocab.property, vocab.value FROM formProperties AS formprop \
 				LEFT JOIN lexicalForm AS form ON formprop.lexicalFormID = form.lexicalFormID \
@@ -153,17 +152,17 @@ class Database:
 
 
 	def setSenseReferences(self):
-		c = self.DB.cursor()
-		for sense in self.lexicalSenses:
-			propertydict = { "sense_identifier": sense["sense_identifier"], "references": [] }
-			query = "SELECT namespace, property, reference FROM senseReference \
-				WHERE lexicalSenseID = %s"
-			c.execute(query, (sense["lexicalSenseID"]))
-			if c.rowcount > 0:
-				propertydict["references"] = c.fetchall()
+		query = "SELECT sense.identifier AS sense_identifier, namespace, property, reference FROM senseReference \
+			LEFT JOIN lexicalSense AS sense ON senseReference.lexicalSenseID = sense.lexicalSenseID"
+		self.senseReferences = self.__getRows(query)
 
-			self.senseReferences.append( propertydict )
-		c.close()
+
+	def setSenseReferencesByID(self):
+		for sense in self.lexicalSenses:
+			query = "SELECT sense.identifier AS sense_identifier, namespace, property, reference FROM senseReference \
+				LEFT JOIN lexicalSense AS sense ON senseReference.lexicalSenseID = sense.lexicalSenseID \
+				WHERE senseReference.lexicalSenseID = %s"
+			self.senseReferences.extend(self.__getRows(query,(sense["lexicalSenseID"])))
 
 
 	def setLexicalComponents(self):

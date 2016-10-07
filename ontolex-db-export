@@ -75,6 +75,7 @@ if identifier:
 	db.setLexicalEntryLabels()
 	db.setLexicalFormPropertiesByID()
 	db.setLexicalSensesByID(identifier)
+	db.setSenseReferencesByID()
 	db.setLexicalComponentsByID(identifier)
 	db.setComponentsByID(identifier,db.languages[language])
 else:
@@ -83,11 +84,10 @@ else:
 	db.setLexicalEntryLabels()
 	db.setLexicalFormProperties()
 	db.setLexicalSenses()
+	db.setSenseReferences()
 	db.setLexicalComponents()
 	db.setComponents()
 
-
-db.setSenseReferences()
 db.setSenseDefinitions(db.languages[language])
 
 

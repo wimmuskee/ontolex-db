@@ -30,15 +30,14 @@ class SKOSGraph(RDFGraph):
 	def setConceptRelations(self,conceptrelations):
 		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 		
-		for conceptrel in conceptrelations:
-			conceptidentifier = URIRef(conceptrel["sense_identifier"])
-			for reference in conceptrel["references"]:
-				if reference["namespace"] == "skos":
-					self.g.add((conceptidentifier,URIRef(SKOS + reference["property"]),URIRef(reference["reference"])))
-				
-				elif reference["namespace"] == "skos-thes":
-					self.g.add((conceptidentifier,URIRef(SKOSTHES + reference["property"]),URIRef(reference["reference"])))
+		for reference in conceptrelations:
+			conceptidentifier = URIRef(reference["sense_identifier"])
+			if reference["namespace"] == "skos":
+				self.g.add((conceptidentifier,URIRef(SKOS + reference["property"]),URIRef(reference["reference"])))
+			
+			elif reference["namespace"] == "skos-thes":
+				self.g.add((conceptidentifier,URIRef(SKOSTHES + reference["property"]),URIRef(reference["reference"])))
 
-				if reference["namespace"] == "ontolex" and reference["property"] == "reference":
-					self.g.add((conceptidentifier,DCTERMS.identifier,URIRef(reference["reference"])))
+			if reference["namespace"] == "ontolex" and reference["property"] == "reference":
+				self.g.add((conceptidentifier,DCTERMS.identifier,URIRef(reference["reference"])))
 
