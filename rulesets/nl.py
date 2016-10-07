@@ -124,16 +124,25 @@ class Ruleset(RulesetCommon):
 
 		for row in result:
 			label = str(row[0])
+			original = label
 			lexicalFormID = str(row[1])
 			lexicalEntryID = str(row[2])
-			
+
+			# fix trema start
+			if label[0] == "e":
+				label = "ë" + label[1:]
+			elif label[0] == "i":
+				label = "ï" + label[1:]
+
 			if label[-3:-1] == "dd" or label[-3:-1] == "tt":
 				guess_participle = "ge" + label[:-2]
-			else:
+			elif label[-1:] == "e":
 				guess_participle = "ge" + label[:-1]
-			
+			else:
+				guess_participle = "ge" + label
+
 			if guess_participle in self.worddb:
-				if self.userCheck("voltooid deelwoord", label, "ik ben/heb " + guess_participle):
+				if self.userCheck("voltooid deelwoord", original, "ik ben/heb " + guess_participle):
 					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
 					form_id = self.db.storeOtherForm(lex_id,guess_participle,self.lang_id)
 					self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
