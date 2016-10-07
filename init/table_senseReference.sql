@@ -6,3 +6,5 @@ namespace ENUM('ontolex','skos', 'skos-thes','lexinfo') NOT NULL,
 property ENUM('reference','broader','related','exactMatch', 'broaderInstantial', 'broaderPartitive','antonym') NOT NULL,
 reference VARCHAR(150) NOT NULL
 );
+
+ALTER TABLE senseReference ADD INDEX i_senseReference_lexicalSenseID ( lexicalSenseID );
