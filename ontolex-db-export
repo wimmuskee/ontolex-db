@@ -60,7 +60,7 @@ if pos:
 	if pos not in db.posses:
 		parser.error("invalid partOfSpeech: " + pos)
 
-# set entry lookup as identifier, later we can select by single pos and no value
+# set entry lookup as identifier
 if value and pos:
 	identifier = db.getLexicalEntryID(value,db.posses[pos])
 
@@ -73,23 +73,20 @@ if identifier:
 	db.setLexicalEntry(identifier)
 	db.setLexicalForm(identifier,db.languages[language])
 	db.setLexicalEntryLabels()
+	db.setLexicalFormPropertiesByID()
 	db.setLexicalSensesByID(identifier)
 	db.setLexicalComponentsByID(identifier)
 	db.setComponentsByID(identifier,db.languages[language])
-elif pos:
-	db.setLexicalEntriesByPOS(db.posses[pos])
-	db.setLexicalFormsByEntries(db.languages[language])
-	db.setLexicalEntryLabels()
-	db.setLexicalSensesByEntries()
 else:
 	db.setLexicalEntries()
 	db.setLexicalForms(db.languages[language])
 	db.setLexicalEntryLabels()
+	db.setLexicalFormProperties()
 	db.setLexicalSenses()
 	db.setLexicalComponents()
 	db.setComponents()
 
-db.setLexicalFormProperties()
+
 db.setSenseReferences()
 db.setSenseDefinitions(db.languages[language])
 

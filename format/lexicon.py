@@ -63,14 +63,10 @@ class LexiconGraph(RDFGraph):
 				self.g.add((lexicalFormIdentifier,URIRef(ISOCAT + "DC-499"),Literal(form["syllableCount"], datatype=XSD.integer)))
 
 
-
 	def setLexicalProperties(self,lexicalProperties):
-		for form in lexicalProperties:
-			lexicalFormIdentifier = URIRef(form["form_identifier"])
-
-			if form["properties"]:
-				for property in form["properties"]:
-					self.g.add((lexicalFormIdentifier,URIRef(property["property"]),URIRef(property["value"])))
+		for property in lexicalProperties:
+			lexicalFormIdentifier = URIRef(property["form_identifier"])
+			self.g.add((lexicalFormIdentifier,URIRef(property["property"]),URIRef(property["value"])))
 
 
 	def setLexicalSenses(self,lexicalSenses,lexicalEntryLabels,lexicalSenseDefinitions):

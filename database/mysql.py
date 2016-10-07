@@ -109,18 +109,20 @@ class Database:
 
 
 	def setLexicalFormProperties(self):
-		c = self.DB.cursor()
+		query = "SELECT form.identifier AS form_identifier, vocab.property, vocab.value FROM formProperties AS formprop \
+			LEFT JOIN lexicalForm AS form ON formprop.lexicalFormID = form.lexicalFormID \
+			LEFT JOIN propertyVocabulary AS vocab ON formprop.propertyID = vocab.id"
+		self.lexicalProperties = self.__getRows(query)
+
+
+	def setLexicalFormPropertiesByID(self):
+		""" use """
 		for form in self.lexicalForms:
-			propertydict = { "form_identifier": form["form_identifier"], "properties": [] }
-			query = "SELECT vocab.property, vocab.value FROM formProperties AS formprop \
+			query = "SELECT form.identifier AS form_identifier, vocab.property, vocab.value FROM formProperties AS formprop \
+				LEFT JOIN lexicalForm AS form ON formprop.lexicalFormID = form.lexicalFormID \
 				LEFT JOIN propertyVocabulary AS vocab ON formprop.propertyID = vocab.id \
 				WHERE formprop.lexicalFormID = %s"
-			c.execute(query, (form["lexicalFormID"]))
-			if c.rowcount > 0:
-				propertydict["properties"] = c.fetchall()
-			
-			self.lexicalProperties.append(propertydict)
-		c.close()
+			self.lexicalProperties.extend(self.__getRows(query,(form["lexicalFormID"])))
 
 
 	def setLexicalSenses(self):
