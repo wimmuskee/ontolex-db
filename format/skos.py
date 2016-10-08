@@ -11,7 +11,7 @@ class SKOSGraph(RDFGraph):
 
 		if self.buildpackage:
 			self.g.add((URIRef("urn:" + name),RDF.type,SKOS.ConceptScheme))
-			self.g.add((URIRef("urn:" + name),DCTERMS.language,Literal(language)))
+			self.g.add((URIRef("urn:" + name),DCTERMS.language,URIRef("http://id.loc.gov/vocabulary/iso639-1/" + language)))
 
 
 	def setConcepts(self,concepts,conceptLabels,conceptDefinitions):

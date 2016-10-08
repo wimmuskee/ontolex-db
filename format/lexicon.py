@@ -30,7 +30,7 @@ class LexiconGraph(RDFGraph):
 			LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
 			self.g.bind("lime", LIME)
 			self.g.add((URIRef("urn:" + name),RDF.type,LIME.lexicon))
-			self.g.add((URIRef("urn:" + name),LIME.language,Literal(language)))
+			self.g.add((URIRef("urn:" + name),LIME.language,URIRef("http://id.loc.gov/vocabulary/iso639-1/" + language)))
 
 
 	def setLexicalEntries(self,lexicalEntries):
