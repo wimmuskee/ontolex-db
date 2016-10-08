@@ -15,3 +15,4 @@ INSERT INTO partOfSpeechVocabulary (value) VALUES ('preposition');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('pronoun');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('numeral');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('cardinalNumeral');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('interjection');
