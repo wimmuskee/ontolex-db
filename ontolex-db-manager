@@ -8,7 +8,7 @@ from functions.common import validateInput, getConfig
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
 parser.add_argument('action', choices=['add','update'], help="main operating mode, add or update stuff")
-parser.add_argument('mode', choices=['entry','form','formprops','sense','definition','relation','component','bulksense'], help="where to operate")
+parser.add_argument('mode', choices=['entry','entryrel','form','formprops','sense','definition','relation','component','bulksense'], help="where to operate")
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='path', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
 commongroup = parser.add_argument_group('common options')
@@ -37,6 +37,7 @@ db.connect()
 db.setLanguages()
 db.setPosses()
 db.setProperties()
+db.setEntryRelations()
 db.setSenseRelations()
 
 # some generic validation
@@ -74,6 +75,20 @@ elif args.action == "update" and args.mode == "entry":
 	lexicalEntryID = db.getID(sourceID, "lexicalEntry")
 	db.updateLexicalEntryValue(lexicalEntryID,word,db.languages[language])
 	print("updated")
+
+elif args.action == "add" and args.mode == "entryrel":
+	target = validateInput(argsdict, "target")
+	relation = validateInput(argsdict, "relation")
+
+	if not target or not relation:
+		parser.error("we need a target and a relation to continue")
+
+	if relation not in db.entryrelations:
+		parser.error("invalid relation provided")
+
+	lexicalEntryID = db.getID(sourceID, "lexicalEntry")
+	db.insertLexicalEntryRelation(lexicalEntryID,db.entryrelations[relation],target,True)
+	print("stored lexical relation")
 
 elif args.action == "add" and args.mode == "form":
 	word = validateInput(argsdict, "word")

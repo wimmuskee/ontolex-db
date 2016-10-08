@@ -47,6 +47,16 @@ class LexiconGraph(RDFGraph):
 				self.g.add((URIRef("urn:" + self.name),LIME.entry,lexicalEntryIdentifier))
 
 
+	def setLexicalEntryRelatons(self,lexicalEntryRelations):
+		for relation in lexicalEntryRelations:
+			lexicalEntryIdentifier = URIRef(relation["lex_identifier"])
+			
+			self.g.add((lexicalEntryIdentifier,URIRef(relation["relation"]),URIRef(relation["reference"])))
+			# for lexinfo contraction forms
+			if relation["relation"][-3:] == "For":
+				self.g.add((lexicalEntryIdentifier,RDF.type,URIRef(relation["relation"][:-3])))
+
+
 	def setLexicalForms(self,lexicalForms):
 		for form in lexicalForms:
 			lexicalEntryIdentifier = URIRef(form["lex_identifier"])

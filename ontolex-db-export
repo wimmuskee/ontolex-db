@@ -71,6 +71,7 @@ if language not in db.languages:
 
 if identifier:
 	db.setLexicalEntry(identifier)
+	db.setLexicalEntryRelationsByID(identifier)
 	db.setLexicalForm(identifier,db.languages[language])
 	db.setLexicalEntryLabels()
 	db.setLexicalFormPropertiesByID()
@@ -80,6 +81,7 @@ if identifier:
 	db.setComponentsByID(identifier,db.languages[language])
 else:
 	db.setLexicalEntries()
+	db.setLexicalEntryRelations()
 	db.setLexicalForms(db.languages[language])
 	db.setLexicalEntryLabels()
 	db.setLexicalFormProperties()
@@ -95,6 +97,7 @@ if format == "xml" or format == "turtle":
 	from format.lexicon import LexiconGraph
 	output = LexiconGraph("mylexicon",language,format,license,buildpackage)
 	output.setLexicalEntries(db.lexicalEntries)
+	output.setLexicalEntryRelatons(db.lexicalEntryRelations)
 	output.setLexicalForms(db.lexicalForms)
 	output.setLexicalProperties(db.lexicalProperties)
 	output.setLexicalSenses(db.lexicalSenses,db.lexicalEntryLabels,db.lexicalSenseDefinitions)

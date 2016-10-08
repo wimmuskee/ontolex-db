@@ -23,6 +23,7 @@ class Database:
 		self.passwd = config["passwd"]
 		self.name = config["name"]
 		self.lexicalEntries = []
+		self.lexicalEntryRelations = []
 		self.lexicalForms = []
 		self.lexicalProperties = []
 		self.lexicalSenses = []
@@ -35,6 +36,7 @@ class Database:
 		self.languages = {}
 		self.properties = {}
 		self.senserelations = []
+		self.entryrelations = {}
 
 
 	def connect(self):
@@ -57,6 +59,12 @@ class Database:
 			self.properties[key] = row["id"]
 
 
+	def setEntryRelations(self):
+		for row in self.__getRows("SELECT * FROM relationVocabulary"):
+			key = "lexinfo:" + self.__getUrlPart(row["relation"])
+			self.entryrelations[key] = row["relationID"]
+
+
 	def setSenseRelations(self):
 		""" Should not be manual, but for now there is validation. """
 		self.senserelations.extend( ["ontolex:reference"] )
@@ -76,6 +84,21 @@ class Database:
 			LEFT JOIN partOfSpeechVocabulary AS pos ON lex.partOfSpeechID = pos.id \
 			WHERE lexicalEntryID = %s"
 		self.lexicalEntries = self.__getRows(query,(lexicalEntryID))
+
+
+	def setLexicalEntryRelations(self):
+		query = "SELECT lex.identifier AS lex_identifier, entryrel.reference, vocab.relation FROM lexicalEntryRelation AS entryrel \
+			LEFT JOIN lexicalEntry AS lex ON entryrel.lexicalEntryID = lex.lexicalEntryID \
+			LEFT JOIN relationVocabulary AS vocab ON entryrel.relationID = vocab.relationID"
+		self.lexicalEntryRelations = self.__getRows(query)
+
+
+	def setLexicalEntryRelationsByID(self,lexicalEntryID):
+		query = "SELECT lex.identifier AS lex_identifier, entryrel.reference, vocab.relation FROM lexicalEntryRelation AS entryrel \
+			LEFT JOIN lexicalEntry AS lex ON entryrel.lexicalEntryID = lex.lexicalEntryID \
+			LEFT JOIN relationVocabulary AS vocab ON entryrel.relationID = vocab.relationID \
+			WHERE entryrel.lexicalEntryID = %s"
+		self.lexicalEntryRelations = self.__getRows(query,(lexicalEntryID))
 
 
 	def setLexicalForms(self,lang_id):
@@ -337,6 +360,15 @@ class Database:
 			self.DB.commit()
 
 		return lexicalEntryID
+
+
+	def insertLexicalEntryRelation(self,lexicalEntryID,relationID,reference,commit=False):
+		c = self.DB.cursor()
+		query = "INSERT INTO lexicalEntryRelation (lexicalEntryID,relationID,reference) VALUES (%s,%s,%s)"
+		c.execute(query, (lexicalEntryID,relationID,reference))
+		c.close()
+		if commit:
+			self.DB.commit()
 
 
 	def insertLexicalForm(self,lexicalEntryID,type,commit=False):
