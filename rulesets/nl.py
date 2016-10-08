@@ -322,12 +322,18 @@ class Ruleset(RulesetCommon):
 
 			if (label[-2:] in ["er","ie","en"] or label[-1:] == "e") and syllableCount > 1:
 				guess_plural = label + "s"
+			elif label[-4:] == "erik":
+				guess_plural = label + "en"
 			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
 				guess_plural = label + label[-1:] + "en"
 			elif label[-3:] in ["eum","ium"]:
 				guess_plural = label[:-2] + "a"
 			elif label[-1:] in ["a","o"]:
 				guess_plural = label + "'s"
+			elif label[-1:] == "e" and syllableCount == 1:
+				guess_plural = label + "ën"
+			elif label[-4:] == "heid":
+				guess_plural = label[:-2] + "den"
 			else:
 				guess_plural = self.__getNounStem(label) + "en"
 
@@ -439,7 +445,7 @@ class Ruleset(RulesetCommon):
 
 	def __getNounStem(self,word):
 		""" For example, boom -> bom -> bom + en = bomen."""
-		if word[-3:-1] in [ "aa", "ee", "oo" ]:
+		if word[-3:-1] in [ "aa", "ee", "oo", "uu" ]:
 			  return word[:-3] + word[-3:-2] + word[-1]
 		else:
 			return word
