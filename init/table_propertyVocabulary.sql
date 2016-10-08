@@ -23,3 +23,4 @@ INSERT INTO propertyVocabulary (property,value) VALUES ('http://www.lexinfo.net/
 INSERT INTO propertyVocabulary (property,value) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#morphosyntacticProperty','http://www.isocat.org/datcat/DC-2207');
 INSERT INTO propertyVocabulary (property,value) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#verbFormMood','http://www.lexinfo.net/ontology/2.0/lexinfo#participle');
 INSERT INTO propertyVocabulary (property,value) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#verbFormMood','http://www.lexinfo.net/ontology/2.0/lexinfo#infinitive');
+INSERT INTO propertyVocabulary (property,value) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#number','http://www.lexinfo.net/ontology/2.0/lexinfo#massNoun');

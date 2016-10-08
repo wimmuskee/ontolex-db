@@ -306,13 +306,18 @@ class Ruleset(RulesetCommon):
 
 
 	def nounPlurals(self):
-		# Finding plurals for nouns without a plural form. """
-		self.setProcessableEntries(LEXINFO.noun,LEXINFO.number,LEXINFO.plural)
-		source_pos_id = self.db.posses["noun"]
-		target_pos_id = self.db.posses["noun"]
+		# looking for plurals, but only for those entries that have no canonical number property
+		result = self.g.query("""SELECT ?label ?lexicalEntryID WHERE {
+			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
+				lexinfo:partOfSpeech lexinfo:noun ;
+				rdfs:label ?label .
+			MINUS { 
+				?lexicalEntryID ontolex:canonicalForm ?lexicalFormID .
+				?lexicalFormID lexinfo:number ?number . } }""")
 
-		for lexicalEntryID in self.lexicalEntries:
-			label = self.lexicalEntries[lexicalEntryID]
+		for row in result:
+			label = str(row[0])
+			lexicalEntryID = str(row[1])
 			syllableCount = self.__getSyllableCount(label)
 
 			if (label[-2:] in ["er","ie","en"] or label[-1:] == "e") and syllableCount > 1:
