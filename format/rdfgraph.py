@@ -56,6 +56,10 @@ class RDFGraph():
 			for narrowerID in self.g.objects(URIRef(senseIdentifier),SKOS.narrower):
 				self.__setTransitive(narrowerID,senseIdentifier)
 
+			# also set these as topConcepts
+			self.g.add((URIRef("urn:" + self.name),SKOS.hasTopConcept,URIRef(senseIdentifier)))
+			self.g.add((URIRef(senseIdentifier),SKOS.topConceptOf,URIRef("urn:" + self.name)))
+
 
 	def printGraph(self):
 		if self.buildpackage:
