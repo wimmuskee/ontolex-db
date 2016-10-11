@@ -68,9 +68,9 @@ class Database:
 	def setSenseRelations(self):
 		""" Should not be manual, but for now there is validation. """
 		self.senserelations.extend( ["ontolex:reference"] )
-		self.senserelations.extend( ["skos:broader", "skos:related", "skos:exactMatch"] )
+		self.senserelations.extend( ["skos:broader", "skos:related"] )
 		self.senserelations.extend( ["skos-thes:broaderInstantial", "skos-thes:broaderPartitive"] )
-		self.senserelations.extend( ["lexinfo:antonym"] )
+		self.senserelations.extend( ["lexinfo:antonym", "lexinfo:synonym"] )
 
 
 	def setLexicalEntries(self):
