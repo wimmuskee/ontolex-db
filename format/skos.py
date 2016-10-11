@@ -45,3 +45,6 @@ class SKOSGraph(RDFGraph):
 				self.g.add((conceptidentifier,OWL.sameAs,URIRef(reference["reference"])))
 
 
+	def setInverses(self):
+		RDFGraph.setInverses(self,OWL.sameAs)
+

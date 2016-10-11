@@ -140,7 +140,7 @@ class LexiconGraph(RDFGraph):
 
 
 	def setInverses(self):
-		RDFGraph.setInverses(self)
+		RDFGraph.setInverses(self,LEXINFO.synonym)
 
 		for s,p,o in self.g.triples( (None, LEXINFO.antonym, None) ):
 			self.g.add((o,LEXINFO.antonym,s))

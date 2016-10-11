@@ -26,15 +26,33 @@ class RDFGraph():
 			self.g.bind("void", VOID)
 
 
-	def setInverses(self):
+	def setInverses(self,synonymPredicate):
+		synonymCopy = [ str(SKOS.broader), str(SKOSTHES.broaderInstantial), str(SKOSTHES.broaderPartitive) ]
+		for s,p,o in self.g.triples((None,synonymPredicate,None)):
+			self.g.add((o,synonymPredicate,s))
+
+			# copy relations to subjects/objects
+			for s2,p2,o2 in self.g.triples((None,None,s)):
+				if str(p2) in synonymCopy:
+					self.g.add((s2,p2,o))
+			for s2,p2,o2 in self.g.triples((None,None,o)):
+				if str(p2) in synonymCopy:
+					self.g.add((s2,p2,s))
+
+			# copy relations from subjects/objects
+			for s2,p2,o2 in self.g.triples((s,None,None)):
+				if str(p2) in synonymCopy:
+					self.g.add((o,p2,s2))
+			for s2,p2,o2 in self.g.triples((o,None,None)):
+				if str(p2) in synonymCopy:
+					self.g.add((s,p2,s2))
+
+
 		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
 			self.g.add((o,SKOS.narrower,s))
 
 		for s,p,o in self.g.triples( (None, SKOS.related, None) ):
 			self.g.add((o,SKOS.related,s))
-
-		for s,p,o in self.g.triples( (None, OWL.sameAs, None) ):
-			self.g.add((o,OWL.sameAs,s))
 
 		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
 			self.g.add((o,SKOSTHES.narrowerPartitive,s))
