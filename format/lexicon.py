@@ -161,3 +161,16 @@ class LexiconGraph(RDFGraph):
 
 		for s,p,o in self.g.triples( (None, ONTOLEX.writtenRep, None) ):
 			self.g.add((s,RDFS.label,o))
+
+		for s,p,o in self.g.triples( (None, LEXINFO.acronymFor, None) ):
+			self.g.add((s,LEXINFO.contractionFor,o))
+			self.g.add((s,RDF.type,LEXINFO.contraction))
+
+		for s,p,o in self.g.triples( (None, LEXINFO.initialismFor, None) ):
+			self.g.add((s,LEXINFO.contractionFor,o))
+			self.g.add((s,RDF.type,LEXINFO.contraction))
+
+		for s,p,o in self.g.triples( (None, LEXINFO.abbreviationFor, None) ):
+			self.g.add((s,LEXINFO.contractionFor,o))
+			self.g.add((s,RDF.type,LEXINFO.contraction))
+
