@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from rdflib import URIRef, Literal, Namespace
-from rdflib.namespace import SKOS, RDF, XSD, DCTERMS
+from rdflib.namespace import SKOS, RDF, XSD, DCTERMS, OWL
 from format.rdfgraph import RDFGraph
 
 
@@ -40,4 +40,8 @@ class SKOSGraph(RDFGraph):
 
 			if reference["namespace"] == "ontolex" and reference["property"] == "reference":
 				self.g.add((conceptidentifier,DCTERMS.identifier,URIRef(reference["reference"])))
+			
+			if reference["namespace"] == "lexinfo" and reference["property"] == "synonym":
+				self.g.add((conceptidentifier,OWL.sameAs,URIRef(reference["reference"])))
+
 

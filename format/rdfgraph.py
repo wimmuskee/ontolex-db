@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from rdflib import Graph
-from rdflib.namespace import XSD, VOID, SKOS, DCTERMS
+from rdflib.namespace import XSD, VOID, SKOS, DCTERMS, OWL
 from rdflib import URIRef, Literal, Namespace
 
 
 class RDFGraph():
 	def __init__(self,name,language,format,license,buildpackage):
 		global SKOSTHES
+		global OWL
 		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 
 		self.name = name
@@ -19,6 +20,7 @@ class RDFGraph():
 		self.g.bind("skos", SKOS)
 		self.g.bind("skosthes", SKOSTHES)
 		self.g.bind("dct", DCTERMS)
+		self.g.bind("owl", OWL)
 
 		if self.buildpackage:
 			self.g.bind("void", VOID)
