@@ -25,6 +25,7 @@ class LexiconGraph(RDFGraph):
 		self.g.bind("decomp", DECOMP)
 		self.g.bind("isocat", ISOCAT)
 
+
 		if self.buildpackage:
 			global LIME
 			LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
@@ -143,6 +144,9 @@ class LexiconGraph(RDFGraph):
 
 		for s,p,o in self.g.triples( (None, LEXINFO.antonym, None) ):
 			self.g.add((o,LEXINFO.antonym,s))
+
+		for s,p,o in self.g.triples( (None, LEXINFO.synonym, None) ):
+			self.g.add((o,LEXINFO.synonym,s))
 
 
 	def setRedundants(self):

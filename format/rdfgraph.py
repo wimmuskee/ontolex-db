@@ -33,8 +33,8 @@ class RDFGraph():
 		for s,p,o in self.g.triples( (None, SKOS.related, None) ):
 			self.g.add((o,SKOS.related,s))
 
-		for s,p,o in self.g.triples( (None, SKOS.exactMatch, None) ):
-			self.g.add((o,SKOS.exactMatch,s))
+		for s,p,o in self.g.triples( (None, OWL.sameAs, None) ):
+			self.g.add((o,OWL.sameAs,s))
 
 		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
 			self.g.add((o,SKOSTHES.narrowerPartitive,s))
