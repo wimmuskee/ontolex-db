@@ -16,3 +16,5 @@ INSERT INTO partOfSpeechVocabulary (value) VALUES ('pronoun');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('numeral');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('cardinalNumeral');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('interjection');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('pastParticipleAdjective');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('presentParticipleAdjective');

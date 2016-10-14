@@ -486,7 +486,16 @@ class Database:
 		c.execute(query, (label,lexicalEntryID))
 		query = "UPDATE writtenRep SET value = %s WHERE lexicalFormID = %s AND languageID = %s"
 		c.execute(query,(label,canonicalform["lexicalFormID"],languageID))
+		c.close()
 
+		self.DB.commit()
+
+
+	def updateLexicalEntryPOS(self,lexicalEntryID,partOfSpeechID):
+		c = self.DB.cursor()
+		query = "UPDATE lexicalEntry SET partOfSpeechID = %s WHERE lexicalEntryID = %s"
+		c.execute(query, (partOfSpeechID,lexicalEntryID))
+		c.close()
 		self.DB.commit()
 
 

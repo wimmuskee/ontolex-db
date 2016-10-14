@@ -9,3 +9,4 @@ field ENUM('lexicalEntry','lexicalSense') NOT NULL
 INSERT INTO relationVocabulary (relation,field) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#abbreviationFor','lexicalEntry');
 INSERT INTO relationVocabulary (relation,field) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#initialismFor','lexicalEntry');
 INSERT INTO relationVocabulary (relation,field) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#acronymFor','lexicalEntry');
+INSERT INTO relationVocabulary (relation,field) VALUES ('http://www.lexinfo.net/ontology/2.0/lexinfo#participleFormOf','lexicalEntry');

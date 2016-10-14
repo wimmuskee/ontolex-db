@@ -174,3 +174,8 @@ class LexiconGraph(RDFGraph):
 			self.g.add((s,LEXINFO.contractionFor,o))
 			self.g.add((s,RDF.type,LEXINFO.contraction))
 
+		for s,p,o in self.g.triples( (None,LEXINFO.partOfSpeech,LEXINFO.presentParticipleAdjective) ):
+			self.g.add((s,LEXINFO.partOfSpeech,LEXINFO.adjective))
+
+		for s,p,o in self.g.triples( (None,LEXINFO.partOfSpeech,LEXINFO.pastParticipleAdjective) ):
+			self.g.add((s,LEXINFO.partOfSpeech,LEXINFO.adjective))

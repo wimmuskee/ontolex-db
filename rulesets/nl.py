@@ -67,6 +67,34 @@ class Ruleset(RulesetCommon):
 				self.db.addSense(source_value,pos_id,"lexinfo","antonym",guess_antonym,pos_id)
 
 
+	def adjectivePresentParticiple(self):
+		""" Set adjective as copy from verb present participles """
+		self.setQuery("askCanonicalByPOS")
+
+		result = self.g.query("""SELECT ?label ?lexicalEntryID WHERE {
+			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
+				lexinfo:partOfSpeech lexinfo:verb ;
+				ontolex:otherForm ?lexicalFormID .
+			?lexicalFormID lexinfo:verbFormMood lexinfo:participle ;
+				lexinfo:tense lexinfo:present ;
+				rdfs:label ?label . }""")
+
+		for row in result:
+			label = str(row[0])
+			lexicalEntryID = str(row[1])
+
+			# first check if label already exists as presentParticipleAdjective
+			if not bool(self.g.query(self.q_askCanonicalByPOS, initBindings={"label": Literal(label, lang="nl"), "partOfSpeech": LEXINFO.presentParticipleAdjective})):
+				# it might exist as a plain adjective
+				if bool(self.g.query(self.q_askCanonicalByPOS, initBindings={"label": Literal(label, lang="nl"), "partOfSpeech": LEXINFO.adjective})):
+					lex_id = self.db.getLexicalEntryID(label,self.db.posses["adjective"])
+					self.db.updateLexicalEntryPOS(lex_id,self.db.posses["presentParticipleAdjective"])
+				else:
+					lex_id = self.db.storeCanonical(label,self.lang_id,self.db.posses["presentParticipleAdjective"])
+					self.db.insertLexicalEntryRelation(lex_id,self.db.entryrelations["lexinfo:participleFormOf"],lexicalEntryID,True)
+				self.db.insertLexicalEntryRelation(lex_id,self.db.entryrelations["lexinfo:participleFormOf"],lexicalEntryID,True)
+
+
 	def adjectiveMaterialNouns(self):
 		print("first redesign")
 		exit()

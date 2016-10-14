@@ -11,6 +11,7 @@ parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar=
 parser.add_argument('--dont-ask', help="asume yes at questions", action="store_true")
 rules = parser.add_argument_group('rules')
 rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", action="store_true")
+rules.add_argument('--adjective-present-participle', help="set verb present participle as adjective", action="store_true")
 rules.add_argument('--adjective-material-nouns', help="find adjectives for material nouns", action="store_true")
 rules.add_argument('--form-syllable-counts', help="find syllable count for forms", action="store_true")
 rules.add_argument('--noun-components', nargs=1, help="init finding components in nouns", metavar="componentID", dest="noun_components")
@@ -50,6 +51,9 @@ if args.adjective_antonyms:
 
 if args.adjective_material_nouns:
 	r.adjectiveMaterialNouns()
+
+if args.adjective_present_participle:
+	r.adjectivePresentParticiple()
 
 if args.form_syllable_counts:
 	r.formSyllableCounts()

@@ -19,6 +19,7 @@ class RulesetCommon:
 		self.db.setPosses()
 		self.db.setLanguages()
 		self.db.setProperties()
+		self.db.setEntryRelations()
 
 		global ONTOLEX
 		global LEXINFO
@@ -62,6 +63,7 @@ class RulesetCommon:
 	def nounComponents(self,componentID):
 		""" Try to match a component to a postfix on nouns."""
 		searchterm = self.getLabel(componentID)
+		print(searchterm)
 		searchtermCount = len(searchterm)
 
 		# only add those entries that postfix match on the searchterm, and do not have a match to the component.
@@ -222,6 +224,11 @@ class RulesetCommon:
 				?sourceLexicalSenseID ontolex:reference ?reference ;
 					skosthes:narrowerInstantial ?lexicalSenseID .
 				?lexicalEntryID ontolex:sense ?lexicalSenseID }""", initNs={"ontolex": ONTOLEX, "skosthes": SKOSTHES })
+		if query == "askCanonicalByPOS":
+			self.q_askCanonicalByPOS = q = prepareQuery( """ASK { 
+				?lexicalEntryID rdf:type ontolex:LexicalEntry ;
+					lexinfo:partOfSpeech ?partOfSpeech ;
+					rdfs:label ?label . }""", initNs = {"ontolex": ONTOLEX, "lexinfo": LEXINFO })
 
 
 
