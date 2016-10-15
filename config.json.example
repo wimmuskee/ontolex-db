@@ -5,6 +5,7 @@
   "name": "ontolex",
   "language": "nl",
   "export": {
+    "creator": "Wim Muskee",
     "license": "https://creativecommons.org/publicdomain/zero/1.0/",
     "transitiveSenseIdentifiers": [
       "urn:uuid:ce22336b-dbd3-46bc-99eb-33601c61cd4d",

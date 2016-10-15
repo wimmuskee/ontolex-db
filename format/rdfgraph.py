@@ -93,6 +93,8 @@ class RDFGraph():
 			self.g.add((URIRef("urn:" + self.name),DCTERMS.date,Literal(str(datetime.date.today()))))
 			if self.exportconfig["license"]:
 				self.g.add((URIRef("urn:" + self.name),DCTERMS.license,Literal(self.exportconfig["license"])))
+			if self.exportconfig["creator"]:
+				self.g.add((URIRef("urn:" + self.name),DCTERMS.creator,Literal(self.exportconfig["creator"])))
 			self.g.add((URIRef("urn:" + self.name),VOID.triples,Literal(str(len(self.g)+1), datatype=XSD.integer)))
 
 		print(bytes.decode(self.g.serialize(format=self.format)))
