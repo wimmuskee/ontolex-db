@@ -28,6 +28,7 @@ value = validateInput(argsdict,"value")
 pos = validateInput(argsdict,"pos")
 language = validateInput(argsdict,"language",config["language"])
 format = validateInput(argsdict,"format","turtle")
+exportconfig = {}
 buildpackage = False
 buildredundants = False
 buildinverses = False
@@ -47,9 +48,8 @@ if args.transitive:
 	buildredundants = True
 	buildtransitives = True
 
-
-if "license" in config:
-	license = config["license"]
+if "export" in config:
+	exportconfig = config["export"]
 
 db = Database(config)
 db.connect()
@@ -95,7 +95,7 @@ db.setSenseDefinitions(db.languages[language])
 
 if format == "xml" or format == "turtle":
 	from format.lexicon import LexiconGraph
-	output = LexiconGraph("mylexicon",language,format,license,buildpackage)
+	output = LexiconGraph("mylexicon",language,format,exportconfig,buildpackage)
 	output.setLexicalEntries(db.lexicalEntries)
 	output.setLexicalEntryRelatons(db.lexicalEntryRelations)
 	output.setLexicalForms(db.lexicalForms)
@@ -107,7 +107,7 @@ if format == "xml" or format == "turtle":
 
 elif format == "skos":
 	from format.skos import SKOSGraph
-	output = SKOSGraph("myconceptscheme",language,license,buildpackage)
+	output = SKOSGraph("myconceptscheme",language,exportconfig,buildpackage)
 	output.setConcepts(db.lexicalSenses,db.lexicalEntryLabels,db.lexicalSenseDefinitions)
 	output.setConceptRelations(db.senseReferences)
 
@@ -119,7 +119,7 @@ if buildinverses:
 	output.setInverses()
 
 if buildtransitives:
-	output.setTransitives(config["transitiveSenseIdentifiers"])
+	output.setTransitives()
 
 
 output.printGraph()

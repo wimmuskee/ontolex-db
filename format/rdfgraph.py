@@ -6,7 +6,7 @@ from rdflib import URIRef, Literal, Namespace
 
 
 class RDFGraph():
-	def __init__(self,name,language,format,license,buildpackage):
+	def __init__(self,name,language,format,exportconfig,buildpackage):
 		global SKOSTHES
 		global OWL
 		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
@@ -14,7 +14,7 @@ class RDFGraph():
 		self.name = name
 		self.language = language
 		self.format = format
-		self.license = license
+		self.exportconfig = exportconfig
 		self.buildpackage = buildpackage
 		self.g = Graph()
 		self.g.bind("skos", SKOS)
@@ -76,9 +76,9 @@ class RDFGraph():
 			self.g.add((s,SKOS.broader,o))
 
 
-	def setTransitives(self,senseIdentifiers):
+	def setTransitives(self):
 		""" This function is dependent on setInverses and setRedundants """
-		for senseIdentifier in senseIdentifiers:
+		for senseIdentifier in self.exportconfig["transitiveSenseIdentifiers"]:
 			for narrowerID in self.g.objects(URIRef(senseIdentifier),SKOS.narrower):
 				self.__setTransitive(narrowerID,senseIdentifier)
 
@@ -91,8 +91,8 @@ class RDFGraph():
 		if self.buildpackage:
 			import datetime
 			self.g.add((URIRef("urn:" + self.name),DCTERMS.date,Literal(str(datetime.date.today()))))
-			if self.license:
-				self.g.add((URIRef("urn:" + self.name),DCTERMS.license,Literal(self.license)))
+			if self.exportconfig["license"]:
+				self.g.add((URIRef("urn:" + self.name),DCTERMS.license,Literal(self.exportconfig["license"])))
 			self.g.add((URIRef("urn:" + self.name),VOID.triples,Literal(str(len(self.g)+1), datatype=XSD.integer)))
 
 		print(bytes.decode(self.g.serialize(format=self.format)))

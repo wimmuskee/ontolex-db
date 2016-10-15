@@ -4,10 +4,10 @@
   "passwd": "***",
   "name": "ontolex",
   "language": "nl",
-  "transitiveSenseIdentifiers": [
-    "urn:uuid:ce22336b-dbd3-46bc-99eb-33601c61cd4d",
-    "urn:uuid:fdc89b9d-f5e2-4642-8937-f2eade1fdd7f"
-  ],
-  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "export": {
+    "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "transitiveSenseIdentifiers": [
+      "urn:uuid:ce22336b-dbd3-46bc-99eb-33601c61cd4d",
+      "urn:uuid:fdc89b9d-f5e2-4642-8937-f2eade1fdd7f" ]},
   "worddb": { "type": "file", "name": "/tmp/keywords.txt" }
 }

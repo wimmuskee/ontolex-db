@@ -6,8 +6,8 @@ from format.rdfgraph import RDFGraph
 
 
 class SKOSGraph(RDFGraph):
-	def __init__(self,name,language,license,buildpackage):
-		RDFGraph.__init__(self, name,language,"turtle",license,buildpackage)
+	def __init__(self,name,language,exportconfig,buildpackage):
+		RDFGraph.__init__(self, name,language,"turtle",exportconfig,buildpackage)
 
 		if self.buildpackage:
 			self.g.add((URIRef("urn:" + name),RDF.type,SKOS.ConceptScheme))
