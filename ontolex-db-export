@@ -17,6 +17,7 @@ parser.add_argument('--package', help="build format package", action="store_true
 parser.add_argument('--redundant', help="set redundant relations", action="store_true")
 parser.add_argument('--inverse', help="set inverse relations", action="store_true")
 parser.add_argument('--transitive', help="set transitive relations, implies inverse and redundant", action="store_true")
+parser.add_argument('--persist', help="Sleepycat persist graph in configurable dir", action="store_true")
 
 
 args = parser.parse_args()
@@ -33,6 +34,7 @@ buildpackage = False
 buildredundants = False
 buildinverses = False
 buildtransitives = False
+persist = False
 
 if args.package:
 	buildpackage = True
@@ -47,6 +49,9 @@ if args.transitive:
 	buildinverses = True
 	buildredundants = True
 	buildtransitives = True
+
+if args.persist:
+	persist = True
 
 if "export" in config:
 	exportconfig = config["export"]
@@ -95,7 +100,7 @@ db.setSenseDefinitions(db.languages[language])
 
 if format == "xml" or format == "turtle":
 	from format.lexicon import LexiconGraph
-	output = LexiconGraph("mylexicon",language,format,exportconfig,buildpackage)
+	output = LexiconGraph("mylexicon",language,format,exportconfig,buildpackage,persist)
 	output.setLexicalEntries(db.lexicalEntries)
 	output.setLexicalEntryRelatons(db.lexicalEntryRelations)
 	output.setLexicalForms(db.lexicalForms)
@@ -107,7 +112,7 @@ if format == "xml" or format == "turtle":
 
 elif format == "skos":
 	from format.skos import SKOSGraph
-	output = SKOSGraph("myconceptscheme",language,exportconfig,buildpackage)
+	output = SKOSGraph("myconceptscheme",language,exportconfig,buildpackage,persist)
 	output.setConcepts(db.lexicalSenses,db.lexicalEntryLabels,db.lexicalSenseDefinitions)
 	output.setConceptRelations(db.senseReferences)
 

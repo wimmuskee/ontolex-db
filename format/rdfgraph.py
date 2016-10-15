@@ -6,7 +6,7 @@ from rdflib import URIRef, Literal, Namespace
 
 
 class RDFGraph():
-	def __init__(self,name,language,format,exportconfig,buildpackage):
+	def __init__(self,name,language,format,exportconfig,buildpackage,persist):
 		global SKOSTHES
 		global OWL
 		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
@@ -16,7 +16,17 @@ class RDFGraph():
 		self.format = format
 		self.exportconfig = exportconfig
 		self.buildpackage = buildpackage
-		self.g = Graph()
+		
+		if persist:
+			self.g = Graph("Sleepycat", identifier=self.name)
+			if self.g.open(self.exportconfig["persist_base"] + "/" + self.name, create=False) == 1:
+				self.g.open(self.exportconfig["persist_base"] + "/" + self.name, create=True)
+				self.g.remove((None,None,None))
+			else:
+				self.g.open(self.exportconfig["persist_base"] + "/" + self.name, create=True)
+		else:
+			self.g = Graph()
+
 		self.g.bind("skos", SKOS)
 		self.g.bind("skosthes", SKOSTHES)
 		self.g.bind("dct", DCTERMS)
@@ -98,6 +108,7 @@ class RDFGraph():
 			self.g.add((URIRef("urn:" + self.name),VOID.triples,Literal(str(len(self.g)+1), datatype=XSD.integer)))
 
 		print(bytes.decode(self.g.serialize(format=self.format)))
+		self.g.close()
 
 
 	def __setTransitive(self,startSenseID,targetSenseID):
