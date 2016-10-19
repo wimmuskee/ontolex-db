@@ -11,6 +11,7 @@ parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar=
 parser.add_argument('--dont-ask', help="asume yes at questions", action="store_true")
 rules = parser.add_argument_group('rules')
 rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", action="store_true")
+rules.add_argument('--adjective-conjugated', help="find conjugated for adjective", action="store_true")
 rules.add_argument('--adjective-present-participle', help="set verb present participle as adjective", action="store_true")
 rules.add_argument('--adjective-material-nouns', help="find adjectives for material nouns", action="store_true")
 rules.add_argument('--form-syllable-counts', help="find syllable count for forms", action="store_true")
@@ -48,6 +49,9 @@ r = Ruleset(config,dont_ask)
 
 if args.adjective_antonyms:
 	r.adjectiveAntonyms()
+
+if args.adjective_conjugated:
+	r.adjectiveConjugated()
 
 if args.adjective_material_nouns:
 	r.adjectiveMaterialNouns()

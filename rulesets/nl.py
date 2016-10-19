@@ -67,6 +67,39 @@ class Ruleset(RulesetCommon):
 				self.db.addSense(source_value,pos_id,"lexinfo","antonym",guess_antonym,pos_id)
 
 
+	def adjectiveConjugated(self):
+		formsToConjugate = {}
+		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.adjective):
+			formdict = self.__getAdjectiveForms(str(lexicalEntryID))
+
+			# find out which forms we should conjugate
+			if formdict["canonical"] and not formdict["canonical_c"]:
+				formsToConjugate[formdict["canonical"]] = {"lexicalEntryID": str(lexicalEntryID), "degree": "canonical"}
+			if formdict["comparative"] and not formdict["comparative_c"]:
+				formsToConjugate[formdict["comparative"]] = {"lexicalEntryID": str(lexicalEntryID), "degree": "comparative"}
+			if formdict["superlative"] and not formdict["superlative_c"]:
+				formsToConjugate[formdict["superlative"]] = {"lexicalEntryID": str(lexicalEntryID), "degree": "superlative"}
+
+		for lexicalFormID in formsToConjugate:
+			lexicalEntryID = formsToConjugate[lexicalFormID]["lexicalEntryID"]
+			degree = formsToConjugate[lexicalFormID]["degree"]
+			label = self.getLabel(lexicalFormID)
+			syllableCount = self.__getSyllableCount(label)
+			
+			if label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels and syllableCount == 1:
+				guess_adjective = label + label[-1:] + "e"
+			else:
+				guess_adjective = self.__getNounStem(label) + "e"
+
+			if guess_adjective in self.worddb:
+				if self.userCheck("vervoeging bijvoegelijk naamwoord: " + degree, label, guess_adjective):
+					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+					form_id = self.db.storeOtherForm(lex_id,guess_adjective,self.lang_id)
+					self.db.insertFormProperty(form_id,self.db.properties["morphosyntacticProperty:DC-2207"],True)
+					if degree != "canonical":
+						self.db.insertFormProperty(form_id,self.db.properties["degree:" + degree],True)
+
+
 	def adjectivePresentParticiple(self):
 		""" Set adjective as copy from verb present participles """
 		self.setQuery("askCanonicalByPOS")
@@ -530,3 +563,24 @@ class Ruleset(RulesetCommon):
 			previous_char = c
 
 		return syllableCount
+
+
+	def __getAdjectiveForms(self,lexicalEntryID):
+		""" Return the different forms if any for an adjective lexical entry."""
+		formdict = { "canonical": "", "canonical_c": "", "comparative": "", "comparative_c": "", "superlative": "", "superlative_c": "" }
+
+		for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.otherForm):
+			formdict["canonical"] = str(self.g.value(URIRef(lexicalEntryID),ONTOLEX.canonicalForm,None))
+			
+			if (URIRef(lexicalFormID),LEXINFO.morphosyntacticProperty,URIRef(ISOCAT + "DC-2207")) in self.g and not (URIRef(lexicalFormID),LEXINFO.degree,LEXINFO.comparative) in self.g and not (URIRef(lexicalFormID),LEXINFO.degree,LEXINFO.superlative) in self.g:
+				formdict["canonical_c"] = str(lexicalFormID)
+			elif (URIRef(lexicalFormID),LEXINFO.degree,LEXINFO.comparative) in self.g and not (URIRef(lexicalFormID),LEXINFO.morphosyntacticProperty,URIRef(ISOCAT + "DC-2207")) in self.g:
+				formdict["comparative"] = str(lexicalFormID)
+			elif (URIRef(lexicalFormID),LEXINFO.degree,LEXINFO.comparative) in self.g and (URIRef(lexicalFormID),LEXINFO.morphosyntacticProperty,URIRef(ISOCAT + "DC-2207")) in self.g:
+				formdict["comparative_c"] = str(lexicalFormID)
+			elif (URIRef(lexicalFormID),LEXINFO.degree,LEXINFO.superlative) in self.g and not (URIRef(lexicalFormID),LEXINFO.morphosyntacticProperty,URIRef(ISOCAT + "DC-2207")) in self.g:
+				formdict["superlative"] = str(lexicalFormID)
+			elif (URIRef(lexicalFormID),LEXINFO.degree,LEXINFO.superlative) in self.g and (URIRef(lexicalFormID),LEXINFO.morphosyntacticProperty,URIRef(ISOCAT + "DC-2207")) in self.g:
+				formdict["superlative_c"] = str(lexicalFormID)
+		
+		return formdict
