@@ -568,10 +568,9 @@ class Ruleset(RulesetCommon):
 	def __getAdjectiveForms(self,lexicalEntryID):
 		""" Return the different forms if any for an adjective lexical entry."""
 		formdict = { "canonical": "", "canonical_c": "", "comparative": "", "comparative_c": "", "superlative": "", "superlative_c": "" }
+		formdict["canonical"] = str(self.g.value(URIRef(lexicalEntryID),ONTOLEX.canonicalForm,None))
 
 		for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.otherForm):
-			formdict["canonical"] = str(self.g.value(URIRef(lexicalEntryID),ONTOLEX.canonicalForm,None))
-			
 			if (URIRef(lexicalFormID),LEXINFO.morphosyntacticProperty,URIRef(ISOCAT + "DC-2207")) in self.g and not (URIRef(lexicalFormID),LEXINFO.degree,LEXINFO.comparative) in self.g and not (URIRef(lexicalFormID),LEXINFO.degree,LEXINFO.superlative) in self.g:
 				formdict["canonical_c"] = str(lexicalFormID)
 			elif (URIRef(lexicalFormID),LEXINFO.degree,LEXINFO.comparative) in self.g and not (URIRef(lexicalFormID),LEXINFO.morphosyntacticProperty,URIRef(ISOCAT + "DC-2207")) in self.g:
@@ -582,5 +581,5 @@ class Ruleset(RulesetCommon):
 				formdict["superlative"] = str(lexicalFormID)
 			elif (URIRef(lexicalFormID),LEXINFO.degree,LEXINFO.superlative) in self.g and (URIRef(lexicalFormID),LEXINFO.morphosyntacticProperty,URIRef(ISOCAT + "DC-2207")) in self.g:
 				formdict["superlative_c"] = str(lexicalFormID)
-		
+
 		return formdict
