@@ -144,6 +144,19 @@ class RulesetCommon:
 						self.db.insertSenseReference(compound_sense_id,"skos:broader",targetSenseID,True)
 
 
+	def verbInfinitives(self):
+		""" Set verbFormMood infinitive for all verb canonicals. """
+		result = self.g.query("""SELECT ?lexicalFormID WHERE {
+			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
+				lexinfo:partOfSpeech lexinfo:verb ;
+				ontolex:canonicalForm ?lexicalFormID .
+			MINUS { ?lexicalFormID lexinfo:verbFormMood lexinfo:infinitive } }""")
+		for row in result:
+			lexicalFormID = str(row[0])
+			form_id = self.db.getID(lexicalFormID,"lexicalForm")
+			self.db.insertFormProperty(form_id,self.db.properties["verbFormMood:infinitive"],True)
+
+
 	def userCheck(self,question,source,target):
 		if not target:
 			return False
