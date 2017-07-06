@@ -88,6 +88,8 @@ class Ruleset(RulesetCommon):
 			
 			if label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels and syllableCount == 1:
 				guess_adjective = label + label[-1:] + "e"
+			elif label[-3:] == "ief":
+				guess_adjective = label[:-1] + "ve"
 			else:
 				guess_adjective = self.__getNounStem(label) + "e"
 
@@ -199,6 +201,8 @@ class Ruleset(RulesetCommon):
 				guess_participle = "ge" + label[:-2]
 			elif label[-1:] == "e":
 				guess_participle = "ge" + label[:-1]
+			elif label[:2] == "be":
+				guess_participle = label[:-1]
 			else:
 				guess_participle = "ge" + label
 
