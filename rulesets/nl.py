@@ -314,7 +314,9 @@ class Ruleset(RulesetCommon):
 
 		for lexicalFormID in self.lexicalForms:
 			label = self.lexicalForms[lexicalFormID]
+			singular_unique = False
 
+			# stoot
 			if label[-1:] == "t":
 				guess_singular = label
 				# no worddb check, but ask to add formprops to form
@@ -322,8 +324,15 @@ class Ruleset(RulesetCommon):
 					form_id = self.db.getID(lexicalFormID,"lexicalForm")
 					self.db.insertFormProperty(form_id,self.db.properties["person:secondPerson"],True)
 					self.db.insertFormProperty(form_id,self.db.properties["person:thirdPerson"],True)
+			# ga, onsta
+			elif label[-1:] == "a":
+				guess_singular = label + "at"
+				singular_unique = True
 			else:
 				guess_singular = label + "t"
+				singular_unique = True
+
+			if singular_unique:
 				if guess_singular in self.worddb:
 					if self.userCheck("enkelvoud", "ik " + label, "jij/hij " + guess_singular):
 						lexicalEntryID = self.g.value(None,ONTOLEX.otherForm,URIRef(lexicalFormID))
@@ -375,6 +384,10 @@ class Ruleset(RulesetCommon):
 					guess_stem = base[:-1] + base[-2:-1] + base[-1:]
 				else:
 					guess_stem = base
+
+			# gaan, ontstaan
+			elif label[-3:] == "aan":
+				guess_stem = label[:-2]
 
 			else:
 				print("don't know: " + label)
