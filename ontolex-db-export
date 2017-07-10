@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser(description='export script for ontolox-db')
 parser.add_argument('-f', '--format', nargs=1, help='output format', metavar='format', dest='format')
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
-parser.add_argument('-i', '--identifier', nargs=1, help='local identifier', metavar='identifier', dest='identifier')
+parser.add_argument('-i', '--identifier', nargs=1, help='identifier (also internal)', metavar='identifier', dest='identifier')
 parser.add_argument('-v', '--value', nargs=1, help='word', metavar='value', dest='value')
 parser.add_argument('-p', '--pos', nargs=1, help='partOfSpeech', metavar='partOfSpeech', dest='pos')
 
@@ -64,6 +64,10 @@ if pos:
 	db.setPosses()
 	if pos not in db.posses:
 		parser.error("invalid partOfSpeech: " + pos)
+
+# use non-local identifiers as well
+if identifier and not identifier.isdigit():
+	identifier = db.getID(identifier,"lexicalEntry")
 
 # set entry lookup as identifier
 if value and pos:
