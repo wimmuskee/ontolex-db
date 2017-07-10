@@ -26,6 +26,7 @@ rules.add_argument('--noun-plurals', help="find plurals for canonical nouns", ac
 rules.add_argument('--verb-infinitives', help="set verb canonicals as infinitives", action="store_true")
 rules.add_argument('--verb-past-participles', help="find past participles verbs", action="store_true")
 rules.add_argument('--verb-past-singulars', help="find past singulars verbs", action="store_true")
+rules.add_argument('--verb-past-plurals', help="find past plurals verbs", action="store_true")
 rules.add_argument('--verb-present-participles', help="find present participles verbs", action="store_true")
 rules.add_argument('--verb-related-nouns', help="find related nouns for verbs", action="store_true")
 rules.add_argument('--verb-singulars', help="find remaing singular forms for verbs with a stem", action="store_true")
@@ -95,6 +96,9 @@ if args.verb_past_participles:
 
 if args.verb_past_singulars:
 	r.verbPastSingulars()
+
+if args.verb_past_plurals:
+	r.verbPastPlurals()
 
 if args.verb_present_participles:
 	r.verbPresentParticiples()

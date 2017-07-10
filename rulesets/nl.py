@@ -235,11 +235,41 @@ class Ruleset(RulesetCommon):
 				guess_past = stem + "de"
 
 			if guess_past in self.worddb:
-				if self.userCheck("verleden tijd", label, guess_past):
+				if self.userCheck("verleden tijd ev", label, "ik/jij/hij " + guess_past):
 					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
 					form_id = self.db.storeOtherForm(lex_id,guess_past,self.lang_id)
 					self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
 					self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
+
+
+	def verbPastPlurals(self):
+		""" Look for forms that have a past singular form, but not a past plural. """
+		result = self.g.query("""SELECT ?label ?lexicalFormID ?lexicalEntryID WHERE {
+			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
+				lexinfo:partOfSpeech lexinfo:verb ;
+				ontolex:otherForm ?lexicalFormID .
+			?lexicalFormID lexinfo:number lexinfo:singular ;
+				lexinfo:tense lexinfo:past ;
+				rdfs:label ?label .
+			MINUS {
+				?lexicalEntryID ontolex:otherForm ?lexicalFormID .
+				?lexicalFormID lexinfo:number lexinfo:plural ;
+					lexinfo:tense lexinfo:past . } }""")
+		for row in result:
+			label = str(row[0])
+			lexicalEntryID = str(row[2])
+
+			if label[-2:] == "te" or label[-2:] == "de":
+				guess_plural = label + "n"
+			else:
+				continue
+
+			if guess_plural in self.worddb:
+				if self.userCheck("verleden tijd mv", label, "wij " + guess_plural):
+					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+					form_id = self.db.storeOtherForm(lex_id,guess_plural,self.lang_id)
+					self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["number:plural"],True)
 
 
 	def verbPresentParticiples(self):
