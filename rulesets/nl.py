@@ -452,7 +452,7 @@ class Ruleset(RulesetCommon):
 			lexicalEntryID = str(row[1])
 			syllableCount = self.__getSyllableCount(label)
 
-			if (label[-2:] in ["er","ie","en"] or label[-1:] == "e") and syllableCount > 1:
+			if (label[-2:] in ["er","ie","en","el"] or label[-1:] == "e") and syllableCount > 1:
 				guess_plural = label + "s"
 			elif label[-4:] == "erik":
 				guess_plural = label + "en"
