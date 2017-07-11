@@ -6,8 +6,8 @@ from format.rdfgraph import RDFGraph
 
 
 class LexiconGraph(RDFGraph):
-	def __init__(self,name,language,format,exportconfig,buildpackage):
-		RDFGraph.__init__(self, name,language,format,exportconfig,buildpackage)
+	def __init__(self,name,language,format,exportconfig,buildpackage,persist):
+		RDFGraph.__init__(self, name,language,format,exportconfig,buildpackage,persist)
 
 		global ONTOLEX
 		global LEXINFO
@@ -179,3 +179,15 @@ class LexiconGraph(RDFGraph):
 
 		for s,p,o in self.g.triples( (None,LEXINFO.partOfSpeech,LEXINFO.pastParticipleAdjective) ):
 			self.g.add((s,LEXINFO.partOfSpeech,LEXINFO.adjective))
+
+		for s,p,o in self.g.triples( (None,LEXINFO.partOfSpeech,LEXINFO.ordinalAdjective) ):
+			self.g.add((s,LEXINFO.partOfSpeech,LEXINFO.adjective))
+
+		for s,p,o in self.g.triples( (None,LEXINFO.partOfSpeech,LEXINFO.cardinalNumeral) ):
+			self.g.add((s,LEXINFO.partOfSpeech,LEXINFO.numeral))
+
+		for s,p,o in self.g.triples( (None,LEXINFO.partOfSpeech,LEXINFO.indefiniteCardinalNumeral) ):
+			self.g.add((s,LEXINFO.partOfSpeech,LEXINFO.numeral))
+
+		for s,p,o in self.g.triples( (None,LEXINFO.partOfSpeech,LEXINFO.indefiniteOrdinalNumeral) ):
+			self.g.add((s,LEXINFO.partOfSpeech,LEXINFO.numeral))

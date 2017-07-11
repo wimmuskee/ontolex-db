@@ -18,3 +18,6 @@ INSERT INTO partOfSpeechVocabulary (value) VALUES ('cardinalNumeral');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('interjection');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('pastParticipleAdjective');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('presentParticipleAdjective');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('ordinalAdjective');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('indefiniteCardinalNumeral');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('indefiniteOrdinalNumeral');
