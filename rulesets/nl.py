@@ -180,9 +180,11 @@ class Ruleset(RulesetCommon):
 			?lexicalFormID lexinfo:number lexinfo:singular ;
 				lexinfo:tense lexinfo:past ;
 				rdfs:label ?label .
-			MINUS { 
-				?lexicalEntryID ontolex:otherForm ?lexicalParticipleID .
-				?lexicalParticipleID lexinfo:verbFormMood lexinfo:participle ;
+			MINUS {
+				?lexicalEntryID rdf:type ontolex:LexicalEntry ;
+					lexinfo:partOfSpeech lexinfo:verb ;
+					ontolex:otherForm ?participle_lexicalFormID .
+				?participle_lexicalFormID lexinfo:verbFormMood lexinfo:participle ;
 					lexinfo:tense lexinfo:past . } }""")
 
 		for row in result:
@@ -252,8 +254,10 @@ class Ruleset(RulesetCommon):
 				lexinfo:tense lexinfo:past ;
 				rdfs:label ?label .
 			MINUS {
-				?lexicalEntryID ontolex:otherForm ?lexicalFormID .
-				?lexicalFormID lexinfo:number lexinfo:plural ;
+				?lexicalEntryID rdf:type ontolex:LexicalEntry ;
+					lexinfo:partOfSpeech lexinfo:verb ;
+					ontolex:otherForm ?plural_lexicalFormID .
+				?plural_lexicalFormID lexinfo:number lexinfo:plural ;
 					lexinfo:tense lexinfo:past . } }""")
 		for row in result:
 			label = str(row[0])
