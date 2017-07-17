@@ -61,3 +61,32 @@ ontolex-db-export -v bv -p noun
 #    lexinfo:initialismFor <urn:uuid:5b4c4848-8ad7-429d-88c4-7eb223a5fb5b> ;
 #    lexinfo:partOfSpeech lexinfo:noun .
 ```
+
+## adding senses
+Senses can be added to existing lexicalEntries. It is then possible to add a definition,
+add references to external identifiers and add relations between them.
+```bash
+# add a sense to a lexicalEntry and look see the new lexicalSense
+ontolex-db-manager add sense -s urn:uuid:8e1c3fc7-1b93-420f-88c5-568a15113536
+ontolex-db-export -i urn:uuid:8e1c3fc7-1b93-420f-88c5-568a15113536
+
+# now, add a relation between 2 senses
+# in this case, a pertainsTo relation between adjective and noun
+ontolex-db-manager add relation -s urn:uuid:02d56dfb-89de-4484-86db-d82feb132e64 -t urn:uuid:fa4f2e70-cfc9-4c4f-ba50-9c756da99d2b -r lexinfo:pertainsTo
+ontolex-db-export -v conjunctureel -p adjective
+
+# <urn:uuid:0a7756cc-a9b5-4adb-bab2-0d9d2a4f686c> a ontolex:LexicalEntry,
+#         ontolex:Word ;
+#     rdfs:label "conjunctureel"@nl ;
+#     lexinfo:partOfSpeech lexinfo:adjective ;
+#     ontolex:canonicalForm <urn:uuid:3dc209a2-a34e-45f8-9654-76e56ba35431> ;
+#     ontolex:sense <urn:uuid:02d56dfb-89de-4484-86db-d82feb132e64> .
+#
+# <urn:uuid:02d56dfb-89de-4484-86db-d82feb132e64> a skos:Concept,
+#         ontolex:LexicalSense ;
+#     rdfs:label "conjunctureel"@nl ;
+#     lexinfo:pertainsTo <urn:uuid:fa4f2e70-cfc9-4c4f-ba50-9c756da99d2b> .
+#
+# <urn:uuid:3dc209a2-a34e-45f8-9654-76e56ba35431> a ontolex:Form ;
+#     ontolex:writtenRep "conjunctureel"@nl .
+```

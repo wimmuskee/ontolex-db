@@ -70,7 +70,7 @@ class Database:
 		self.senserelations.extend( ["ontolex:reference"] )
 		self.senserelations.extend( ["skos:broader", "skos:related"] )
 		self.senserelations.extend( ["skos-thes:broaderInstantial", "skos-thes:broaderPartitive"] )
-		self.senserelations.extend( ["lexinfo:antonym", "lexinfo:synonym"] )
+		self.senserelations.extend( ["lexinfo:antonym", "lexinfo:synonym", "lexinfo:pertainsTo"] )
 
 
 	def setLexicalEntries(self):
