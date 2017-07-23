@@ -50,7 +50,7 @@ class Ruleset(RulesetCommon):
 			guess_antonym = "on" + source_value
 
 			if self.userCheck("tegenstelling", source_value, guess_antonym):
-				sensecount = self.countLexicalenses(lexicalEntryIdentifier)
+				sensecount = self.countLexicalSenses(lexicalEntryIdentifier)
 				if sensecount > 1:
 					print("multiple senses detected, store manually")
 					continue
@@ -65,6 +65,71 @@ class Ruleset(RulesetCommon):
 				# we might want to store now, first the guess antonym lexicalEntry, then the sense
 				self.db.storeCanonical(guess_antonym,self.lang_id,pos_id)
 				self.db.addSense(source_value,pos_id,"lexinfo","antonym",guess_antonym,pos_id)
+
+
+	def adjectivePertainsTo(self):
+		# 1. gather adjective lexicalEntries
+		self.setLexicalEntriesByPOS(LEXINFO.adjective,["label","senses"])
+
+		# 2. delete entries which have a pertainsTo sense relation
+		for lexicalEntryID in list(self.lexicalEntries):
+			meta = self.lexicalEntries[lexicalEntryID]
+			for lexicalSenseID in meta["senses"]:
+				senseID = self.g.value(URIRef(lexicalSenseID),LEXINFO.pertainsTo,None)
+				if senseID:
+					del(self.lexicalEntries[lexicalEntryID])
+					break
+
+		# 3. apply rulesets to find matches and delete the rest
+		for lexicalEntryID in list(self.lexicalEntries):
+			label = self.lexicalEntries[lexicalEntryID]["label"]
+			self.lexicalEntries[lexicalEntryID]["match"] = {}
+
+			search_noun = []
+			if label[-5:] == "tisch":
+				# communistisch -> communisme
+				search_noun.append(label[:-5] + "me")
+			elif label[-4:] == "isch":
+				# chemisch -> chemie
+				search_noun.append(label[:-3] + "e")
+				# feministisch -> feminisme
+				search_noun.append(label[:-3] + "sme")
+				# kritisch -> kritiek
+				search_noun.append(label[:-3] + "ek")
+			elif label[-6:] == "kundig":
+				# wiskundig -> wiskunde
+				search_noun.append(label[:-2] + "e")
+
+			for noun in search_noun:
+				targetLexicalEntryID = self.findLexicalEntry(noun,LEXINFO.noun)
+				if targetLexicalEntryID:
+					self.lexicalEntries[lexicalEntryID]["match"] = {"lexicalEntryID": targetLexicalEntryID, "label": noun, "senses": self.getLexicalSenseIDs(targetLexicalEntryID)}
+					break
+
+			if not self.lexicalEntries[lexicalEntryID]["match"]:
+				del(self.lexicalEntries[lexicalEntryID])
+
+		# 4. parse remaining entries with matches, and store
+		for lexicalEntryID,meta in self.lexicalEntries.items():
+			if len(meta["senses"]) > 1 or len(meta["match"]["senses"]) > 1:
+				print("sensecount > 1 for source or target: " + meta["label"])
+				continue
+			
+			if self.userCheck("pertainsTo", meta["label"], meta["match"]["label"]):
+				if len(meta["senses"]) == 1:
+					source_sense_id = self.db.getID(meta["senses"][0],"lexicalSense")
+				else:
+					source_entry_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+					source_sense_id = self.db.insertLexicalSense(source_entry_id,True)
+
+				if len(meta["match"]["senses"]) == 1:
+					target_sense_identifier = meta["match"]["senses"][0]
+				else:
+					target_entry_id = self.db.getID(meta["match"]["lexicalEntryID"],"lexicalEntry")
+					target_sense_id = self.db.insertLexicalSense(target_entry_id,True)
+					target_sense_identifier = self.db.getIdentifier(target_sense_id,"lexicalSense")
+
+				self.db.insertSenseReference(source_sense_id,"lexinfo:pertainsTo",target_sense_identifier,True)
 
 
 	def adjectiveConjugated(self):
@@ -142,10 +207,10 @@ class Ruleset(RulesetCommon):
 		for mID in materialSenseIDs:
 			for senseID in self.g.objects(URIRef(mID),SKOSTHES.narrowerInstantial):
 				lexicalEntryID = str(self.g.value(None,ONTOLEX.sense,URIRef(senseID)))
-				self.lexicalEntries[lexicalEntryID] = self.getLabel(senseID)
+				self.lexicalEntries[lexicalEntryID]["label"] = self.getLabel(senseID)
 
 		for lexicalEntryID in self.lexicalEntries:
-			label = self.lexicalEntries[lexicalEntryID]
+			label = self.lexicalEntries[lexicalEntryID]["label"]
 			guess_adjective = self.__getNounStem(label) + "en"
 
 			if guess_adjective in self.worddb:
@@ -266,7 +331,7 @@ class Ruleset(RulesetCommon):
 			if label[-2:] == "te" or label[-2:] == "de":
 				guess_plural = label + "n"
 			else:
-				continue
+				guess_plural = label + "en"
 
 			if guess_plural in self.worddb:
 				if self.userCheck("verleden tijd mv", label, "wij " + guess_plural):
@@ -308,10 +373,10 @@ class Ruleset(RulesetCommon):
 		target_pos_id = self.db.posses["noun"]
 
 		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.verb):
-			self.lexicalEntries[lexicalEntryID] = self.getLabel(lexicalEntryID)
+			self.lexicalEntries[lexicalEntryID]["label"] = self.getLabel(lexicalEntryID)
 
 		for lexicalEntryID in self.lexicalEntries:
-			source_value = self.lexicalEntries[lexicalEntryID]
+			source_value = self.lexicalEntries[lexicalEntryID]["label"]
 			guess_noun = source_value[:-2] + "ing"
 
 			if guess_noun in self.worddb and self.userCheck("gerelateerd", source_value, guess_noun):
@@ -385,10 +450,10 @@ class Ruleset(RulesetCommon):
 				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.present) in self.g and (URIRef(lexicalFormID),LEXINFO.person,LEXINFO.firstPerson) in self.g:
 					use = False
 			if use:
-				self.lexicalEntries[str(lexicalEntryID)] = self.getLabel(lexicalEntryID)
+				self.lexicalEntries[str(lexicalEntryID)]["label"] = self.getLabel(lexicalEntryID)
 
 		for lexicalEntryID in self.lexicalEntries:
-			label = self.lexicalEntries[lexicalEntryID]
+			label = self.lexicalEntries[lexicalEntryID]["label"]
 			base = label[:-2]
 			guess_stem = ""
 
@@ -460,6 +525,8 @@ class Ruleset(RulesetCommon):
 				guess_plural = label + "s"
 			elif label[-4:] == "erik":
 				guess_plural = label + "en"
+			elif label[-2:] == "ij":
+				guess_plural = label + "en"
 			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
 				guess_plural = label + label[-1:] + "en"
 			elif label[-3:] in ["eum","ium"]:
@@ -490,7 +557,7 @@ class Ruleset(RulesetCommon):
 		self.setProcessableEntries(LEXINFO.noun,LEXINFO.partOfSpeech,LEXINFO.diminutiveNoun)
 
 		for lexicalEntryID in self.lexicalEntries:
-			label = self.lexicalEntries[lexicalEntryID]
+			label = self.lexicalEntries[lexicalEntryID]["label"]
 			syllableCount = self.__getSyllableCount(label)
 			guess_diminutive = ""
 			

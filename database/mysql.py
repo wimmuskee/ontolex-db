@@ -241,6 +241,14 @@ class Database:
 		return row[field]
 
 
+	def getIdentifier(self,id,table):
+		""" Return the identifier from either entry, form or sense, based on the real DB id. """
+		field = table + "ID"
+		query = "SELECT identifier FROM " + table + " WHERE " + field + " = %s"
+		row = self.__getRow(query,(id))
+		return row["identifier"]
+
+
 	def getCountlexicalSenses(self,lexicalEntryID):
 		query = "SELECT count(*) AS count FROM lexicalSense WHERE lexicalEntryID = %s"
 		row = self.__getRow(query,(lexicalEntryID))

@@ -49,7 +49,7 @@ class RulesetCommon:
 
 		self.dont_ask = dont_ask
 
-		# store lexicalForms, ID is key, value label
+		# store lexicalEntries, ID is key, value meta dict
 		self.lexicalEntries = {}
 		# store lexicalForms, ID is key, value is dict with label and lexicalEntryID
 		self.lexicalForms = {}
@@ -171,6 +171,16 @@ class RulesetCommon:
 			return False
 
 
+	def setLexicalEntriesByPOS(self,partOfSpeech,fieldset=[]):
+		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
+			lexicalEntryID = str(lexicalEntryID)
+			self.lexicalEntries[lexicalEntryID] = {}
+			if "label" in fieldset:
+				self.lexicalEntries[lexicalEntryID]["label"] = self.getLabel(lexicalEntryID)
+			if "senses" in fieldset:
+				self.lexicalEntries[lexicalEntryID]["senses"] = self.getLexicalSenseIDs(lexicalEntryID)
+
+
 	def setProcessableEntries(self,partOfSpeech,checkPredicate,checkObject):
 		""" Find entries that do not have a form with the specified relation.
 		We're gonna try to find new forms with that relation. 
@@ -178,7 +188,7 @@ class RulesetCommon:
 		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
 			if self.checkFormRelation(lexicalEntryID,checkPredicate,checkObject):
 				continue
-			self.lexicalEntries[str(lexicalEntryID)] = self.getLabel(lexicalEntryID)
+			self.lexicalEntries[str(lexicalEntryID)]["label"] = self.getLabel(lexicalEntryID)
 
 
 	def setProcessableForms(self,partOfSpeech,checkPredicate):
@@ -198,6 +208,13 @@ class RulesetCommon:
 		return str(self.g.value(URIRef(identifier),RDFS.label,None))
 
 
+	def getLexicalSenseIDs(self,lexicalEntryID):
+		senseIDs = []
+		for lexicalSenseID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.sense):
+			senseIDs.append(str(lexicalSenseID))
+		return senseIDs
+
+
 	def checkLexicalEntryExists(self,word,partOfSpeech):
 		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
 			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=self.language)) in self.g:
@@ -206,9 +223,12 @@ class RulesetCommon:
 
 
 	def findLexicalEntry(self,word,partOfSpeech):
+		lexicalEntryID = ""
 		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
 			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=self.language)) in self.g:
-				return str(lexicalEntryIdentifier)
+				lexicalEntryID = str(lexicalEntryIdentifier)
+				break
+		return lexicalEntryID
 
 
 	def checkFormRelation(self,lexicalEntryID,checkPredicate,checkObject):
@@ -220,7 +240,7 @@ class RulesetCommon:
 
 
 	# we have this in prepared form, but not sure which version i will use
-	def countLexicalenses(self,lexicalEntryIdentifier):
+	def countLexicalSenses(self,lexicalEntryIdentifier):
 		c = 0
 		for lexicalSenseIdentifier in self.g.objects(URIRef(lexicalEntryIdentifier),ONTOLEX.sense):
 			c = c + 1
