@@ -123,6 +123,9 @@ class Ruleset(RulesetCommon):
 			elif label[-6:] == "kundig":
 				# wiskundig -> wiskunde
 				search_noun.append(label[:-2] + "e")
+			elif label[-5:] == "oneel":
+				# traditioneel -> traditie
+				search_noun.append(label[:-5] + "e")
 
 			for noun in search_noun:
 				targetLexicalEntryID = self.findLexicalEntry(noun,LEXINFO.noun)
