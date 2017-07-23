@@ -34,37 +34,61 @@ class Ruleset(RulesetCommon):
 
 
 	def adjectiveAntonyms(self):
-		print("first redesign")
-		exit()
-		""" Based on word characteristics. Trying to prefix 'on' to a word. """
-		pos_id = self.db.posses["adjective"]
-		lexicalEntryIDs = {}
-		
-		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.adjective):
-			label = self.getLabel(lexicalEntryIdentifier)
-			if label[:2] != "on":
-				lexicalEntryIDs[lexicalEntryIdentifier] = label
-	
-		for lexicalEntryIdentifier in lexicalEntryIDs:
-			source_value = lexicalEntryIDs[lexicalEntryIdentifier]
-			guess_antonym = "on" + source_value
+		# 1. gather adjective lexicalEntries
+		self.setLexicalEntriesByPOS(LEXINFO.adjective,["label","senses"])
 
-			if self.userCheck("tegenstelling", source_value, guess_antonym):
-				sensecount = self.countLexicalSenses(lexicalEntryIdentifier)
-				if sensecount > 1:
-					print("multiple senses detected, store manually")
-					continue
-				elif sensecount == 1:
-					# check antonym
-					lexicalSenseIdentifier = self.g.value(URIRef(lexicalEntryIdentifier),ONTOLEX.sense,None)
-					if (URIRef(lexicalSenseIdentifier),LEXINFO.antonym,None) in self.g:
-						print("antonym already detected, moving on")
-						continue
-				
-				# at this point sensecount is 0, or it is safe to move on
-				# we might want to store now, first the guess antonym lexicalEntry, then the sense
-				self.db.storeCanonical(guess_antonym,self.lang_id,pos_id)
-				self.db.addSense(source_value,pos_id,"lexinfo","antonym",guess_antonym,pos_id)
+		# 2. delete entries which have an antonym sense relation, or start with stringmatchers
+		for lexicalEntryID in list(self.lexicalEntries):
+			meta = self.lexicalEntries[lexicalEntryID]
+			if meta["label"][:2] == "on" or meta["label"][:2] == "in":
+				del(self.lexicalEntries[lexicalEntryID])
+				continue
+
+			for lexicalSenseID in meta["senses"]:
+				senseID = self.g.value(URIRef(lexicalSenseID),LEXINFO.antonym,None)
+				if senseID:
+					del(self.lexicalEntries[lexicalEntryID])
+					break
+
+		# 3. apply rulesets to find matches and delete the rest
+		for lexicalEntryID in list(self.lexicalEntries):
+			label = self.lexicalEntries[lexicalEntryID]["label"]
+			self.lexicalEntries[lexicalEntryID]["match"] = {}
+
+			search_antonym = []
+			search_antonym.append("in" + label)
+			search_antonym.append("on" + label)
+			
+			for antonym in search_antonym:
+				targetLexicalEntryID = self.findLexicalEntry(antonym,LEXINFO.adjective)
+				if targetLexicalEntryID:
+					self.lexicalEntries[lexicalEntryID]["match"] = {"lexicalEntryID": targetLexicalEntryID, "label": antonym, "senses": self.getLexicalSenseIDs(targetLexicalEntryID)}
+					break
+
+			if not self.lexicalEntries[lexicalEntryID]["match"]:
+				del(self.lexicalEntries[lexicalEntryID])
+
+		# 4. parse remaining entries with matches, and store
+		for lexicalEntryID,meta in self.lexicalEntries.items():
+			if len(meta["senses"]) > 1 or len(meta["match"]["senses"]) > 1:
+				print("sensecount > 1 for source or target: " + meta["label"])
+				continue
+			
+			if self.userCheck("antonym", meta["label"], meta["match"]["label"]):
+				if len(meta["senses"]) == 1:
+					source_sense_id = self.db.getID(meta["senses"][0],"lexicalSense")
+				else:
+					source_entry_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+					source_sense_id = self.db.insertLexicalSense(source_entry_id,True)
+
+				if len(meta["match"]["senses"]) == 1:
+					target_sense_identifier = meta["match"]["senses"][0]
+				else:
+					target_entry_id = self.db.getID(meta["match"]["lexicalEntryID"],"lexicalEntry")
+					target_sense_id = self.db.insertLexicalSense(target_entry_id,True)
+					target_sense_identifier = self.db.getIdentifier(target_sense_id,"lexicalSense")
+
+				self.db.insertSenseReference(source_sense_id,"lexinfo:antonym",target_sense_identifier,True)
 
 
 	def adjectivePertainsTo(self):
