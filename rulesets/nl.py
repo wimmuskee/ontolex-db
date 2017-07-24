@@ -459,78 +459,74 @@ class Ruleset(RulesetCommon):
 				singular_unique = True
 
 			if singular_unique:
-				if guess_singular in self.worddb:
-					if self.userCheck("enkelvoud", "ik " + label, "jij/hij " + guess_singular):
-						lexicalEntryID = self.g.value(None,ONTOLEX.otherForm,URIRef(lexicalFormID))
-						lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-						form_id = self.db.storeOtherForm(lex_id,guess_singular,self.lang_id)
-						self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
-						self.db.insertFormProperty(form_id,self.db.properties["tense:present"],True)
-						self.db.insertFormProperty(form_id,self.db.properties["person:secondPerson"],True)
-						self.db.insertFormProperty(form_id,self.db.properties["person:thirdPerson"],True)
+				if self.userCheck("enkelvoud", "ik " + label, "jij/hij " + guess_singular):
+					lexicalEntryID = self.g.value(None,ONTOLEX.otherForm,URIRef(lexicalFormID))
+					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+					form_id = self.db.storeOtherForm(lex_id,guess_singular,self.lang_id)
+					self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["tense:present"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["person:secondPerson"],True)
+					self.db.insertFormProperty(form_id,self.db.properties["person:thirdPerson"],True)
 
 
 	def verbStems(self):
-		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.verb):
-			use = True
-			for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.lexicalForm):
-				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.present) in self.g and (URIRef(lexicalFormID),LEXINFO.person,LEXINFO.firstPerson) in self.g:
-					use = False
-			if use:
-				self.lexicalEntries[str(lexicalEntryID)]["label"] = self.getLabel(lexicalEntryID)
+		# 1. gather verb lexicalEntries
+		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","forms"])
 
-		for lexicalEntryID in self.lexicalEntries:
+		# 2. delete entries which have 
+		for lexicalEntryID in list(self.lexicalEntries):
+			meta = self.lexicalEntries[lexicalEntryID]
+
+			for lexicalFormID in meta["forms"]:
+				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.present) in self.g and (URIRef(lexicalFormID),LEXINFO.person,LEXINFO.firstPerson) in self.g:
+					del(self.lexicalEntries[lexicalEntryID])
+					break
+
+		# 3. apply rulesets and store
+		for lexicalEntryID in list(self.lexicalEntries):
 			label = self.lexicalEntries[lexicalEntryID]["label"]
 			base = label[:-2]
 			guess_stem = ""
 
-			# roeien, hooien and bijten, roepen
 			if base[-2:] in self.double_chars or base[-3:-1] in self.double_chars:
+				# roeien, hooien and bijten, roepen
 				guess_stem = base
-
-			# beschermen, zetten
 			elif not base[-2:-1] in self.vowels and not base[-1:] in self.vowels:
+				# zetten -> beschermen
 				if base[-2:-1] == base[-1:]:
 					guess_stem = base[:-1]
 				else:
 					guess_stem = base
-
-			# hanteren, benaderen, keren, handelen, uitwisselen, delen, nemen, ademen
 			elif base[-2:] in ["er","em","el","en"]:
+				# hanteren, benaderen, keren, handelen, uitwisselen, delen, nemen, ademen
 				# no apparant rule, so check by random choice
 				choice = randint(1,10)
 				if choice > 6:
 					guess_stem = base
 				else:
 					guess_stem = base[:-1] + base[-2:-1] + base[-1:]
-
-			# horen, vermenigvuldigen
 			elif base[-2:-1] in self.vowels and not base[-1:] in self.vowels:
-				if base[-2:-1] in ["a","o","e"]:
+				# horen, vermenigvuldigen, gluren
+				if base[-2:-1] in ["a","o","e","u"]:
+					# make longer
 					guess_stem = base[:-1] + base[-2:-1] + base[-1:]
 				else:
 					guess_stem = base
-
-			# gaan, ontstaan
 			elif label[-3:] == "aan":
+				# gaan, ontstaan
 				guess_stem = label[:-2]
-
-			else:
-				print("don't know: " + label)
-				continue
 
 			if guess_stem[-1:] == "v":
 				guess_stem = guess_stem[:-1] + "f"
 			elif guess_stem[-1:] == "z":
 				guess_stem = guess_stem[:-1] + "s"
 
-			if guess_stem in self.worddb:
-				if self.userCheck("stam", label, "ik " + guess_stem):
-					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-					form_id = self.db.storeOtherForm(lex_id,guess_stem,self.lang_id)
-					self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
-					self.db.insertFormProperty(form_id,self.db.properties["tense:present"],True)
-					self.db.insertFormProperty(form_id,self.db.properties["person:firstPerson"],True)
+			if self.userCheck("stam", label, "ik " + guess_stem):
+				lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+				form_id = self.db.storeOtherForm(lex_id,guess_stem,self.lang_id)
+				self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
+				self.db.insertFormProperty(form_id,self.db.properties["tense:present"],True)
+				self.db.insertFormProperty(form_id,self.db.properties["person:firstPerson"],True)
 
 
 	def nounPlurals(self):
