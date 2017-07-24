@@ -138,14 +138,9 @@ class RulesetCommon:
 				self.db.insertLexicalEntryComponent(source_entry_id,post_comp_id,2,True)
 
 
-	def refreshComponents(self):
-		components = self.getTopUsedComponents()
-		for c in components:
-			self.nounComponents(c)
-			self.lexicalEntries = {}
-
-
 	def nounComponentsSenses(self):
+		print("first redesign")
+		exit()
 		"""For each component, find used compounds and see if they are narrower in meaning."""
 		self.setQuery("countSenses")
 		
@@ -315,7 +310,7 @@ class RulesetCommon:
 					rdfs:label ?label . }""", initNs = {"ontolex": ONTOLEX, "lexinfo": LEXINFO })
 
 
-
+	# NOTE, not used anymore, we need a better way to manage components
 	def getTopUsedComponents(self,min_threshold=2):
 		components = {}
 		result = self.g.query( """SELECT ?componentID (COUNT(?componentID) as ?countComponentID) WHERE {

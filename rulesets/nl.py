@@ -657,6 +657,8 @@ class Ruleset(RulesetCommon):
 
 
 	def nounComponentsFind(self):
+		print("first redesign")
+		exit()
 		pos_id = self.db.posses["noun"]
 		components = self.getTopUsedComponents()
 		for componentID in components:
