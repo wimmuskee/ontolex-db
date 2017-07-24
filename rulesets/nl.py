@@ -477,6 +477,11 @@ class Ruleset(RulesetCommon):
 		for lexicalEntryID in list(self.lexicalEntries):
 			meta = self.lexicalEntries[lexicalEntryID]
 
+			# for now, remove all verbs that are made from components
+			if self.g.value(URIRef(lexicalEntryID),DECOMP.constituent,None):
+				del(self.lexicalEntries[lexicalEntryID])
+				continue
+
 			for lexicalFormID in meta["forms"]:
 				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.present) in self.g and (URIRef(lexicalFormID),LEXINFO.person,LEXINFO.firstPerson) in self.g:
 					del(self.lexicalEntries[lexicalEntryID])
