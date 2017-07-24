@@ -90,3 +90,20 @@ ontolex-db-export -v conjunctureel -p adjective
 # <urn:uuid:3dc209a2-a34e-45f8-9654-76e56ba35431> a ontolex:Form ;
 #     ontolex:writtenRep "conjunctureel"@nl .
 ```
+
+## Adding components
+Components are usually initiated for a common subpart on the commandline, and used to start
+gathering new components based on that first one. For example, the Dutch *aanhouden* can be
+divided in *aan* and *houden*, similar to the English *deactivate*.
+```bash
+# get the lexicalFormID and add a component
+ontolex-db-export -v aan -p preposition
+ontolex-db-manager add component -s urn:uuid:63a6d052-3ee6-4cba-9c07-a66b01cf77a4
+
+# stored component: urn:uuid:6adcd994-3e76-4dbb-ad91-000d6e31211a
+# and refresh the export
+ontolex-db-export --package --transitive > export.ttl
+
+# now use that identifier in the verb-components ruleset
+ontolex-db-ruleset --verb-components urn:uuid:6adcd994-3e76-4dbb-ad91-000d6e31211a
+```
