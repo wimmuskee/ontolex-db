@@ -96,6 +96,48 @@ class RulesetCommon:
 				print("prefix not found as writtenRep: " + prefix)
 
 
+	def verbComponents(self,componentID):
+		""" Try to match a component to a prefix on verbs."""
+		searchterm = self.getLabel(componentID)
+		searchtermCount = len(searchterm)
+
+		# 1. collect verbs
+		self.setLexicalEntriesByPOS(LEXINFO.verb,["label"])
+
+		# 2. delete entries that do not start with searchterm, and do not have components set
+		for lexicalEntryID in list(self.lexicalEntries):
+			label = self.lexicalEntries[lexicalEntryID]["label"]
+			if len(label) <= searchtermCount or label[:searchtermCount] != searchterm:
+				del(self.lexicalEntries[lexicalEntryID])
+				continue
+			elif (URIRef(lexicalEntryID),DECOMP.constituent,URIRef(componentID)) in self.g:
+				del(self.lexicalEntries[lexicalEntryID])
+
+		# 3. now see if we can find a match for the postfix (in verbs)
+		for lexicalEntryID in list(self.lexicalEntries):
+			label = self.lexicalEntries[lexicalEntryID]["label"]
+			postfix = label[searchtermCount:]
+			self.lexicalEntries[lexicalEntryID]["match"] = {}
+
+			for lexicalFormID in self.g.subjects(ONTOLEX.writtenRep,Literal(postfix, lang=self.language)):
+				if (URIRef(lexicalFormID),LEXINFO.verbFormMood,LEXINFO.infinitive) in self.g:
+					self.lexicalEntries[lexicalEntryID]["match"] = { "lexicalFormID": str(lexicalFormID), "value": postfix, "lexicalEntryID": str(self.g.value(None,ONTOLEX.lexicalForm,URIRef(lexicalFormID)))}
+
+			if not self.lexicalEntries[lexicalEntryID]["match"]:
+				del(self.lexicalEntries[lexicalEntryID])
+
+		# 4. ask and store matches
+		for lexicalEntryID,meta in self.lexicalEntries.items():
+			if self.userCheck("components", meta["label"], searchterm + " + " + meta["match"]["value"]):
+				source_entry_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+				target_entry_id = self.db.getID(meta["match"]["lexicalEntryID"],"lexicalEntry")
+				target_form_id = self.db.getID(meta["match"]["lexicalFormID"],"lexicalForm")
+				pre_comp_id = self.db.getID(componentID,"component")
+				post_comp_id = self.db.insertComponent(target_entry_id,target_form_id,True)
+				self.db.insertLexicalEntryComponent(source_entry_id,pre_comp_id,1)
+				self.db.insertLexicalEntryComponent(source_entry_id,post_comp_id,2,True)
+
+
 	def refreshComponents(self):
 		components = self.getTopUsedComponents()
 		for c in components:
@@ -179,6 +221,8 @@ class RulesetCommon:
 				self.lexicalEntries[lexicalEntryID]["label"] = self.getLabel(lexicalEntryID)
 			if "senses" in fieldset:
 				self.lexicalEntries[lexicalEntryID]["senses"] = self.getLexicalSenseIDs(lexicalEntryID)
+			if "forms" in fieldset:
+				self.lexicalEntries[lexicalEntryID]["forms"] = self.getLexicalFormIDs(lexicalEntryID)
 
 
 	def setProcessableEntries(self,partOfSpeech,checkPredicate,checkObject):
@@ -206,6 +250,13 @@ class RulesetCommon:
 
 	def getLabel(self,identifier):
 		return str(self.g.value(URIRef(identifier),RDFS.label,None))
+
+
+	def getLexicalFormIDs(self,lexicalEntryID):
+		formIDs = []
+		for lexicalFormID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.lexicalForm):
+			formIDs.append(str(lexicalFormID))
+		return formIDs
 
 
 	def getLexicalSenseIDs(self,lexicalEntryID):
