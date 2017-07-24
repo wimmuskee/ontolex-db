@@ -150,7 +150,8 @@ elif args.action == "add" and args.mode == "definition":
 elif args.action == "add" and args.mode == "component":
 	lexicalFormID = db.getID(sourceID,"lexicalForm")
 	componentID = db.storeComponent(lexicalFormID)
-	print("Stored component: " + str(componentID))
+	component_identifier = db.getIdentifier(componentID,"component")
+	print("Stored component: " + component_identifier)
 
 elif args.action == "add" and args.mode == "bulksense":
 	relation = validateInput(argsdict, "relation")
