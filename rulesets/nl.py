@@ -309,31 +309,38 @@ class Ruleset(RulesetCommon):
 
 
 	def verbPastSingulars(self):
-		result = self.g.query("""SELECT ?label ?lexicalEntryID WHERE {
-			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
-				lexinfo:partOfSpeech lexinfo:verb ;
-				rdfs:label ?label .
-			MINUS { 
-				?lexicalEntryID ontolex:otherForm ?lexicalFormID .
-				?lexicalFormID lexinfo:number lexinfo:singular ;
-					lexinfo:tense lexinfo:past . } }""")
+		# 1. get verbs
+		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","forms"])
 
-		for row in result:
-			label = str(row[0])
-			lexicalEntryID = str(row[1])
-			stem = label[:-2]
+		# 2. keep entries with present singular firstPerson form (and no past singular form
+		for lexicalEntryID in list(self.lexicalEntries):
+			meta = self.lexicalEntries[lexicalEntryID]
+			self.lexicalEntries[lexicalEntryID]["stem"] = ""
+			for lexicalFormID in meta["forms"]:
+				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.past) in self.g:
+					del(self.lexicalEntries[lexicalEntryID])
+					break
+			
+				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.present) in self.g and (URIRef(lexicalFormID),LEXINFO.person,LEXINFO.firstPerson) in self.g:
+					self.lexicalEntries[lexicalEntryID]["stem"] = self.getLabel(lexicalFormID)
+
+			if lexicalEntryID in self.lexicalEntries and not self.lexicalEntries[lexicalEntryID]["stem"]:
+				del(self.lexicalEntries[lexicalEntryID])
+
+		# 3. make past form and check
+		for lexicalEntryID, meta in self.lexicalEntries.items():
+			stem = meta["stem"]
 
 			if stem[-1:] in [ "t","k","f","s","c","h","p"]:
 				guess_past = stem + "te"
 			else:
 				guess_past = stem + "de"
 
-			if guess_past in self.worddb:
-				if self.userCheck("verleden tijd ev", label, "ik/jij/hij " + guess_past):
-					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-					form_id = self.db.storeOtherForm(lex_id,guess_past,self.lang_id)
-					self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
-					self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
+			if self.userCheck("verleden tijd ev", meta["label"], "ik/jij/hij " + guess_past):
+				lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+				form_id = self.db.storeOtherForm(lex_id,guess_past,self.lang_id)
+				self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
+				self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
 
 
 	def verbPastPlurals(self):
