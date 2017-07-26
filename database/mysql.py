@@ -221,6 +221,13 @@ class Database:
 		self.components.extend(self.__getRows(query,(lexicalEntryID,lang_id)))
 
 
+	def saveVerbPastSingular(self,lexicalEntryID,value,lang_id):
+		lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+		form_id = self.db.storeOtherForm(lex_id,value,lang_id)
+		self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
+		self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
+
+
 	def getLexicalEntryID(self,value,partOfSpeechID):
 		query = "SELECT lexicalEntryID FROM lexicalEntry WHERE value = %s AND partOfSpeechID = %s"
 		row = self.__getRow(query,(value,partOfSpeechID))

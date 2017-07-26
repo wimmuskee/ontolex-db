@@ -331,16 +331,17 @@ class Ruleset(RulesetCommon):
 		for lexicalEntryID, meta in self.lexicalEntries.items():
 			infinitive_stem_lastchar = meta["label"][-3:-2]
 
-			if infinitive_stem_lastchar in [ "t","k","f","s","c","h","p"]:
+			if infinitive_stem_lastchar in [ "t","k","f","s","c","h","p","x"]:
 				guess_past = meta["stem"] + "te"
 			else:
 				guess_past = meta["stem"] + "de"
 
 			if self.userCheck("verleden tijd ev", meta["label"], "ik/jij/hij " + guess_past):
-				lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-				form_id = self.db.storeOtherForm(lex_id,guess_past,self.lang_id)
-				self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
-				self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
+				self.db.saveVerbPastSingular(lexicalEntryID,guess_past,self.lang_id)
+			else:
+				answer = input("manual? provide value or press enter to cancel ")
+				if len(answer) > 1:
+					self.db.saveVerbPastSingular(lexicalEntryID,answer,self.lang_id)
 
 
 	def verbPastPlurals(self):
