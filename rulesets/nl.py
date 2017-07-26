@@ -320,7 +320,6 @@ class Ruleset(RulesetCommon):
 				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.past) in self.g:
 					del(self.lexicalEntries[lexicalEntryID])
 					break
-			
 				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.present) in self.g and (URIRef(lexicalFormID),LEXINFO.person,LEXINFO.firstPerson) in self.g:
 					self.lexicalEntries[lexicalEntryID]["stem"] = self.getLabel(lexicalFormID)
 
@@ -345,35 +344,40 @@ class Ruleset(RulesetCommon):
 
 
 	def verbPastPlurals(self):
-		""" Look for forms that have a past singular form, but not a past plural. """
-		result = self.g.query("""SELECT ?label ?lexicalFormID ?lexicalEntryID WHERE {
-			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
-				lexinfo:partOfSpeech lexinfo:verb ;
-				ontolex:otherForm ?lexicalFormID .
-			?lexicalFormID lexinfo:number lexinfo:singular ;
-				lexinfo:tense lexinfo:past ;
-				rdfs:label ?label .
-			MINUS {
-				?lexicalEntryID rdf:type ontolex:LexicalEntry ;
-					lexinfo:partOfSpeech lexinfo:verb ;
-					ontolex:otherForm ?plural_lexicalFormID .
-				?plural_lexicalFormID lexinfo:number lexinfo:plural ;
-					lexinfo:tense lexinfo:past . } }""")
-		for row in result:
-			label = str(row[0])
-			lexicalEntryID = str(row[2])
+		# 1. get verbs
+		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","forms"])
+
+		# 2. keep entries with a past singular but not a plural
+		for lexicalEntryID in list(self.lexicalEntries):
+			meta = self.lexicalEntries[lexicalEntryID]
+			self.lexicalEntries[lexicalEntryID]["stem"] = ""
+
+			for lexicalFormID in meta["forms"]:
+				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.plural) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.past) in self.g:
+					del(self.lexicalEntries[lexicalEntryID])
+					break
+				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.past) in self.g:
+					self.lexicalEntries[lexicalEntryID]["stem"] = self.getLabel(lexicalFormID)
+
+			if lexicalEntryID in self.lexicalEntries and not self.lexicalEntries[lexicalEntryID]["stem"]:
+				del(self.lexicalEntries[lexicalEntryID])
+
+		# 3. make past form and check
+		for lexicalEntryID, meta in self.lexicalEntries.items():
+			label = meta["stem"]
 
 			if label[-2:] == "te" or label[-2:] == "de":
 				guess_plural = label + "n"
+			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
+				guess_plural = label + label[-1:] + "en"
 			else:
 				guess_plural = label + "en"
 
-			if guess_plural in self.worddb:
-				if self.userCheck("verleden tijd mv", label, "wij " + guess_plural):
-					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-					form_id = self.db.storeOtherForm(lex_id,guess_plural,self.lang_id)
-					self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
-					self.db.insertFormProperty(form_id,self.db.properties["number:plural"],True)
+			if self.userCheck("verleden tijd mv", label, "wij " + guess_plural):
+				lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+				form_id = self.db.storeOtherForm(lex_id,guess_plural,self.lang_id)
+				self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
+				self.db.insertFormProperty(form_id,self.db.properties["number:plural"],True)
 
 
 	def verbPresentParticiples(self):
