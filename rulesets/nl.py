@@ -329,12 +329,12 @@ class Ruleset(RulesetCommon):
 
 		# 3. make past form and check
 		for lexicalEntryID, meta in self.lexicalEntries.items():
-			stem = meta["stem"]
+			infinitive_stem_lastchar = meta["label"][-3:-2]
 
-			if stem[-1:] in [ "t","k","f","s","c","h","p"]:
-				guess_past = stem + "te"
+			if infinitive_stem_lastchar in [ "t","k","f","s","c","h","p"]:
+				guess_past = meta["stem"] + "te"
 			else:
-				guess_past = stem + "de"
+				guess_past = meta["stem"] + "de"
 
 			if self.userCheck("verleden tijd ev", meta["label"], "ik/jij/hij " + guess_past):
 				lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
