@@ -375,6 +375,10 @@ class Ruleset(RulesetCommon):
 				guess_plural = label + "n"
 			elif label[-2:-1] in self.vowels and label[-3:-2] in self.vowels:
 				# sleep -> slepen
+				if label[-1:] == "f":
+					label = label[:-1] + "v"
+				elif label[-1:] == "s":
+					label = label[:-1] + "z"
 				guess_plural = label[:-2] + label[-1:] + "en"
 			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
 				# zwom -> zwommen
@@ -384,7 +388,8 @@ class Ruleset(RulesetCommon):
 
 			if self.userCheck("verleden tijd mv", label, "wij " + guess_plural):
 				lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-				form_id = self.db.storeOtherForm(lex_id,guess_plural,self.lang_id)
+				# turning off safemode in storeOtherForm, infinitive "bevatten" is also past plural "bevatten"
+				form_id = self.db.storeOtherForm(lex_id,guess_plural,self.lang_id,False)
 				self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
 				self.db.insertFormProperty(form_id,self.db.properties["number:plural"],True)
 
