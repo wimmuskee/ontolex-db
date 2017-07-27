@@ -352,6 +352,11 @@ class Ruleset(RulesetCommon):
 			meta = self.lexicalEntries[lexicalEntryID]
 			self.lexicalEntries[lexicalEntryID]["stem"] = ""
 
+			# for now, remove all verbs that are made from components
+			if self.g.value(URIRef(lexicalEntryID),DECOMP.constituent,None):
+				del(self.lexicalEntries[lexicalEntryID])
+				continue
+
 			for lexicalFormID in meta["forms"]:
 				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.plural) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.past) in self.g:
 					del(self.lexicalEntries[lexicalEntryID])
@@ -368,7 +373,11 @@ class Ruleset(RulesetCommon):
 
 			if label[-2:] == "te" or label[-2:] == "de":
 				guess_plural = label + "n"
+			elif label[-2:-1] in self.vowels and label[-3:-2] in self.vowels:
+				# sleep -> slepen
+				guess_plural = label[:-2] + label[-1:] + "en"
 			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
+				# zwom -> zwommen
 				guess_plural = label + label[-1:] + "en"
 			else:
 				guess_plural = label + "en"
