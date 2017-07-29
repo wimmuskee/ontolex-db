@@ -248,19 +248,12 @@ class Ruleset(RulesetCommon):
 
 	def formSyllableCounts(self):
 		""" Provide a syllable count for all forms. """
-		result = self.g.query( """SELECT ?lexicalFormID ?formLabel WHERE {
-			?lexicalFormID rdf:type ontolex:Form ;
-				ontolex:writtenRep ?formLabel .
-			OPTIONAL { ?lexicalFormID isocat:DC-499 ?syllableCount }
-			FILTER(!bound(?syllableCount)) }""")
-
-		for row in result:
-			lexicalFormID = str(row[0])
-			label = str(row[1])
+		data = self.db.getWrittenRepsWithoutSyllableCount(self.lang_id)
+		for row in data:
+			label = row["value"]
 			syllableCount = self.__getSyllableCount(label)
 			if self.userCheck("lettergrepen", label, str(syllableCount)):
-				form_id = self.db.getID(lexicalFormID,"lexicalForm")
-				self.db.updateSyllableCount(form_id,syllableCount,self.lang_id)
+				self.db.updateSyllableCount(label,syllableCount,self.lang_id)
 
 
 	def verbPastParticiples(self):

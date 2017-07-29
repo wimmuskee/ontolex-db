@@ -262,6 +262,11 @@ class Database:
 		return int(row["count"])
 
 
+	def getWrittenRepsWithoutSyllableCount(self,lang_id):
+		query = "SELECT DISTINCT value FROM writtenRep WHERE syllableCount IS NULL AND languageID = %s"
+		return self.__getRows(query,(lang_id))
+
+
 	def checkSenseReferenceExists(self,lexicalSenseID,relation,reference):
 		namespace = relation.split(":")[0]
 		property = relation.split(":")[1]
@@ -514,10 +519,10 @@ class Database:
 		self.DB.commit()
 
 
-	def updateSyllableCount(self,lexicalFormID,syllableCount,languageID):
+	def updateSyllableCount(self,value,syllableCount,languageID):
 		c = self.DB.cursor()
-		query = "UPDATE writtenRep SET syllableCount = %s WHERE lexicalFormID = %s AND languageID = %s"
-		c.execute(query,(syllableCount,lexicalFormID,languageID))
+		query = "UPDATE writtenRep SET syllableCount = %s WHERE value = %s AND languageID = %s"
+		c.execute(query,(syllableCount,value,languageID))
 		c.close()
 		self.DB.commit()
 
