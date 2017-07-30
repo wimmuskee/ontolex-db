@@ -148,6 +148,9 @@ class LexiconGraph(RDFGraph):
 		for s,p,o in self.g.triples( (None, LEXINFO.synonym, None) ):
 			self.g.add((o,LEXINFO.synonym,s))
 
+		for s,p,o in self.g.triples( (None, LEXINFO.relatedTerm, None) ):
+			self.g.add((o,LEXINFO.relatedTerm,s))
+
 
 	def setRedundants(self):
 		""" Not setting inverse relations, so if you want those, execute this before setInverses. """
