@@ -233,10 +233,10 @@ class Database:
 
 
 	def saveVerbPastSingular(self,lexicalEntryID,value,lang_id):
-		lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-		form_id = self.db.storeOtherForm(lex_id,value,lang_id)
-		self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
-		self.db.insertFormProperty(form_id,self.db.properties["number:singular"],True)
+		lex_id = self.getID(lexicalEntryID,"lexicalEntry")
+		form_id = self.storeOtherForm(lex_id,value,lang_id)
+		self.insertFormProperty(form_id,self.properties["tense:past"],True)
+		self.insertFormProperty(form_id,self.properties["number:singular"],True)
 
 
 	def getLexicalEntryID(self,value,partOfSpeechID):
