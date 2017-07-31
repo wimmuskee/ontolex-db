@@ -6,8 +6,8 @@ from format.rdfgraph import RDFGraph
 
 
 class SKOSGraph(RDFGraph):
-	def __init__(self,name,language,exportconfig,buildpackage):
-		RDFGraph.__init__(self, name,language,"turtle",exportconfig,buildpackage)
+	def __init__(self,name,language,exportconfig,buildpackage,persist):
+		RDFGraph.__init__(self, name,language,"turtle",exportconfig,buildpackage,persist)
 
 		if self.buildpackage:
 			self.g.add((URIRef("urn:" + name),RDF.type,SKOS.ConceptScheme))
@@ -44,7 +44,12 @@ class SKOSGraph(RDFGraph):
 			if reference["namespace"] == "lexinfo" and reference["property"] == "synonym":
 				self.g.add((conceptidentifier,OWL.sameAs,URIRef(reference["reference"])))
 
+			if reference["namespace"] == "lexinfo" and reference["property"] == "relatedTerm":
+				self.g.add((conceptidentifier,SKOS.related,URIRef(reference["reference"])))
+
 
 	def setInverses(self):
 		RDFGraph.setInverses(self,OWL.sameAs)
 
+		for s,p,o in self.g.triples( (None, SKOS.related, None) ):
+			self.g.add((o,SKOS.related,s))

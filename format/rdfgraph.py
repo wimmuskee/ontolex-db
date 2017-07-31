@@ -67,9 +67,6 @@ class RDFGraph():
 		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
 			self.g.add((o,SKOS.narrower,s))
 
-		for s,p,o in self.g.triples( (None, SKOS.related, None) ):
-			self.g.add((o,SKOS.related,s))
-
 		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
 			self.g.add((o,SKOSTHES.narrowerPartitive,s))
 
