@@ -412,34 +412,62 @@ class Ruleset(RulesetCommon):
 
 
 	def verbRelatedNouns(self):
-		print("first redesign")
-		exit()
-		""" example. delen -> deling """
-		source_pos_id = self.db.posses["verb"]
-		target_pos_id = self.db.posses["noun"]
+		# 1. gather verb lexicalEntries
+		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","senses"])
 
-		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,LEXINFO.verb):
-			self.lexicalEntries[lexicalEntryID]["label"] = self.getLabel(lexicalEntryID)
+		# 2. delete entries which we don't want to parse
+		for lexicalEntryID in list(self.lexicalEntries):
+			if self.lexicalEntries[lexicalEntryID]["label"][-2:] != "en":
+				del(self.lexicalEntries[lexicalEntryID])
+				continue
 
-		for lexicalEntryID in self.lexicalEntries:
-			source_value = self.lexicalEntries[lexicalEntryID]["label"]
-			guess_noun = source_value[:-2] + "ing"
+		# 3.1 add matches
+		for lexicalEntryID in list(self.lexicalEntries):
+			label = self.lexicalEntries[lexicalEntryID]["label"]
+			self.lexicalEntries[lexicalEntryID]["match"] = {}
 
-			if guess_noun in self.worddb and self.userCheck("gerelateerd", source_value, guess_noun):
-				if not self.checkLexicalEntryExists(guess_noun,LEXINFO.noun):
-					# target entry does not exist, add target and add relation
-					self.db.storeCanonical(guess_noun,self.lang_id,target_pos_id)
-					targetSenseCount = 0
+			search_noun = []
+			search_noun.append(label[:-2] + "ing")
+			# later, add delen -> deel
+
+			for noun in search_noun:
+				targetLexicalEntryID = self.findLexicalEntry(noun,LEXINFO.noun)
+				if targetLexicalEntryID:
+					self.lexicalEntries[lexicalEntryID]["match"] = {"lexicalEntryID": targetLexicalEntryID, "label": noun, "senses": self.getLexicalSenseIDs(targetLexicalEntryID)}
+					
+
+			if not self.lexicalEntries[lexicalEntryID]["match"]:
+				del(self.lexicalEntries[lexicalEntryID])
+
+		# 3.2 remove entries for which match exists
+		for lexicalEntryID in list(self.lexicalEntries):
+			for sourceSenseID in self.lexicalEntries[lexicalEntryID]["senses"]:
+				for targetSenseID in self.lexicalEntries[lexicalEntryID]["match"]["senses"]:
+					if (URIRef(sourceSenseID),LEXINFO.relatedTerm,URIRef(targetSenseID)) in self.g:
+						del(self.lexicalEntries[lexicalEntryID])
+						break
+
+		# 4. parse remaining entries with matches, and store
+		for lexicalEntryID,meta in self.lexicalEntries.items():
+			if len(meta["senses"]) > 1 or len(meta["match"]["senses"]) > 1:
+				print("sensecount > 1 for source or target: " + meta["label"])
+				continue
+
+			if self.userCheck("relatedTerm", meta["label"], meta["match"]["label"]):
+				if len(meta["senses"]) == 1:
+					source_sense_id = self.db.getID(meta["senses"][0],"lexicalSense")
 				else:
-					targetLexicalEntryID = self.findLexicalEntry(guess_noun,LEXINFO.noun)
-					targetSenseCount = self.countLexicalenses(targetLexicalEntryID)
-				
-				# this is horrific otherwise to check, think of something better later
-				sensecount = self.countLexicalenses(lexicalEntryID)
-				if sensecount == 0 and targetSenseCount == 0:
-					self.db.addSense(source_value,source_pos_id,"skos","related",guess_noun,target_pos_id)
+					source_entry_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+					source_sense_id = self.db.insertLexicalSense(source_entry_id,True)
+
+				if len(meta["match"]["senses"]) == 1:
+					target_sense_identifier = meta["match"]["senses"][0]
 				else:
-					print("either source or target has a sense, not storing relation")
+					target_entry_id = self.db.getID(meta["match"]["lexicalEntryID"],"lexicalEntry")
+					target_sense_id = self.db.insertLexicalSense(target_entry_id,True)
+					target_sense_identifier = self.db.getIdentifier(target_sense_id,"lexicalSense")
+
+				self.db.insertSenseReference(source_sense_id,"lexinfo:relatedTerm",target_sense_identifier,True)
 
 
 	def verbSingulars(self):
