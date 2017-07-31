@@ -261,6 +261,13 @@ class RulesetCommon:
 		return senseIDs
 
 
+	def filterEntriesRemoveComponentBased(self):
+		""" Remove all entries that are made from components. """
+		for lexicalEntryID in list(self.lexicalEntries):
+			if (URIRef(lexicalEntryID),DECOMP.constituent,None) in self.g:
+				del(self.lexicalEntries[lexicalEntryID])
+
+
 	def checkLexicalEntryExists(self,word,partOfSpeech):
 		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
 			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=self.language)) in self.g:
@@ -325,4 +332,3 @@ class RulesetCommon:
 				components[componentID] = count
 
 		return components
-

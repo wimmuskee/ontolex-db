@@ -257,26 +257,27 @@ class Ruleset(RulesetCommon):
 
 
 	def verbPastParticiples(self):
-		# select verb forms that have a past singular, but not a past participle
-		result = self.g.query("""SELECT ?label ?lexicalFormID ?lexicalEntryID WHERE {
-			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
-				lexinfo:partOfSpeech lexinfo:verb ;
-				ontolex:otherForm ?lexicalFormID .
-			?lexicalFormID lexinfo:number lexinfo:singular ;
-				lexinfo:tense lexinfo:past ;
-				rdfs:label ?label .
-			MINUS {
-				?lexicalEntryID rdf:type ontolex:LexicalEntry ;
-					lexinfo:partOfSpeech lexinfo:verb ;
-					ontolex:otherForm ?participle_lexicalFormID .
-				?participle_lexicalFormID lexinfo:verbFormMood lexinfo:participle ;
-					lexinfo:tense lexinfo:past . } }""")
+		# 1. get verbs
+		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","forms"])
+		self.filterEntriesRemoveComponentBased()
 
-		for row in result:
-			label = str(row[0])
-			original = label
-			lexicalFormID = str(row[1])
-			lexicalEntryID = str(row[2])
+		# 2. keep entries with a past singular but not a past participle
+		for lexicalEntryID in list(self.lexicalEntries):
+			self.lexicalEntries[lexicalEntryID]["stem"] = ""
+			for lexicalFormID in self.lexicalEntries[lexicalEntryID]["forms"]:
+				if (URIRef(lexicalFormID),LEXINFO.verbFormMood,LEXINFO.participle) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.past) in self.g:
+					del(self.lexicalEntries[lexicalEntryID])
+					break
+				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.past) in self.g:
+					self.lexicalEntries[lexicalEntryID]["stem"] = self.getLabel(lexicalFormID)
+
+			if lexicalEntryID in self.lexicalEntries and not self.lexicalEntries[lexicalEntryID]["stem"]:
+				del(self.lexicalEntries[lexicalEntryID])
+
+		# 3. make participle, check and save
+		for lexicalEntryID,meta in self.lexicalEntries.items():
+			label = meta["stem"]
+			original = meta["label"]
 
 			# fix trema start
 			if label[0] == "e":
@@ -284,21 +285,35 @@ class Ruleset(RulesetCommon):
 			elif label[0] == "i":
 				label = "ï" + label[1:]
 
-			if label[-3:-1] == "dd" or label[-3:-1] == "tt":
+			if (label[:2] == "be" or label[:3] == "ver" or label[:3] == "ont") and (label[-3:] == "dde" or label[-3:] == "tte"):
+				# begroette -> begroet, verlootte -> verloot
+				guess_participle = label[:-2]
+			elif (label[:2] == "be" or label[:3] == "ver" or label[:3] == "ont") and (label[-2:] == "de" or label[-2:] == "te"):
+				# verzekerde -> verzekerd, belazerde -> belazerd
+				guess_participle = label[:-1]
+			elif label[-3:-1] == "dd" or label[-3:-1] == "tt":
+				# lootte -> geloot
 				guess_participle = "ge" + label[:-2]
 			elif label[-1:] == "e":
+				# stoorde -> gestoord
 				guess_participle = "ge" + label[:-1]
-			elif label[:2] == "be":
-				guess_participle = label[:-1]
+			elif label[:2] == "be" or label[:3] == "ver" or label[:3] == "ont":
+				# vergeven -> vergeven (indeed not working for all)
+				guess_participle = label
+			elif label[-2:-1] not in self.vowels:
+				# bond -> gebonden
+				guess_participle = "ge" + label + "en"
 			else:
-				guess_participle = "ge" + label
+				# vloog -> gevlogen
+				label = self.__getStemToPluralizeCheck(label)
+				guess_participle = "ge" + label[:-2] + label[-1] + "en"
 
-			if guess_participle in self.worddb:
-				if self.userCheck("voltooid deelwoord", original, "ik ben/heb " + guess_participle):
-					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-					form_id = self.db.storeOtherForm(lex_id,guess_participle,self.lang_id)
-					self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
-					self.db.insertFormProperty(form_id,self.db.properties["verbFormMood:participle"],True)
+			if self.userCheck("voltooid deelwoord", original, "ik ben/heb " + guess_participle):
+				lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+				# store with safemode False
+				form_id = self.db.storeOtherForm(lex_id,guess_participle,self.lang_id,False)
+				self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
+				self.db.insertFormProperty(form_id,self.db.properties["verbFormMood:participle"],True)
 
 
 	def verbPastSingulars(self):
@@ -307,9 +322,8 @@ class Ruleset(RulesetCommon):
 
 		# 2. keep entries with present singular firstPerson form (and no past singular form
 		for lexicalEntryID in list(self.lexicalEntries):
-			meta = self.lexicalEntries[lexicalEntryID]
 			self.lexicalEntries[lexicalEntryID]["stem"] = ""
-			for lexicalFormID in meta["forms"]:
+			for lexicalFormID in self.lexicalEntries[lexicalEntryID]["forms"]:
 				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.past) in self.g:
 					del(self.lexicalEntries[lexicalEntryID])
 					break
@@ -339,18 +353,13 @@ class Ruleset(RulesetCommon):
 	def verbPastPlurals(self):
 		# 1. get verbs
 		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","forms"])
+		self.filterEntriesRemoveComponentBased()
 
 		# 2. keep entries with a past singular but not a plural
 		for lexicalEntryID in list(self.lexicalEntries):
-			meta = self.lexicalEntries[lexicalEntryID]
 			self.lexicalEntries[lexicalEntryID]["stem"] = ""
 
-			# for now, remove all verbs that are made from components
-			if self.g.value(URIRef(lexicalEntryID),DECOMP.constituent,None):
-				del(self.lexicalEntries[lexicalEntryID])
-				continue
-
-			for lexicalFormID in meta["forms"]:
+			for lexicalFormID in self.lexicalEntries[lexicalEntryID]["forms"]:
 				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.plural) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.past) in self.g:
 					del(self.lexicalEntries[lexicalEntryID])
 					break
@@ -368,10 +377,7 @@ class Ruleset(RulesetCommon):
 				guess_plural = label + "n"
 			elif label[-2:-1] in self.vowels and label[-3:-2] in self.vowels:
 				# sleep -> slepen
-				if label[-1:] == "f":
-					label = label[:-1] + "v"
-				elif label[-1:] == "s":
-					label = label[:-1] + "z"
+				label = self.__getStemToPluralizeCheck(label)
 				guess_plural = label[:-2] + label[-1:] + "en"
 			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
 				# zwom -> zwommen
@@ -519,17 +525,11 @@ class Ruleset(RulesetCommon):
 	def verbStems(self):
 		# 1. gather verb lexicalEntries
 		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","forms"])
+		self.filterEntriesRemoveComponentBased()
 
 		# 2. delete entries which have 
 		for lexicalEntryID in list(self.lexicalEntries):
-			meta = self.lexicalEntries[lexicalEntryID]
-
-			# for now, remove all verbs that are made from components
-			if self.g.value(URIRef(lexicalEntryID),DECOMP.constituent,None):
-				del(self.lexicalEntries[lexicalEntryID])
-				continue
-
-			for lexicalFormID in meta["forms"]:
+			for lexicalFormID in self.lexicalEntries[lexicalEntryID]["forms"]:
 				if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.singular) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.present) in self.g and (URIRef(lexicalFormID),LEXINFO.person,LEXINFO.firstPerson) in self.g:
 					del(self.lexicalEntries[lexicalEntryID])
 					break
@@ -613,6 +613,7 @@ class Ruleset(RulesetCommon):
 			elif label[-4:] == "heid":
 				guess_plural = label[:-2] + "den"
 			else:
+				label = self.__getStemToPluralizeCheck(label)
 				guess_plural = self.__getNounStem(label) + "en"
 
 			if guess_plural in self.worddb:
@@ -721,6 +722,15 @@ class Ruleset(RulesetCommon):
 				if len(word) > label_len and word[-label_len:] == label and not word[0].isupper() and not self.checkLexicalEntryExists(word,LEXINFO.noun):
 					if self.userCheck("add as noun", label, word):
 						self.db.storeCanonical(word,self.lang_id,pos_id)
+
+
+	def __getStemToPluralizeCheck(self,stem):
+		""" Makes sure stem ending in f or s can be pluralized with correct endings. """
+		if stem[-1:] == "f":
+			stem = stem[:-1] + "v"
+		elif stem[-1:] == "s":
+			stem = stem[:-1] + "z"
+		return stem
 
 
 	def __getNounStem(self,word):
