@@ -220,6 +220,17 @@ class Database:
 			AND rep.languageID = %s"
 		self.components.extend(self.__getRows(query,(lexicalEntryID,lang_id)))
 
+		# and add single component to output (but not connected to actual component part of lexicalEntry
+		# useful for management, and checking loose components
+		if not self.components:
+			query = "SELECT DISTINCT comp.identifier AS comp_identifier, lex.identifier AS lex_identifier, form.identifier AS form_identifier, rep.value AS rep_value FROM component AS comp \
+				LEFT JOIN lexicalEntry AS lex ON comp.lexicalEntryID = lex.lexicalEntryID \
+				LEFT JOIN lexicalForm AS form ON comp.lexicalFormID = form.lexicalFormID \
+				LEFT JOIN writtenRep AS rep ON form.lexicalFormID = rep.lexicalFormID \
+				WHERE lex.lexicalEntryID = %s \
+				AND rep.languageID = %s"
+			self.components.extend(self.__getRows(query,(lexicalEntryID,lang_id)))
+
 
 	def saveVerbPastSingular(self,lexicalEntryID,value,lang_id):
 		lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
