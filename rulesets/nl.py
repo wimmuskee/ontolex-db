@@ -630,7 +630,13 @@ class Ruleset(RulesetCommon):
 
 
 	def nounDiminutives(self):
-		self.setProcessableEntries(LEXINFO.noun,LEXINFO.partOfSpeech,LEXINFO.diminutiveNoun)
+		self.setLexicalEntriesByPOS(LEXINFO.noun,["label","forms"])
+
+		for lexicalEntryID in list(self.lexicalEntries):
+			for lexicalFormID in self.lexicalEntries[lexicalEntryID]["forms"]:
+				if (URIRef(lexicalFormID),LEXINFO.partOfSpeech,LEXINFO.diminutiveNoun) in self.g:
+					del(self.lexicalEntries[lexicalEntryID])
+					break
 
 		for lexicalEntryID in self.lexicalEntries:
 			label = self.lexicalEntries[lexicalEntryID]["label"]

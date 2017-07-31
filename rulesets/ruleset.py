@@ -220,16 +220,6 @@ class RulesetCommon:
 				self.lexicalEntries[lexicalEntryID]["forms"] = self.getLexicalFormIDs(lexicalEntryID)
 
 
-	def setProcessableEntries(self,partOfSpeech,checkPredicate,checkObject):
-		""" Find entries that do not have a form with the specified relation.
-		We're gonna try to find new forms with that relation. 
-		"""
-		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
-			if self.checkFormRelation(lexicalEntryID,checkPredicate,checkObject):
-				continue
-			self.lexicalEntries[str(lexicalEntryID)]["label"] = self.getLabel(lexicalEntryID)
-
-
 	def setProcessableForms(self,partOfSpeech,checkPredicate):
 		""" Use when assuming all forms should have at least a certain predicate set.
 		We're trying to find those without.
