@@ -309,11 +309,11 @@ class Ruleset(RulesetCommon):
 				guess_participle = "ge" + label[:-2] + label[-1] + "en"
 
 			if self.userCheck("voltooid deelwoord", original, "ik ben/heb " + guess_participle):
-				lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-				# store with safemode False
-				form_id = self.db.storeOtherForm(lex_id,guess_participle,self.lang_id,False)
-				self.db.insertFormProperty(form_id,self.db.properties["tense:past"],True)
-				self.db.insertFormProperty(form_id,self.db.properties["verbFormMood:participle"],True)
+				self.db.saveVerbPastParticiple(lexicalEntryID,guess_participle,self.lang_id)
+			else:
+				answer = input("manual? provide value or press enter to cancel ")
+				if len(answer) > 1:
+					self.db.saveVerbPastParticiple(lexicalEntryID,answer,self.lang_id)
 
 
 	def verbPastSingulars(self):

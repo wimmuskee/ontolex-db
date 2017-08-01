@@ -238,6 +238,13 @@ class Database:
 		self.insertFormProperty(form_id,self.properties["tense:past"],True)
 		self.insertFormProperty(form_id,self.properties["number:singular"],True)
 
+	def saveVerbPastParticiple(self,lexicalEntryID,value,lang_id):
+		lex_id = self.getID(lexicalEntryID,"lexicalEntry")
+		# store with safemode False
+		form_id = self.storeOtherForm(lex_id,value,lang_id,False)
+		self.insertFormProperty(form_id,self.properties["tense:past"],True)
+		self.insertFormProperty(form_id,self.properties["verbFormMood:participle"],True)
+
 
 	def getLexicalEntryID(self,value,partOfSpeechID):
 		query = "SELECT lexicalEntryID FROM lexicalEntry WHERE value = %s AND partOfSpeechID = %s"
