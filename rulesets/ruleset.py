@@ -297,6 +297,31 @@ class RulesetCommon:
 		return c
 
 
+	def checkAndSaveSense(self,senserelation):
+		""" Take preparsed lexicalEntries and store sense relation of possible and allowed.
+		Input senserelation should be a ns prefixed str value like "lexinfo:relatedTerm". """
+		for lexicalEntryID,meta in self.lexicalEntries.items():
+			if len(meta["senses"]) > 1 or len(meta["match"]["senses"]) > 1:
+				print("sensecount > 1 for source or target: " + meta["label"])
+				continue
+
+			if self.userCheck(senserelation, meta["label"], meta["match"]["label"]):
+				if len(meta["senses"]) == 1:
+					source_sense_id = self.db.getID(meta["senses"][0],"lexicalSense")
+				else:
+					source_entry_id = self.db.getID(lexicalEntryID,"lexicalEntry")
+					source_sense_id = self.db.insertLexicalSense(source_entry_id,True)
+
+				if len(meta["match"]["senses"]) == 1:
+					target_sense_identifier = meta["match"]["senses"][0]
+				else:
+					target_entry_id = self.db.getID(meta["match"]["lexicalEntryID"],"lexicalEntry")
+					target_sense_id = self.db.insertLexicalSense(target_entry_id,True)
+					target_sense_identifier = self.db.getIdentifier(target_sense_id,"lexicalSense")
+
+				self.db.insertSenseReference(source_sense_id,senserelation,target_sense_identifier,True)
+
+
 	def setQuery(self,query):
 		""" Set prepared queries. """
 		if query == "countSenses":

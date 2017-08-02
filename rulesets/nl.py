@@ -69,26 +69,7 @@ class Ruleset(RulesetCommon):
 				del(self.lexicalEntries[lexicalEntryID])
 
 		# 4. parse remaining entries with matches, and store
-		for lexicalEntryID,meta in self.lexicalEntries.items():
-			if len(meta["senses"]) > 1 or len(meta["match"]["senses"]) > 1:
-				print("sensecount > 1 for source or target: " + meta["label"])
-				continue
-			
-			if self.userCheck("antonym", meta["label"], meta["match"]["label"]):
-				if len(meta["senses"]) == 1:
-					source_sense_id = self.db.getID(meta["senses"][0],"lexicalSense")
-				else:
-					source_entry_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-					source_sense_id = self.db.insertLexicalSense(source_entry_id,True)
-
-				if len(meta["match"]["senses"]) == 1:
-					target_sense_identifier = meta["match"]["senses"][0]
-				else:
-					target_entry_id = self.db.getID(meta["match"]["lexicalEntryID"],"lexicalEntry")
-					target_sense_id = self.db.insertLexicalSense(target_entry_id,True)
-					target_sense_identifier = self.db.getIdentifier(target_sense_id,"lexicalSense")
-
-				self.db.insertSenseReference(source_sense_id,"lexinfo:antonym",target_sense_identifier,True)
+		self.checkAndSaveSense("lexinfo:antonym")
 
 
 	def adjectivePertainsTo(self):
@@ -123,6 +104,9 @@ class Ruleset(RulesetCommon):
 			elif label[-6:] == "kundig":
 				# wiskundig -> wiskunde
 				search_noun.append(label[:-2] + "e")
+			elif label[-2:] == "ig":
+				# vochtig -> vocht
+				search_noun.append(label[:-2])
 			elif label[-5:] == "oneel":
 				# traditioneel -> traditie
 				search_noun.append(label[:-5] + "e")
@@ -137,26 +121,7 @@ class Ruleset(RulesetCommon):
 				del(self.lexicalEntries[lexicalEntryID])
 
 		# 4. parse remaining entries with matches, and store
-		for lexicalEntryID,meta in self.lexicalEntries.items():
-			if len(meta["senses"]) > 1 or len(meta["match"]["senses"]) > 1:
-				print("sensecount > 1 for source or target: " + meta["label"])
-				continue
-			
-			if self.userCheck("pertainsTo", meta["label"], meta["match"]["label"]):
-				if len(meta["senses"]) == 1:
-					source_sense_id = self.db.getID(meta["senses"][0],"lexicalSense")
-				else:
-					source_entry_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-					source_sense_id = self.db.insertLexicalSense(source_entry_id,True)
-
-				if len(meta["match"]["senses"]) == 1:
-					target_sense_identifier = meta["match"]["senses"][0]
-				else:
-					target_entry_id = self.db.getID(meta["match"]["lexicalEntryID"],"lexicalEntry")
-					target_sense_id = self.db.insertLexicalSense(target_entry_id,True)
-					target_sense_identifier = self.db.getIdentifier(target_sense_id,"lexicalSense")
-
-				self.db.insertSenseReference(source_sense_id,"lexinfo:pertainsTo",target_sense_identifier,True)
+		self.checkAndSaveSense("lexinfo:pertainsTo")
 
 
 	def adjectiveConjugated(self):
@@ -490,26 +455,7 @@ class Ruleset(RulesetCommon):
 						break
 
 		# 4. parse remaining entries with matches, and store
-		for lexicalEntryID,meta in self.lexicalEntries.items():
-			if len(meta["senses"]) > 1 or len(meta["match"]["senses"]) > 1:
-				print("sensecount > 1 for source or target: " + meta["label"])
-				continue
-
-			if self.userCheck("relatedTerm", meta["label"], meta["match"]["label"]):
-				if len(meta["senses"]) == 1:
-					source_sense_id = self.db.getID(meta["senses"][0],"lexicalSense")
-				else:
-					source_entry_id = self.db.getID(lexicalEntryID,"lexicalEntry")
-					source_sense_id = self.db.insertLexicalSense(source_entry_id,True)
-
-				if len(meta["match"]["senses"]) == 1:
-					target_sense_identifier = meta["match"]["senses"][0]
-				else:
-					target_entry_id = self.db.getID(meta["match"]["lexicalEntryID"],"lexicalEntry")
-					target_sense_id = self.db.insertLexicalSense(target_entry_id,True)
-					target_sense_identifier = self.db.getIdentifier(target_sense_id,"lexicalSense")
-
-				self.db.insertSenseReference(source_sense_id,"lexinfo:relatedTerm",target_sense_identifier,True)
+		self.checkAndSaveSense("lexinfo:relatedTerm")
 
 
 	def verbSingulars(self):
