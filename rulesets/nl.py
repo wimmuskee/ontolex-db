@@ -282,13 +282,15 @@ class Ruleset(RulesetCommon):
 			# fix trema start
 			if label[0] == "e":
 				label = "ë" + label[1:]
-			elif label[0] == "i":
+			elif label[0] == "i" and label[1] != "j":
 				label = "ï" + label[1:]
 
-			if (label[:2] == "be" or label[:3] == "ver" or label[:3] == "ont") and (label[-3:] == "dde" or label[-3:] == "tte"):
+			prefixes = ["ge","be","ver","ont","her"]
+
+			if (label[:2] in prefixes or label[:3] in prefixes) and (label[-3:] == "dde" or label[-3:] == "tte"):
 				# begroette -> begroet, verlootte -> verloot
 				guess_participle = label[:-2]
-			elif (label[:2] == "be" or label[:3] == "ver" or label[:3] == "ont") and (label[-2:] == "de" or label[-2:] == "te"):
+			elif (label[:2] in prefixes or label[:3] in prefixes) and (label[-2:] == "de" or label[-2:] == "te"):
 				# verzekerde -> verzekerd, belazerde -> belazerd
 				guess_participle = label[:-1]
 			elif label[-3:-1] == "dd" or label[-3:-1] == "tt":
@@ -297,7 +299,7 @@ class Ruleset(RulesetCommon):
 			elif label[-1:] == "e":
 				# stoorde -> gestoord
 				guess_participle = "ge" + label[:-1]
-			elif label[:2] == "be" or label[:3] == "ver" or label[:3] == "ont":
+			elif label[:2] in prefixes or label[:3] in prefixes:
 				# vergeven -> vergeven (indeed not working for all)
 				guess_participle = label
 			elif label[-2:-1] not in self.vowels:
