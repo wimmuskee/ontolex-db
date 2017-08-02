@@ -142,13 +142,11 @@ class RulesetCommon:
 		print("first redesign")
 		exit()
 		"""For each component, find used compounds and see if they are narrower in meaning."""
-		self.setQuery("countSenses")
-		
 		components = self.getTopUsedComponents()
 		for componentID in components:
 			componentLexicalEntryID = self.g.value(URIRef(componentID),DECOMP.correspondsTo,None)
 			componentLabel = self.getLabel(componentLexicalEntryID)
-			componentSenseCount = int(self.g.query(self.q_countSenses, initBindings={'lexicalEntryID': URIRef(componentLexicalEntryID)}).bindings[0]["?count"])
+			componentSenseCount = self.countLexicalSenses(componentLexicalEntryID)
 			if componentSenseCount != 1:
 				print("either too few or too many senses (" + str(componentSenseCount) + "): " + componentLabel)
 				continue
@@ -159,7 +157,7 @@ class RulesetCommon:
 				for compoundLexicalEntryID in self.g.subjects(DECOMP.constituent,URIRef(componentID)):
 					compoundLabel = self.getLabel(compoundLexicalEntryID)
 					compound_lex_id = self.db.getID(compoundLexicalEntryID,"lexicalEntry")
-					compoundSenseCount = int(self.g.query(self.q_countSenses, initBindings={'lexicalEntryID': URIRef(compoundLexicalEntryID)}).bindings[0]["?count"])
+					compoundSenseCount = self.countLexicalSenses(compoundLexicalEntryID)
 					if compoundSenseCount == 0:
 						if self.userCheck("add sense", "compoundword", compoundLabel):
 							compound_sense_id = self.db.insertLexicalSense(compound_lex_id,True)
@@ -324,9 +322,6 @@ class RulesetCommon:
 
 	def setQuery(self,query):
 		""" Set prepared queries. """
-		if query == "countSenses":
-			self.q_countSenses = prepareQuery("""SELECT (count(*) as ?count) WHERE {
-				?lexicalEntryID ontolex:sense ?o }""", initNs={"ontolex": ONTOLEX})
 		if query == "getNarrowerInstantialByReference":
 			self.q_getNarrowerInstantialByReference = prepareQuery( """SELECT ?lexicalEntryID WHERE { 
 				?sourceLexicalSenseID ontolex:reference ?reference ;
