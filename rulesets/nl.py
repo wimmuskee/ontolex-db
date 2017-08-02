@@ -257,7 +257,11 @@ class Ruleset(RulesetCommon):
 
 
 	def verbPastParticiples(self):
-		# 1. get verbs
+		self.verbPastParticiplesComponents()
+		self.verbPastParticiplesRegular()
+
+
+	def verbPastParticiplesRegular(self):
 		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","forms"])
 		self.filterEntriesRemoveComponentBased()
 
@@ -316,6 +320,36 @@ class Ruleset(RulesetCommon):
 				answer = input("manual? provide value or press enter to cancel ")
 				if len(answer) > 1:
 					self.db.saveVerbPastParticiple(lexicalEntryID,answer,self.lang_id)
+
+
+	def verbPastParticiplesComponents(self):
+		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","forms"])
+		self.filterEntriesOnlyComponentBased()
+
+		# keep entries that do not have a past particple, and where the component entry has a past participle
+		for lexicalEntryID in list(self.lexicalEntries):
+			for lexicalFormID in self.lexicalEntries[lexicalEntryID]["forms"]:
+				if (URIRef(lexicalFormID),LEXINFO.verbFormMood,LEXINFO.participle) in self.g and (URIRef(lexicalFormID),LEXINFO.tense,LEXINFO.past) in self.g:
+					del(self.lexicalEntries[lexicalEntryID])
+					break
+
+		for lexicalEntryID in list(self.lexicalEntries):
+			self.lexicalEntries[lexicalEntryID]["match"] = ""
+			adverbcomponent = self.g.value(URIRef(lexicalEntryID),URIRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#_1"),None)
+			verbcomponent = self.g.value(URIRef(lexicalEntryID),URIRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#_2"),None)
+			adverblabel = self.getLabel(adverbcomponent)
+			componentLexicalEntryID = self.g.value(verbcomponent,DECOMP.correspondsTo,None)
+			for lexicalFormID in self.g.objects(componentLexicalEntryID,ONTOLEX.lexicalForm):
+				if (lexicalFormID,LEXINFO.verbFormMood,LEXINFO.participle) in self.g and (lexicalFormID,LEXINFO.tense,LEXINFO.past) in self.g:
+					self.lexicalEntries[lexicalEntryID]["match"] = adverblabel + self.getLabel(lexicalFormID)
+					break
+
+			if not self.lexicalEntries[lexicalEntryID]["match"]:
+				del(self.lexicalEntries[lexicalEntryID])
+
+		for lexicalEntryID,meta in self.lexicalEntries.items():
+			if self.userCheck("voltooid deelwoord", meta["label"], "ik ben/heb " + meta["match"]):
+				self.db.saveVerbPastParticiple(lexicalEntryID,meta["match"],self.lang_id)
 
 
 	def verbPastSingulars(self):

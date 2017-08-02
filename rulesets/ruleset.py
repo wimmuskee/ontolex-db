@@ -258,6 +258,13 @@ class RulesetCommon:
 				del(self.lexicalEntries[lexicalEntryID])
 
 
+	def filterEntriesOnlyComponentBased(self):
+		""" Keep all entries that are made from components. """
+		for lexicalEntryID in list(self.lexicalEntries):
+			if not (URIRef(lexicalEntryID),DECOMP.constituent,None) in self.g:
+				del(self.lexicalEntries[lexicalEntryID])
+
+
 	def checkLexicalEntryExists(self,word,partOfSpeech):
 		for lexicalEntryIdentifier in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
 			if (URIRef(lexicalEntryIdentifier),RDFS.label,Literal(word, lang=self.language)) in self.g:
