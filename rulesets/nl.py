@@ -419,6 +419,11 @@ class Ruleset(RulesetCommon):
 
 
 	def verbRelatedNouns(self):
+		self.verbRelatedNounsVariant("ing")
+		self.verbRelatedNounsVariant("er")
+
+
+	def verbRelatedNounsVariant(self,variant):
 		# 1. gather verb lexicalEntries
 		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","senses"])
 
@@ -433,15 +438,16 @@ class Ruleset(RulesetCommon):
 			label = self.lexicalEntries[lexicalEntryID]["label"]
 			self.lexicalEntries[lexicalEntryID]["match"] = {}
 
-			search_noun = []
-			search_noun.append(label[:-2] + "ing")
-			# later, add delen -> deel
+			if variant == "ing":
+				# wonen -> woning
+				noun = label[:-2] + "ing"
+			elif variant == "er":
+				# aanbieden -> aanbieder
+				noun = label[:-1] + "r"
 
-			for noun in search_noun:
-				targetLexicalEntryID = self.findLexicalEntry(noun,LEXINFO.noun)
-				if targetLexicalEntryID:
-					self.lexicalEntries[lexicalEntryID]["match"] = {"lexicalEntryID": targetLexicalEntryID, "label": noun, "senses": self.getLexicalSenseIDs(targetLexicalEntryID)}
-					
+			targetLexicalEntryID = self.findLexicalEntry(noun,LEXINFO.noun)
+			if targetLexicalEntryID:
+				self.lexicalEntries[lexicalEntryID]["match"] = {"lexicalEntryID": targetLexicalEntryID, "label": noun, "senses": self.getLexicalSenseIDs(targetLexicalEntryID)}
 
 			if not self.lexicalEntries[lexicalEntryID]["match"]:
 				del(self.lexicalEntries[lexicalEntryID])
