@@ -145,11 +145,11 @@ class LexiconGraph(RDFGraph):
 		for s,p,o in self.g.triples( (None, LEXINFO.antonym, None) ):
 			self.g.add((o,LEXINFO.antonym,s))
 
-		for s,p,o in self.g.triples( (None, LEXINFO.synonym, None) ):
-			self.g.add((o,LEXINFO.synonym,s))
-
 		for s,p,o in self.g.triples( (None, LEXINFO.relatedTerm, None) ):
 			self.g.add((o,LEXINFO.relatedTerm,s))
+
+		for s,p,o in self.g.triples( (None, LEXINFO.hypernym, None) ):
+			self.g.add((o,LEXINFO.hyponym,s))
 
 
 	def setRedundants(self):
