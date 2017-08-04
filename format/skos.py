@@ -39,7 +39,7 @@ class SKOSGraph(RDFGraph):
 				self.g.add((conceptidentifier,URIRef(SKOSTHES + reference["property"]),URIRef(reference["reference"])))
 
 			if reference["namespace"] == "ontolex" and reference["property"] == "reference":
-				self.g.add((conceptidentifier,DCTERMS.identifier,URIRef(reference["reference"])))
+				self.g.add((conceptidentifier,SKOS.exactMatch,URIRef(reference["reference"])))
 			
 			if reference["namespace"] == "lexinfo" and reference["property"] == "synonym":
 				self.g.add((conceptidentifier,OWL.sameAs,URIRef(reference["reference"])))

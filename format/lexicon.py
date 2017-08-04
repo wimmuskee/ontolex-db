@@ -91,7 +91,7 @@ class LexiconGraph(RDFGraph):
 			self.g.add((lexicalSenseIdentifier,RDF.type,SKOS.Concept))
 			self.g.add((lexicalSenseIdentifier,RDFS.label,Literal(lexicalEntryLabels[sense["lexicalEntryID"]], lang=self.language)))
 			if sense_identifier in lexicalSenseDefinitions:
-				self.g.add((lexicalSenseIdentifier,SKOS.definition,Literal(lexicalSenseDefinitions[sense_identifier], lang=self.language)))
+				self.g.add((lexicalSenseIdentifier,LEXINFO.explanation,Literal(lexicalSenseDefinitions[sense_identifier], lang=self.language)))
 
 
 	def setSenseReferences(self,senseReferences):
