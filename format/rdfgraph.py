@@ -39,29 +39,21 @@ class RDFGraph():
 	def setInverses(self,synonymPredicate):
 		synonymCopy = [ str(SKOS.broader), str(SKOSTHES.broaderInstantial), str(SKOSTHES.broaderPartitive) ]
 		for s,p,o in self.g.triples((None,synonymPredicate,None)):
-			self.g.add((o,synonymPredicate,s))
-
 			# set prelimenary findings to temp, not actual, to prevent double copies, and endless transitive loops
+			# copy relations from each s,o to eachother, and deal with inverses of those later
 			tempg = Graph()
 
-			# copy relations to subjects/objects
-			for s2,p2,o2 in self.g.triples((None,None,s)):
-				if str(p2) in synonymCopy:
-					tempg.add((s2,p2,o))
-			for s2,p2,o2 in self.g.triples((None,None,o)):
-				if str(p2) in synonymCopy:
-					tempg.add((s2,p2,s))
-
-			# copy relations from subjects/objects
 			for s2,p2,o2 in self.g.triples((s,None,None)):
 				if str(p2) in synonymCopy:
-					tempg.add((o,p2,s2))
+					tempg.add((o,p2,o2))
 			for s2,p2,o2 in self.g.triples((o,None,None)):
 				if str(p2) in synonymCopy:
-					tempg.add((s,p2,s2))
+					tempg.add((s,p2,o2))
 
-			for s,p,o in tempg:
-				self.g.add((s,p,o))
+			for s2,p2,o2 in tempg:
+				self.g.add((s2,p2,o2))
+
+			self.g.add((o,synonymPredicate,s))
 
 
 		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
