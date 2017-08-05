@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from rdflib import URIRef, Literal, Namespace
-from rdflib.namespace import SKOS, RDFS, RDF, XSD
+from rdflib.namespace import RDFS, RDF, XSD
 from format.rdfgraph import RDFGraph
 
 
@@ -11,12 +11,10 @@ class LexiconGraph(RDFGraph):
 
 		global ONTOLEX
 		global LEXINFO
-		global SKOSTHES
 		global DECOMP
 		global ISOCAT
 		ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 		LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
-		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 		DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
 		ISOCAT = Namespace("http://www.isocat.org/datcat/")
 
@@ -24,7 +22,6 @@ class LexiconGraph(RDFGraph):
 		self.g.bind("lexinfo", LEXINFO)
 		self.g.bind("decomp", DECOMP)
 		self.g.bind("isocat", ISOCAT)
-
 
 		if self.buildpackage:
 			global LIME
@@ -88,7 +85,6 @@ class LexiconGraph(RDFGraph):
 
 			self.g.add((lexicalEntryIdentifier,ONTOLEX.sense,lexicalSenseIdentifier))
 			self.g.add((lexicalSenseIdentifier,RDF.type,ONTOLEX.LexicalSense))
-			self.g.add((lexicalSenseIdentifier,RDF.type,SKOS.Concept))
 			self.g.add((lexicalSenseIdentifier,RDFS.label,Literal(lexicalEntryLabels[sense["lexicalEntryID"]], lang=self.language)))
 			if sense_identifier in lexicalSenseDefinitions:
 				self.g.add((lexicalSenseIdentifier,LEXINFO.explanation,Literal(lexicalSenseDefinitions[sense_identifier], lang=self.language)))
@@ -99,12 +95,6 @@ class LexiconGraph(RDFGraph):
 			lexicalSenseIdentifier = URIRef(reference["sense_identifier"])
 			if reference["namespace"] == "ontolex":
 				self.g.add((lexicalSenseIdentifier,URIRef(ONTOLEX + reference["property"]),URIRef(reference["reference"])))
-
-			elif reference["namespace"] == "skos":
-				self.g.add((lexicalSenseIdentifier,URIRef(SKOS + reference["property"]),URIRef(reference["reference"])))
-			
-			elif reference["namespace"] == "skos-thes":
-				self.g.add((lexicalSenseIdentifier,URIRef(SKOSTHES + reference["property"]),URIRef(reference["reference"])))
 
 			elif reference["namespace"] == "lexinfo":
 				self.g.add((lexicalSenseIdentifier,URIRef(LEXINFO + reference["property"]),URIRef(reference["reference"])))
@@ -140,7 +130,7 @@ class LexiconGraph(RDFGraph):
 
 
 	def setInverses(self):
-		RDFGraph.setInverses(self,LEXINFO.synonym)
+		RDFGraph.setSynonyms(self,LEXINFO.synonym,[str(LEXINFO.hypernym),str(LEXINFO.relatedTerm),str(LEXINFO.antonym)])
 
 		for s,p,o in self.g.triples( (None, LEXINFO.antonym, None) ):
 			self.g.add((o,LEXINFO.antonym,s))

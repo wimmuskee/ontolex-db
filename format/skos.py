@@ -9,6 +9,9 @@ class SKOSGraph(RDFGraph):
 	def __init__(self,name,language,exportconfig,buildpackage,persist):
 		RDFGraph.__init__(self, name,language,"turtle",exportconfig,buildpackage,persist)
 
+		self.g.bind("skos", SKOS)
+		self.g.bind("owl", OWL)
+
 		if self.buildpackage:
 			self.g.add((URIRef("urn:" + name),RDF.type,SKOS.ConceptScheme))
 			self.g.add((URIRef("urn:" + name),DCTERMS.language,URIRef("http://id.loc.gov/vocabulary/iso639-1/" + language)))
@@ -28,16 +31,8 @@ class SKOSGraph(RDFGraph):
 
 
 	def setConceptRelations(self,conceptrelations):
-		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
-		
 		for reference in conceptrelations:
 			conceptidentifier = URIRef(reference["sense_identifier"])
-			if reference["namespace"] == "skos":
-				self.g.add((conceptidentifier,URIRef(SKOS + reference["property"]),URIRef(reference["reference"])))
-			
-			elif reference["namespace"] == "skos-thes":
-				self.g.add((conceptidentifier,URIRef(SKOSTHES + reference["property"]),URIRef(reference["reference"])))
-
 			if reference["namespace"] == "ontolex" and reference["property"] == "reference":
 				self.g.add((conceptidentifier,SKOS.exactMatch,URIRef(reference["reference"])))
 			
@@ -47,9 +42,15 @@ class SKOSGraph(RDFGraph):
 			if reference["namespace"] == "lexinfo" and reference["property"] == "relatedTerm":
 				self.g.add((conceptidentifier,SKOS.related,URIRef(reference["reference"])))
 
+			if reference["namespace"] == "lexinfo" and reference["property"] == "hypernym":
+				self.g.add((conceptidentifier,SKOS.broaderTransitive,URIRef(reference["reference"])))
+
 
 	def setInverses(self):
-		RDFGraph.setInverses(self,OWL.sameAs)
+		RDFGraph.setSynonyms(self,OWL.sameAs,[str(SKOS.related),str(SKOS.broaderTransitive)])
 
 		for s,p,o in self.g.triples( (None, SKOS.related, None) ):
 			self.g.add((o,SKOS.related,s))
+
+		for s,p,o in self.g.triples( (None, SKOS.broaderTransitive, None) ):
+			self.g.add((o,SKOS.narrowerTransitive,s))

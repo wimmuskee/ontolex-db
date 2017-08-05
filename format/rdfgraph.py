@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from rdflib import Graph
-from rdflib.namespace import XSD, VOID, SKOS, DCTERMS, OWL
+from rdflib.namespace import XSD, VOID, DCTERMS
 from rdflib import URIRef, Literal, Namespace
 
 
 class RDFGraph():
 	def __init__(self,name,language,format,exportconfig,buildpackage,persist):
-		global SKOSTHES
-		global OWL
-		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
-
 		self.name = name
 		self.language = language
 		self.format = format
@@ -27,17 +23,14 @@ class RDFGraph():
 		else:
 			self.g = Graph()
 
-		self.g.bind("skos", SKOS)
-		self.g.bind("skosthes", SKOSTHES)
-		self.g.bind("dct", DCTERMS)
-		self.g.bind("owl", OWL)
-
 		if self.buildpackage:
+			self.g.bind("dct", DCTERMS)
 			self.g.bind("void", VOID)
 
 
-	def setInverses(self,synonymPredicate):
-		synonymCopy = [ str(SKOS.broader), str(SKOSTHES.broaderInstantial), str(SKOSTHES.broaderPartitive) ]
+	def setSynonyms(self,synonymPredicate,synonymCopy):
+		""" Merge specific relations from synonym concepts. Those relations that should be merged are
+		provided by the synonymCopy list. """
 		for s,p,o in self.g.triples((None,synonymPredicate,None)):
 			# set prelimenary findings to temp, not actual, to prevent double copies, and endless transitive loops
 			# copy relations from each s,o to eachother, and deal with inverses of those later
@@ -56,34 +49,14 @@ class RDFGraph():
 			self.g.add((o,synonymPredicate,s))
 
 
-		for s,p,o in self.g.triples( (None, SKOS.broader, None) ):
-			self.g.add((o,SKOS.narrower,s))
-
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
-			self.g.add((o,SKOSTHES.narrowerPartitive,s))
-
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
-			self.g.add((o,SKOSTHES.narrowerInstantial,s))
-
-
 	def setRedundants(self):
 		""" Not setting inverse relations, so if you want those, execute this before setInverses. """
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderPartitive, None) ):
-			self.g.add((s,SKOS.broader,o))
-
-		for s,p,o in self.g.triples( (None, SKOSTHES.broaderInstantial, None) ):
-			self.g.add((s,SKOS.broader,o))
+		pass
 
 
 	def setTransitives(self):
 		""" This function is dependent on setInverses and setRedundants """
-		for senseIdentifier in self.exportconfig["transitiveSenseIdentifiers"]:
-			for narrowerID in self.g.objects(URIRef(senseIdentifier),SKOS.narrower):
-				self.__setTransitive(narrowerID,senseIdentifier)
-
-			# also set these as topConcepts
-			self.g.add((URIRef("urn:" + self.name),SKOS.hasTopConcept,URIRef(senseIdentifier)))
-			self.g.add((URIRef(senseIdentifier),SKOS.topConceptOf,URIRef("urn:" + self.name)))
+		pass
 
 
 	def printGraph(self):
@@ -98,11 +71,3 @@ class RDFGraph():
 
 		print(bytes.decode(self.g.serialize(format=self.format)))
 		self.g.close()
-
-
-	def __setTransitive(self,startSenseID,targetSenseID):
-		""" Move down the graph, and store transitives (also inverses), and move down again."""
-		for narrowerID in self.g.objects(URIRef(startSenseID),SKOS.narrower):
-			self.g.add((URIRef(narrowerID),SKOS.broaderTransitive,URIRef(targetSenseID)))
-			self.g.add((URIRef(targetSenseID),SKOS.narrowerTransitive,URIRef(narrowerID)))
-			self.__setTransitive(narrowerID,targetSenseID)
