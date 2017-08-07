@@ -584,7 +584,9 @@ class Ruleset(RulesetCommon):
 			lexicalEntryID = str(row[1])
 			syllableCount = self.__getSyllableCount(label)
 
-			if (label[-2:] in ["er","ie","en","el"] or label[-1:] == "e") and syllableCount > 1:
+			if labe[-3:] == "ier":
+				guess_plural = label + "en"
+			elif (label[-2:] in ["er","ie","en","el"] or label[-1:] == "e") and syllableCount > 1:
 				guess_plural = label + "s"
 			elif label[-4:] == "erik":
 				guess_plural = label + "en"
@@ -601,8 +603,8 @@ class Ruleset(RulesetCommon):
 			elif label[-4:] == "heid":
 				guess_plural = label[:-2] + "den"
 			else:
-				label = self.__getStemToPluralizeCheck(label)
-				guess_plural = self.__getNounStem(label) + "en"
+				stem = self.__getStemToPluralizeCheck(label)
+				guess_plural = self.__getNounStem(stem) + "en"
 
 			if guess_plural in self.worddb:
 				if self.userCheck("meervoud", label, guess_plural):
