@@ -1,22 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from rdflib import URIRef, Literal, Namespace
+from rdflib import URIRef, Literal
 from rdflib.namespace import RDFS, RDF, XSD
 from format.rdfgraph import RDFGraph
+from format.namespace import *
 
 
 class LexiconGraph(RDFGraph):
 	def __init__(self,name,language,format,exportconfig,buildpackage,persist):
 		RDFGraph.__init__(self, name,language,format,exportconfig,buildpackage,persist)
-
-		global ONTOLEX
-		global LEXINFO
-		global DECOMP
-		global ISOCAT
-		ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
-		LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
-		DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
-		ISOCAT = Namespace("http://www.isocat.org/datcat/")
 
 		self.g.bind("ontolex", ONTOLEX)
 		self.g.bind("lexinfo", LEXINFO)
@@ -24,8 +16,6 @@ class LexiconGraph(RDFGraph):
 		self.g.bind("isocat", ISOCAT)
 
 		if self.buildpackage:
-			global LIME
-			LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
 			self.g.bind("lime", LIME)
 			self.g.add((URIRef("urn:" + name),RDF.type,LIME.lexicon))
 			self.g.add((URIRef("urn:" + name),LIME.language,URIRef("http://id.loc.gov/vocabulary/iso639-1/" + language)))

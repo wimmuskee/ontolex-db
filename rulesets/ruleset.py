@@ -2,9 +2,10 @@
 
 from database.mysql import Database
 from rdflib import Graph
-from rdflib import URIRef, Literal, Namespace
+from rdflib import URIRef, Literal
 from rdflib.namespace import RDFS, RDF, XSD
 from rdflib.plugins.sparql import prepareQuery
+from format.namespace import *
 
 """ The pattern all rulesets should follow.
 1. select the entries we want to change
@@ -20,18 +21,6 @@ class RulesetCommon:
 		self.db.setLanguages()
 		self.db.setProperties()
 		self.db.setEntryRelations()
-
-		global ONTOLEX
-		global LEXINFO
-		global DECOMP
-		global ISOCAT
-		global LIME
-
-		ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
-		LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
-		DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
-		ISOCAT = Namespace("http://www.isocat.org/datcat/")
-		LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
 
 		self.g = Graph()
 		self.g.parse("export.ttl", format="turtle")

@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from rdflib import URIRef, Literal, Namespace
+from rdflib import URIRef, Literal
 from rulesets.ruleset import RulesetCommon
+from format.namespace import *
 from random import randint
 
-ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
-LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
-DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
-ISOCAT = Namespace("http://www.isocat.org/datcat/")
 LANGUAGE = "nl"
-
 
 class Ruleset(RulesetCommon):
 	def __init__(self,config,dont_ask=False):
 		RulesetCommon.__init__(self,config,dont_ask)
-		global ONTOLEX
-		global LEXINFO
-		global DECOMP
-		global ISOCAT
 
 		if config["worddb"]["type"] == "file":
 			self.setWordDbFile(config["worddb"]["name"])
