@@ -6,7 +6,6 @@ from random import randint
 
 ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
-SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
 ISOCAT = Namespace("http://www.isocat.org/datcat/")
 LANGUAGE = "nl"
@@ -17,7 +16,6 @@ class Ruleset(RulesetCommon):
 		RulesetCommon.__init__(self,config,dont_ask)
 		global ONTOLEX
 		global LEXINFO
-		global SKOSTHES
 		global DECOMP
 		global ISOCAT
 

@@ -3,7 +3,7 @@
 from database.mysql import Database
 from rdflib import Graph
 from rdflib import URIRef, Literal, Namespace
-from rdflib.namespace import SKOS, RDFS, RDF, XSD
+from rdflib.namespace import RDFS, RDF, XSD
 from rdflib.plugins.sparql import prepareQuery
 
 """ The pattern all rulesets should follow.
@@ -25,14 +25,12 @@ class RulesetCommon:
 		global LEXINFO
 		global DECOMP
 		global ISOCAT
-		global SKOSTHES
 		global LIME
 
 		ONTOLEX = Namespace("http://www.w3.org/ns/lemon/ontolex#")
 		LEXINFO = Namespace("http://www.lexinfo.net/ontology/2.0/lexinfo#")
 		DECOMP = Namespace("http://www.w3.org/ns/lemon/decomp#")
 		ISOCAT = Namespace("http://www.isocat.org/datcat/")
-		SKOSTHES = Namespace("http://purl.org/iso25964/skos-thes#")
 		LIME = Namespace("http://www.w3.org/ns/lemon/lime#")
 
 		self.g = Graph()
@@ -40,7 +38,6 @@ class RulesetCommon:
 		self.g.bind("ontolex", ONTOLEX)
 		self.g.bind("lexinfo", LEXINFO)
 		self.g.bind("decomp", DECOMP)
-		self.g.bind("skosthes", SKOSTHES)
 		self.g.bind("isocat", ISOCAT)
 
 		# later, check if language is correct
@@ -287,7 +284,6 @@ class RulesetCommon:
 		return False
 
 
-	# we have this in prepared form, but not sure which version i will use
 	def countLexicalSenses(self,lexicalEntryIdentifier):
 		c = 0
 		for lexicalSenseIdentifier in self.g.objects(URIRef(lexicalEntryIdentifier),ONTOLEX.sense):
