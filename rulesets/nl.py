@@ -140,7 +140,7 @@ class Ruleset(RulesetCommon):
 			else:
 				guess_adjective = self.__getNounStem(label) + "e"
 
-			if guess_adjective in self.worddb:
+			if guess_adjective.lower() in self.worddb:
 				if self.userCheck("vervoeging bijvoegelijk naamwoord: " + degree, label, guess_adjective):
 					lex_id = self.db.getID(lexicalEntryID,"lexicalEntry")
 					form_id = self.db.storeOtherForm(lex_id,guess_adjective,self.lang_id)
@@ -574,7 +574,7 @@ class Ruleset(RulesetCommon):
 			lexicalEntryID = str(row[1])
 			syllableCount = self.__getSyllableCount(label)
 
-			if labe[-3:] == "ier":
+			if label[-3:] == "ier":
 				guess_plural = label + "en"
 			elif (label[-2:] in ["er","ie","en","el"] or label[-1:] == "e") and syllableCount > 1:
 				guess_plural = label + "s"
@@ -596,7 +596,7 @@ class Ruleset(RulesetCommon):
 				stem = self.__getStemToPluralizeCheck(label)
 				guess_plural = self.__getNounStem(stem) + "en"
 
-			if guess_plural in self.worddb:
+			if guess_plural.lower() in self.worddb:
 				if self.userCheck("meervoud", label, guess_plural):
 					# first get the database identifier and store the plural
 					lex_id = self.db.getID(str(lexicalEntryID),"lexicalEntry")
