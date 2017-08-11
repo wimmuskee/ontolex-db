@@ -8,6 +8,7 @@ from functions.common import validateInput, getConfig
 parser = argparse.ArgumentParser(description='manager script for ontolox-db rulesets')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
+parser.add_argument('-s', '--script', nargs=1, help='script module name', metavar='script', dest='script')
 parser.add_argument('--dont-ask', help="asume yes at questions", action="store_true")
 rules = parser.add_argument_group('rules')
 rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", action="store_true")
@@ -43,6 +44,12 @@ dont_ask = False
 if args.dont_ask:
 	dont_ask = True
 
+if args.script:
+	script = args.script[0]
+	mod = import_module('rulesets.scripts.' + script)
+	CustomRuleset = getattr(mod, "CustomRuleset")
+	r = CustomRuleset(config,language,dont_ask)
+	exit()
 
 # import language module
 # check for language existence later
