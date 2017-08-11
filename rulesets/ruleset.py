@@ -307,11 +307,6 @@ class RulesetCommon:
 
 	def setQuery(self,query):
 		""" Set prepared queries. """
-		if query == "getNarrowerInstantialByReference":
-			self.q_getNarrowerInstantialByReference = prepareQuery( """SELECT ?lexicalEntryID WHERE { 
-				?sourceLexicalSenseID ontolex:reference ?reference ;
-					skosthes:narrowerInstantial ?lexicalSenseID .
-				?lexicalEntryID ontolex:sense ?lexicalSenseID }""", initNs={"ontolex": ONTOLEX, "skosthes": SKOSTHES })
 		if query == "askCanonicalByPOS":
 			self.q_askCanonicalByPOS = q = prepareQuery( """ASK { 
 				?lexicalEntryID rdf:type ontolex:LexicalEntry ;

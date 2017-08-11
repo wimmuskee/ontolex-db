@@ -674,27 +674,6 @@ class Ruleset(RulesetCommon):
 				self.db.insertFormProperty(form_id,self.db.properties["gender:" + guess_gender],True)
 
 
-	def nounGenderCategory(self):
-		""" Add noun gender neuter based on category. """
-		# landen, windstreken, metalen
-		self.setProcessableForms(LEXINFO.noun,LEXINFO.gender)
-		self.setQuery("getNarrowerInstantialByReference")
-		referenceEntryIDs = []
-
-		for ref in ["http://www.wikidata.org/entity/Q6256","http://www.wikidata.org/entity/Q23718","http://www.wikidata.org/entity/Q11426"]:
-			for row in self.g.query( self.q_getNarrowerInstantialByReference, initBindings={"reference": URIRef(ref)}):
-				referenceEntryIDs.append(str(row[0]))
-		
-		for lexicalFormID in self.lexicalForms:
-			label =  self.lexicalForms[lexicalFormID]["label"]
-			lexicalEntryID = self.lexicalForms[lexicalFormID]["lexicalEntryID"]
-			
-			if lexicalEntryID in referenceEntryIDs:
-				if self.userCheck("geslacht", label, "neuter"):
-					form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
-					self.db.insertFormProperty(form_id,self.db.properties["gender:neuter"],True)
-
-
 	def nounComponentsFind(self):
 		print("first redesign")
 		exit()

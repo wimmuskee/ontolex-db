@@ -22,7 +22,6 @@ rules.add_argument('--noun-components-find', help="find new nouns based on frequ
 rules.add_argument('--noun-components-senses', help="find new senses based on frequently used components", action="store_true")
 rules.add_argument('--noun-diminutives', help="find diminuitives for nouns", action="store_true")
 rules.add_argument('--noun-genders', help="find gender for noun forms", action="store_true")
-rules.add_argument('--noun-genders-category', help="find gender for noun forms by category", action="store_true")
 rules.add_argument('--noun-plurals', help="find plurals for canonical nouns", action="store_true")
 rules.add_argument('--verb-components', nargs=1, help="init finding components in verbs", metavar="componentID", dest="verb_components")
 rules.add_argument('--verb-infinitives', help="set verb canonicals as infinitives", action="store_true")
@@ -89,9 +88,6 @@ if args.noun_diminutives:
 
 if args.noun_genders:
 	r.nounGender()
-
-if args.noun_genders_category:
-	r.nounGenderCategory()
 
 if args.noun_plurals:
 	r.nounPlurals()

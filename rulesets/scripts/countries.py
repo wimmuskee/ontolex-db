@@ -2,7 +2,7 @@
 # This script takes a csv with: country names,country adjectives,inhabitant names
 # and adds them to the lexicon with the proper relations if they do not exist already,
 # for example,
-#  - country_name "Germany" noun, hypernym "country"
+#  - country_name "Germany" noun, massNoun, hypernym "country"
 #  - country_adjective "German" adjective, pertainsTo country_name
 #  - inhabitant_name "German" noun, relatedTerm country_name
 
@@ -30,6 +30,19 @@ class CustomRuleset(RulesetCommon):
 		self.__setCanonical(name,"noun","name")
 		self.__setCanonical(adjective,"adjective","adjective")
 		self.__setCanonical(inhabitant,"noun","inhabitant")
+
+		# name form
+		canonicalFormID = self.g.value(URIRef(self.data["name"]["lexicalEntryID"]),ONTOLEX.canonicalForm,None)
+		canonical_form_id = self.db.getID(str(canonicalFormID),"lexicalForm")
+
+		# massNoun, don't ask
+		if not (canonicalFormID,LEXINFO.number,LEXINFO.massNoun) in self.g:
+			self.db.insertFormProperty(canonical_form_id,self.db.properties["number:massNoun"],True)
+
+		# neuter (language specific)
+		if self.language == "nl":
+			if not (canonicalFormID,LEXINFO.gender,LEXINFO.neuter) in self.g and self.userCheck("add gender",name,"neuter"):
+				self.db.insertFormProperty(canonical_form_id,self.db.properties["gender:neuter"],True)
 
 		# pertainsTo
 		if self.__checkSense("name") and self.__checkSense("adjective"):
