@@ -6,19 +6,15 @@
 #  - country_adjective "German" adjective, pertainsTo country_name
 #  - inhabitant_name "German" noun, relatedTerm country_name
 
-from rulesets.ruleset import RulesetCommon
+from rulesets.scripts.script import ScriptCommon
 from format.namespace import LEXINFO, ONTOLEX
 import csv
 from rdflib import URIRef
 
-class CustomRuleset(RulesetCommon):
+class Script(ScriptCommon):
 	def __init__(self,config,language,dont_ask=False):
-		RulesetCommon.__init__(self,config,dont_ask)
-		self.language = language
-		self.lang_id = self.db.languages[language]
-		self.hypernym_senseID = str(self.g.value(None,ONTOLEX.reference,URIRef("http://www.wikidata.org/entity/Q6256")))
-		if self.hypernym_senseID:
-			self.hypernym_label = self.getLabel(self.hypernym_senseID)
+		ScriptCommon.__init__(self,config,language,dont_ask)
+		self.setHypernym("http://www.wikidata.org/entity/Q6256")
 
 		with open('custom-csv/countries.csv', 'r') as csvfile:
 			spamreader = csv.reader(csvfile, delimiter=',')
@@ -30,9 +26,9 @@ class CustomRuleset(RulesetCommon):
 		self.__resetData()
 
 		# canonicals
-		self.__setCanonical(name,"noun","name")
-		self.__setCanonical(adjective,"adjective","adjective")
-		self.__setCanonical(inhabitant,"noun","inhabitant")
+		self.setCanonical(name,"noun","name")
+		self.setCanonical(adjective,"adjective","adjective")
+		self.setCanonical(inhabitant,"noun","inhabitant")
 
 		# name form
 		canonicalFormID = self.g.value(URIRef(self.data["name"]["lexicalEntryID"]),ONTOLEX.canonicalForm,None)
@@ -48,65 +44,27 @@ class CustomRuleset(RulesetCommon):
 				self.db.insertFormProperty(canonical_form_id,self.db.properties["gender:neuter"],True)
 
 		# hypernym
-		if self.hypernym_senseID and self.__checkSense("name"):
-			self.__setSense("name")
+		if self.hypernym_senseID and self.checkSense("name"):
+			self.setSense("name")
 			if not (URIRef(self.data["name"]["lexicalSenseID"]),LEXINFO.hypernym,URIRef(self.hypernym_senseID)) in self.g:
 				if self.userCheck("add hypernym",name,self.hypernym_label):
 					self.db.insertSenseReference(self.data["name"]["sense_id"],"lexinfo:hypernym",self.hypernym_senseID,True)
 
 		# pertainsTo
-		if self.__checkSense("name") and self.__checkSense("adjective"):
-			self.__setSense("name")
-			self.__setSense("adjective")
+		if self.checkSense("name") and self.checkSense("adjective"):
+			self.setSense("name")
+			self.setSense("adjective")
 			if not (URIRef(self.data["adjective"]["lexicalSenseID"]),LEXINFO.pertainsTo,URIRef(self.data["name"]["lexicalSenseID"])) in self.g:
 				if self.userCheck("add pertainsTo",name,adjective):
 					self.db.insertSenseReference(self.data["adjective"]["sense_id"],"lexinfo:pertainsTo",self.data["name"]["lexicalSenseID"],True)
 
 		# relatedTerm
-		if self.__checkSense("name") and self.__checkSense("inhabitant"):
-			self.__setSense("name")
-			self.__setSense("inhabitant")
+		if self.checkSense("name") and self.checkSense("inhabitant"):
+			self.setSense("name")
+			self.setSense("inhabitant")
 			if not (URIRef(self.data["inhabitant"]["lexicalSenseID"]),LEXINFO.relatedTerm,URIRef(self.data["name"]["lexicalSenseID"])) in self.g:
 				if self.userCheck("add relatedTerm",name,inhabitant):
 					self.db.insertSenseReference(self.data["inhabitant"]["sense_id"],"lexinfo:relatedTerm",self.data["name"]["lexicalSenseID"],True)
-
-
-	def __setCanonical(self,value,pos,key):
-		if not value:
-			return
-
-		lexicalEntryID = self.findLexicalEntry(value,URIRef(LEXINFO + pos))
-		if not lexicalEntryID and self.userCheck("add canonical",value,pos):
-				lexid = self.db.storeCanonical(value,self.lang_id,self.db.posses[pos],False)
-				lexicalEntryID = self.db.getIdentifier(lexid,"lexicalEntry")
-
-		if lexicalEntryID:
-			self.data[key]["lexicalEntryID"] = lexicalEntryID
-			self.data[key]["senseCount"] = self.countLexicalSenses(lexicalEntryID)
-
-
-	def __setSense(self,key):
-		""" Sets sense_id by retrieving it if it exists, or inserting if not. """
-		if self.data[key]["lexicalSenseID"]:
-			return
-
-		if self.data[key]["senseCount"] == 1:
-			lexicalSenseID = str(self.g.value(URIRef(self.data[key]["lexicalEntryID"]),ONTOLEX.sense,None))
-			self.data[key]["sense_id"] = self.db.getID(lexicalSenseID,"lexicalSense")
-			self.data[key]["lexicalSenseID"] = lexicalSenseID
-		else:
-			entry_id = self.db.getID(self.data[key]["lexicalEntryID"],"lexicalEntry")
-			self.data[key]["sense_id"] = self.db.insertLexicalSense(entry_id,True)
-			self.data[key]["lexicalSenseID"] = self.db.getIdentifier(self.data[key]["sense_id"],"lexicalSense")
-
-
-	def __checkSense(self,key):
-		"""Checks whether lexicalEntryID for key is present and senseCount
-		is lower than 2."""
-		if self.data[key]["lexicalEntryID"] and self.data[key]["senseCount"] < 2:
-			return True
-		else:
-			return False
 
 
 	def __resetData(self):

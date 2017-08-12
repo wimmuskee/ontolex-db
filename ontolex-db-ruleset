@@ -45,8 +45,8 @@ if args.dont_ask:
 if args.script:
 	script = args.script[0]
 	mod = import_module('rulesets.scripts.' + script)
-	CustomRuleset = getattr(mod, "CustomRuleset")
-	r = CustomRuleset(config,language,dont_ask)
+	Script = getattr(mod, "Script")
+	s = Script(config,language,dont_ask)
 	exit()
 
 # import language module
