@@ -385,6 +385,7 @@ class Ruleset(RulesetCommon):
 
 
 	def verbRelatedNouns(self):
+		self.verbRelatedNounsVariant("aar")
 		self.verbRelatedNounsVariant("ing")
 		self.verbRelatedNounsVariant("er")
 
@@ -410,6 +411,8 @@ class Ruleset(RulesetCommon):
 			elif variant == "er":
 				# aanbieden -> aanbieder
 				noun = label[:-1] + "r"
+			elif variant == "aar":
+				noun = label[:-2] + "aar"
 
 			targetLexicalEntryID = self.findLexicalEntry(noun,LEXINFO.noun)
 			if targetLexicalEntryID:
