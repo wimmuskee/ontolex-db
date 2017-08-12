@@ -15,7 +15,6 @@ rules.add_argument('--adjective-antonyms', help="find antonyms for adjective", a
 rules.add_argument('--adjective-conjugated', help="find conjugated for adjective", action="store_true")
 rules.add_argument('--adjective-pertainsto', help="find pertainsTo for adjective", action="store_true")
 rules.add_argument('--adjective-present-participle', help="set verb present participle as adjective", action="store_true")
-rules.add_argument('--adjective-material-nouns', help="find adjectives for material nouns", action="store_true")
 rules.add_argument('--form-syllable-counts', help="find syllable count for forms", action="store_true")
 rules.add_argument('--noun-components', nargs=1, help="init finding components in nouns", metavar="componentID", dest="noun_components")
 rules.add_argument('--noun-components-find', help="find new nouns based on frequently used components", action="store_true")
@@ -63,9 +62,6 @@ if args.adjective_conjugated:
 
 if args.adjective_pertainsto:
 	r.adjectivePertainsTo()
-
-if args.adjective_material_nouns:
-	r.adjectiveMaterialNouns()
 
 if args.adjective_present_participle:
 	r.adjectivePresentParticiple()

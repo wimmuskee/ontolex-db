@@ -177,30 +177,6 @@ class Ruleset(RulesetCommon):
 				self.db.insertLexicalEntryRelation(lex_id,self.db.entryrelations["lexinfo:participleFormOf"],lexicalEntryID,True)
 
 
-	def adjectiveMaterialNouns(self):
-		print("first redesign")
-		exit()
-		""" Get all material nouns, based on being part of material category."""
-		materialSenseIDs = self.getLexicalSenseIDsByReference(["http://www.wikidata.org/entity/Q11344"])
-		source_pos_id = self.db.posses["noun"]
-		target_pos_id = self.db.posses["adjective"]
-
-		# now get all specific values in lexicalEntries
-		for mID in materialSenseIDs:
-			for senseID in self.g.objects(URIRef(mID),SKOSTHES.narrowerInstantial):
-				lexicalEntryID = str(self.g.value(None,ONTOLEX.sense,URIRef(senseID)))
-				self.lexicalEntries[lexicalEntryID]["label"] = self.getLabel(senseID)
-
-		for lexicalEntryID in self.lexicalEntries:
-			label = self.lexicalEntries[lexicalEntryID]["label"]
-			guess_adjective = self.__getNounStem(label) + "en"
-
-			if guess_adjective in self.worddb:
-				if self.userCheck("bijvoegelijk naamwoord", label, guess_adjective):
-					self.db.storeCanonical(guess_adjective,self.lang_id,target_pos_id)
-					self.db.addSense(label,source_pos_id,"skos","related",guess_adjective,target_pos_id)
-
-
 	def formSyllableCounts(self):
 		""" Provide a syllable count for all forms. """
 		data = self.db.getWrittenRepsWithoutSyllableCount(self.lang_id)
