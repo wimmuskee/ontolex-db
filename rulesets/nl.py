@@ -576,7 +576,7 @@ class Ruleset(RulesetCommon):
 
 			if label[-3:] == "ier":
 				guess_plural = label + "en"
-			elif (label[-2:] in ["er","ie","en","el"] or label[-1:] == "e") and syllableCount > 1:
+			elif label[-2:] in ["er","ie","en","el"]:
 				guess_plural = label + "s"
 			elif label[-4:] == "erik":
 				guess_plural = label + "en"
@@ -590,6 +590,13 @@ class Ruleset(RulesetCommon):
 				guess_plural = label + "'s"
 			elif label[-1:] == "e" and syllableCount == 1:
 				guess_plural = label + "ën"
+			elif label[-1:] == "e" and syllableCount > 1:
+				# no apparant rule, so random, gevangenen and sondes
+				choice = randint(1,10)
+				if choice > 5:
+					guess_plural = label + "n"
+				else:
+					guess_plural = label + "s"
 			elif label[-4:] == "heid":
 				guess_plural = label[:-2] + "den"
 			else:
