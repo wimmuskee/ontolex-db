@@ -16,6 +16,9 @@ class CustomRuleset(RulesetCommon):
 		RulesetCommon.__init__(self,config,dont_ask)
 		self.language = language
 		self.lang_id = self.db.languages[language]
+		self.hypernym_senseID = str(self.g.value(None,ONTOLEX.reference,URIRef("http://www.wikidata.org/entity/Q6256")))
+		if self.hypernym_senseID:
+			self.hypernym_label = self.getLabel(self.hypernym_senseID)
 
 		with open('custom-csv/countries.csv', 'r') as csvfile:
 			spamreader = csv.reader(csvfile, delimiter=',')
@@ -43,6 +46,13 @@ class CustomRuleset(RulesetCommon):
 		if self.language == "nl":
 			if not (canonicalFormID,LEXINFO.gender,LEXINFO.neuter) in self.g and self.userCheck("add gender",name,"neuter"):
 				self.db.insertFormProperty(canonical_form_id,self.db.properties["gender:neuter"],True)
+
+		# hypernym
+		if self.hypernym_senseID and self.__checkSense("name"):
+			self.__setSense("name")
+			if not (URIRef(self.data["name"]["lexicalSenseID"]),LEXINFO.hypernym,URIRef(self.hypernym_senseID)) in self.g:
+				if self.userCheck("add hypernym",name,self.hypernym_label):
+					self.db.insertSenseReference(self.data["name"]["sense_id"],"lexinfo:hypernym",self.hypernym_senseID,True)
 
 		# pertainsTo
 		if self.__checkSense("name") and self.__checkSense("adjective"):
