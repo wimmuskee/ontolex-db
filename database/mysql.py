@@ -303,6 +303,10 @@ class Database:
 		lexicalEntryID = self.insertLexicalEntry(word,pos_id)
 		lexicalFormID = self.insertLexicalForm(lexicalEntryID,"canonicalForm")
 		self.insertWrittenRep(lexicalFormID,word,lang_id)
+
+		# store infinitive form for verb
+		if pos_id == self.posses["verb"]:
+			self.insertFormProperty(lexicalFormID,self.properties["verbFormMood:infinitive"])
 		self.DB.commit()
 		return lexicalEntryID
 

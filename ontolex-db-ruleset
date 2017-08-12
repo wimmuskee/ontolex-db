@@ -24,7 +24,6 @@ rules.add_argument('--noun-diminutives', help="find diminuitives for nouns", act
 rules.add_argument('--noun-genders', help="find gender for noun forms", action="store_true")
 rules.add_argument('--noun-plurals', help="find plurals for canonical nouns", action="store_true")
 rules.add_argument('--verb-components', nargs=1, help="init finding components in verbs", metavar="componentID", dest="verb_components")
-rules.add_argument('--verb-infinitives', help="set verb canonicals as infinitives", action="store_true")
 rules.add_argument('--verb-past-participles', help="find past participles verbs", action="store_true")
 rules.add_argument('--verb-past-singulars', help="find past singulars verbs", action="store_true")
 rules.add_argument('--verb-past-plurals', help="find past plurals verbs", action="store_true")
@@ -94,9 +93,6 @@ if args.noun_plurals:
 
 if args.verb_components:
 	r.verbComponents(args.verb_components[0])
-
-if args.verb_infinitives:
-	r.verbInfinitives()
 
 if args.verb_past_participles:
 	r.verbPastParticiples()
