@@ -49,7 +49,6 @@ class RulesetCommon:
 	def nounComponents(self,componentID):
 		""" Try to match a component to a postfix on nouns."""
 		searchterm = self.getLabel(componentID)
-		print(searchterm)
 		searchtermCount = len(searchterm)
 
 		# only add those entries that postfix match on the searchterm, and do not have a match to the component.
@@ -87,16 +86,14 @@ class RulesetCommon:
 		searchterm = self.getLabel(componentID)
 		searchtermCount = len(searchterm)
 
-		# 1. collect verbs
+		# 1. collect verbs without components
 		self.setLexicalEntriesByPOS(LEXINFO.verb,["label"])
+		self.filterEntriesRemoveComponentBased()
 
-		# 2. delete entries that do not start with searchterm, and do not have components set
+		# 2. delete entries that do not start with searchterm
 		for lexicalEntryID in list(self.lexicalEntries):
 			label = self.lexicalEntries[lexicalEntryID]["label"]
 			if len(label) <= searchtermCount or label[:searchtermCount] != searchterm:
-				del(self.lexicalEntries[lexicalEntryID])
-				continue
-			elif (URIRef(lexicalEntryID),DECOMP.constituent,URIRef(componentID)) in self.g:
 				del(self.lexicalEntries[lexicalEntryID])
 
 		# 3. now see if we can find a match for the postfix (in verbs)
