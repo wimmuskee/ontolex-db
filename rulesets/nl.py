@@ -151,8 +151,6 @@ class Ruleset(RulesetCommon):
 
 	def adjectivePresentParticiple(self):
 		""" Set adjective as copy from verb present participles """
-		self.setQuery("askCanonicalByPOS")
-
 		result = self.g.query("""SELECT ?label ?lexicalEntryID WHERE {
 			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
 				lexinfo:partOfSpeech lexinfo:verb ;
@@ -166,9 +164,9 @@ class Ruleset(RulesetCommon):
 			lexicalEntryID = str(row[1])
 
 			# first check if label already exists as presentParticipleAdjective
-			if not bool(self.g.query(self.q_askCanonicalByPOS, initBindings={"label": Literal(label, lang="nl"), "partOfSpeech": LEXINFO.presentParticipleAdjective})):
+			if not self.checkLexicalEntryExists(label,LEXINFO.presentParticipleAdjective):
 				# it might exist as a plain adjective
-				if bool(self.g.query(self.q_askCanonicalByPOS, initBindings={"label": Literal(label, lang="nl"), "partOfSpeech": LEXINFO.adjective})):
+				if self.checkLexicalEntryExists(label,LEXINFO.adjective):
 					lex_id = self.db.getLexicalEntryID(label,self.db.posses["adjective"])
 					self.db.updateLexicalEntryPOS(lex_id,self.db.posses["presentParticipleAdjective"])
 				else:

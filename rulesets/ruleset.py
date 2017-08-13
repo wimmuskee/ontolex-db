@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from database.mysql import Database
-from rdflib import Graph
-from rdflib import URIRef, Literal
+from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import RDFS, RDF, XSD
-from rdflib.plugins.sparql import prepareQuery
 from format.namespace import *
 
 """ The pattern all rulesets should follow.
@@ -287,15 +285,6 @@ class RulesetCommon:
 					target_sense_identifier = self.db.getIdentifier(target_sense_id,"lexicalSense")
 
 				self.db.insertSenseReference(source_sense_id,senserelation,target_sense_identifier,True)
-
-
-	def setQuery(self,query):
-		""" Set prepared queries. """
-		if query == "askCanonicalByPOS":
-			self.q_askCanonicalByPOS = q = prepareQuery( """ASK { 
-				?lexicalEntryID rdf:type ontolex:LexicalEntry ;
-					lexinfo:partOfSpeech ?partOfSpeech ;
-					rdfs:label ?label . }""", initNs = {"ontolex": ONTOLEX, "lexinfo": LEXINFO })
 
 
 	# NOTE, not used anymore, we need a better way to manage components
