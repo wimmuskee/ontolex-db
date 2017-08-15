@@ -383,6 +383,7 @@ class Ruleset(RulesetCommon):
 
 
 	def verbRelatedNouns(self):
+		self.verbRelatedNounsVariant("plural")
 		self.verbRelatedNounsVariant("aar")
 		self.verbRelatedNounsVariant("ing")
 		self.verbRelatedNounsVariant("er")
@@ -390,7 +391,7 @@ class Ruleset(RulesetCommon):
 
 	def verbRelatedNounsVariant(self,variant):
 		# 1. gather verb lexicalEntries
-		self.setLexicalEntriesByPOS(LEXINFO.verb,["label","senses"])
+		self.setLexicalEntriesByPOS(LEXINFO.verb,["label"])
 
 		# 2. delete entries which we don't want to parse
 		for lexicalEntryID in list(self.lexicalEntries):
@@ -410,7 +411,12 @@ class Ruleset(RulesetCommon):
 				# aanbieden -> aanbieder
 				noun = label[:-1] + "r"
 			elif variant == "aar":
+				# moorden -> moordenaar
 				noun = label[:-2] + "aar"
+			elif variant == "plural":
+				# fietsen -> fiets
+				# simple for now, but should match to plural form, and retrieve singular
+				noun = label[:-2]
 
 			targetLexicalEntryID = self.findLexicalEntry(noun,LEXINFO.noun)
 			if targetLexicalEntryID:
@@ -421,7 +427,7 @@ class Ruleset(RulesetCommon):
 
 		# 3.2 remove entries for which match exists
 		for lexicalEntryID in list(self.lexicalEntries):
-			for sourceSenseID in self.lexicalEntries[lexicalEntryID]["senses"]:
+			for sourceSenseID in self.getLexicalSenseIDs(lexicalEntryID):
 				for targetSenseID in self.lexicalEntries[lexicalEntryID]["match"]["senses"]:
 					if (URIRef(sourceSenseID),LEXINFO.relatedTerm,URIRef(targetSenseID)) in self.g:
 						del(self.lexicalEntries[lexicalEntryID])
