@@ -54,9 +54,29 @@ class RDFGraph():
 		pass
 
 
-	def setTransitives(self):
+	def setTransitives(self,relatedPredicate):
 		""" This function is dependent on setInverses and setRedundants """
-		pass
+		""" This specifically sets all related terms to each other as well,
+		so if a -> b and b -> c, then a -> c ."""
+		relatedlist = set()
+		for subject,object in self.g.subject_objects(relatedPredicate):
+			relatedlist.add(str(subject))
+
+		for concept in list(relatedlist):
+			corners = []
+			# we are removing elements from relatedlist while iterating
+			# make sure the concept still exists before getting corners
+			if concept in relatedlist:
+				corners = self.__getCorners(concept,relatedPredicate)
+
+			for corner in corners:
+				relatedlist.remove(corner)
+
+			for x in corners:
+				for y in corners:
+					if x != y:
+						self.g.add((URIRef(x),relatedPredicate,URIRef(y)))
+						self.g.add((URIRef(y),relatedPredicate,URIRef(x)))
 
 
 	def printGraph(self):
@@ -71,3 +91,24 @@ class RDFGraph():
 
 		print(bytes.decode(self.g.serialize(format=self.format)))
 		self.g.close()
+
+
+	def __getCorners(self,concept,relatedPredicate,corners=None,checked=None):
+		""" Used for getting all related concepts that are connected somehow. """
+		if not corners:
+			corners = []
+		if not checked:
+			checked = []
+
+		# add to checked
+		checked.append(concept)
+
+		# add to corners
+		corners.append(concept)
+
+		for related in self.g.objects(URIRef(concept),relatedPredicate):
+			related_str = str(related)
+			if related_str and related_str not in checked:
+				corners = self.__getCorners(related_str,relatedPredicate,corners,checked)
+
+		return corners

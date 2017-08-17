@@ -174,3 +174,7 @@ class LexiconGraph(RDFGraph):
 
 		for s,p,o in self.g.triples( (None,LEXINFO.partOfSpeech,LEXINFO.indefiniteOrdinalNumeral) ):
 			self.g.add((s,LEXINFO.partOfSpeech,LEXINFO.numeral))
+
+
+	def setTransitives(self):
+		RDFGraph.setTransitives(self,LEXINFO.relatedTerm)

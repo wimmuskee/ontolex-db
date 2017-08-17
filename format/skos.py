@@ -54,3 +54,7 @@ class SKOSGraph(RDFGraph):
 
 		for s,p,o in self.g.triples( (None, SKOS.broaderTransitive, None) ):
 			self.g.add((o,SKOS.narrowerTransitive,s))
+
+
+	def setTransitives(self):
+		RDFGraph.setTransitives(self,SKOS.related)
