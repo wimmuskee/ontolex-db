@@ -645,8 +645,13 @@ class Ruleset(RulesetCommon):
 		self.setProcessableForms(LEXINFO.noun,LEXINFO.gender)
 
 		for lexicalFormID in self.lexicalForms:
+			# do not use plural forms
+			if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.plural) in self.g:
+				continue
+
 			label = self.lexicalForms[lexicalFormID]["label"]
 			lexicalEntryID = self.lexicalForms[lexicalFormID]["lexicalEntryID"]
+			syllableCount = self.__getSyllableCount(label)
 			guess_gender = ""
 
 			# later look if we can make a function for these lookups
@@ -656,8 +661,13 @@ class Ruleset(RulesetCommon):
 				guess_gender = "neuter"
 			elif len(label) > 5 and label[-4:] in [ "heid", "teit", "tuur", "suur" ]:
 				guess_gender = "feminine"
+			elif syllableCount == 2 and ( label[:2] in ["ge","be"] or label[:3] == "ver"):
+				guess_gender = "neuter"
+			elif label[-5:] == "paard" or label[-4:] == "jaar":
+				guess_gender = "neuter"
 			elif len(label) > 6 and (label[-3:] in ["aar","erd"] or label[-4:] == "aard"):
 				guess_gender = "masculine"
+
 
 			if self.userCheck("geslacht",label,guess_gender):
 				form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
