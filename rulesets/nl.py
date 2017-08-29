@@ -218,7 +218,7 @@ class Ruleset(RulesetCommon):
 			elif label[0] == "i" and label[1] != "j":
 				label = "ï" + label[1:]
 
-			prefixes = ["ge","be","ver","ont","her"]
+			prefixes = ["ge","be","ver","ont","her","voor","over"]
 
 			if (label[:2] in prefixes or label[:3] in prefixes) and (label[-3:] == "dde" or label[-3:] == "tte"):
 				# begroette -> begroet, verlootte -> verloot
@@ -569,6 +569,8 @@ class Ruleset(RulesetCommon):
 				guess_plural = label + label[-1:] + "en"
 			elif label[-3:] in ["eum","ium"]:
 				guess_plural = label[:-2] + "a"
+			elif label[-2:] == "us":
+				guess_plural = label[:-2] + "i"
 			elif label[-1:] in ["a","o"]:
 				guess_plural = label + "'s"
 			elif label[-1:] == "e" and syllableCount == 1:
