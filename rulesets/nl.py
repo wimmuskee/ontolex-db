@@ -427,7 +427,8 @@ class Ruleset(RulesetCommon):
 
 		# 3.2 remove entries for which match exists
 		for lexicalEntryID in list(self.lexicalEntries):
-			for sourceSenseID in self.getLexicalSenseIDs(lexicalEntryID):
+			self.lexicalEntries[lexicalEntryID]["senses"] = self.getLexicalSenseIDs(lexicalEntryID)
+			for sourceSenseID in self.lexicalEntries[lexicalEntryID]["senses"]:
 				for targetSenseID in self.lexicalEntries[lexicalEntryID]["match"]["senses"]:
 					if (URIRef(sourceSenseID),LEXINFO.relatedTerm,URIRef(targetSenseID)) in self.g:
 						del(self.lexicalEntries[lexicalEntryID])
@@ -565,12 +566,12 @@ class Ruleset(RulesetCommon):
 				guess_plural = label + "en"
 			elif label[-2:] == "ij":
 				guess_plural = label + "en"
+			elif label[-2:] == "us":
+				guess_plural = label[:-2] + "i"
 			elif label[-2:-1] in self.vowels and not label[-3:-2] in self.vowels:
 				guess_plural = label + label[-1:] + "en"
 			elif label[-3:] in ["eum","ium"]:
 				guess_plural = label[:-2] + "a"
-			elif label[-2:] == "us":
-				guess_plural = label[:-2] + "i"
 			elif label[-1:] in ["a","o"]:
 				guess_plural = label + "'s"
 			elif label[-1:] == "e" and syllableCount == 1:
