@@ -414,9 +414,14 @@ class Ruleset(RulesetCommon):
 				# moorden -> moordenaar
 				noun = label[:-2] + "aar"
 			elif variant == "plural":
-				# fietsen -> fiets
-				# simple for now, but should match to plural form, and retrieve singular
-				noun = label[:-2]
+				# get first person present
+				noun = ""
+				for formID in self.g.objects(URIRef(lexicalEntryID),ONTOLEX.otherForm):
+					if (formID,LEXINFO.tense,LEXINFO.present) in self.g and (formID,LEXINFO.person,LEXINFO.firstPerson) in self.g:
+						noun = self.getLabel(str(formID))
+				if not noun:
+					del(self.lexicalEntries[lexicalEntryID])
+					continue
 
 			targetLexicalEntryID = self.findLexicalEntry(noun,LEXINFO.noun)
 			if targetLexicalEntryID:
@@ -429,6 +434,9 @@ class Ruleset(RulesetCommon):
 		for lexicalEntryID in list(self.lexicalEntries):
 			self.lexicalEntries[lexicalEntryID]["senses"] = self.getLexicalSenseIDs(lexicalEntryID)
 			for sourceSenseID in self.lexicalEntries[lexicalEntryID]["senses"]:
+				if lexicalEntryID not in self.lexicalEntries:
+					break
+
 				for targetSenseID in self.lexicalEntries[lexicalEntryID]["match"]["senses"]:
 					if (URIRef(sourceSenseID),LEXINFO.relatedTerm,URIRef(targetSenseID)) in self.g:
 						del(self.lexicalEntries[lexicalEntryID])
