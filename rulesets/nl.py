@@ -100,6 +100,9 @@ class Ruleset(RulesetCommon):
 			elif label[-5:] == "oneel":
 				# traditioneel -> traditie
 				search_noun.append(label[:-5] + "e")
+			else:
+				# politiek, militair
+				search_noun.append(label)
 
 			for noun in search_noun:
 				targetLexicalEntryID = self.findLexicalEntry(noun,LEXINFO.noun)
@@ -656,14 +659,15 @@ class Ruleset(RulesetCommon):
 		self.setProcessableForms(LEXINFO.noun,LEXINFO.gender)
 
 		for lexicalFormID in self.lexicalForms:
-			# do not use plural forms
-			if (URIRef(lexicalFormID),LEXINFO.number,LEXINFO.plural) in self.g:
-				continue
-
 			label = self.lexicalForms[lexicalFormID]["label"]
 			lexicalEntryID = self.lexicalForms[lexicalFormID]["lexicalEntryID"]
+			number = str(self.g.value(URIRef(lexicalFormID),LEXINFO.number,None))
 			syllableCount = self.__getSyllableCount(label)
 			guess_gender = ""
+
+			# do not use plural forms
+			if number == str(LEXINFO.plural):
+				continue
 
 			# later look if we can make a function for these lookups
 			if label[-3:] == "ing" and self.checkLexicalEntryExists(label[:-3] + "en",LEXINFO.verb):
@@ -678,7 +682,9 @@ class Ruleset(RulesetCommon):
 				guess_gender = "neuter"
 			elif len(label) > 6 and (label[-3:] in ["aar","erd"] or label[-4:] == "aard"):
 				guess_gender = "masculine"
-
+			elif number == str(LEXINFO.massNoun):
+				# mostly correct
+				guess_gender = "neuter"
 
 			if self.userCheck("geslacht",label,guess_gender):
 				form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
