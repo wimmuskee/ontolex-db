@@ -48,7 +48,8 @@ class Ruleset(RulesetCommon):
 			search_antonym = []
 			search_antonym.append("in" + label)
 			search_antonym.append("on" + label)
-			
+			search_antonym.append("an" + label)
+
 			for antonym in search_antonym:
 				targetLexicalEntryID = self.findLexicalEntry(antonym,LEXINFO.adjective)
 				if targetLexicalEntryID:
@@ -571,10 +572,17 @@ class Ruleset(RulesetCommon):
 			label = str(row[0])
 			lexicalEntryID = str(row[1])
 			syllableCount = self.__getSyllableCount(label)
+			choice = randint(0,1)
 
 			if label[-3:] == "ier":
 				guess_plural = label + "en"
-			elif label[-2:] in ["er","ie","en","el"]:
+			elif label[-2:] == "ie":
+				# no apparant rule, so random, theorie, politie
+				if choice == 1:
+					guess_plural = label + "s"
+				else:
+					guess_plural = label + "ën"
+			elif label[-2:] in ["er","en","el"]:
 				guess_plural = label + "s"
 			elif label[-4:] == "erik":
 				guess_plural = label + "en"
@@ -592,8 +600,7 @@ class Ruleset(RulesetCommon):
 				guess_plural = label + "ën"
 			elif label[-1:] == "e" and syllableCount > 1:
 				# no apparant rule, so random, gevangenen and sondes
-				choice = randint(1,10)
-				if choice > 5:
+				if choice == 1:
 					guess_plural = label + "n"
 				else:
 					guess_plural = label + "s"
