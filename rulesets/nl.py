@@ -140,6 +140,9 @@ class Ruleset(RulesetCommon):
 				guess_adjective = label + label[-1:] + "e"
 			elif label[-3:] == "ief":
 				guess_adjective = label[:-1] + "ve"
+			elif label[-4:] == "ieel":
+				# ceremonieel
+				guess_adjective = label[:-4] + "iële"
 			else:
 				guess_adjective = self.__getNounStem(label) + "e"
 
