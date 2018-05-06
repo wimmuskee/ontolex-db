@@ -22,6 +22,7 @@ rules.add_argument('--noun-components-senses', help="find new senses based on fr
 rules.add_argument('--noun-diminutives', help="find diminuitives for nouns", action="store_true")
 rules.add_argument('--noun-genders', help="find gender for noun forms", action="store_true")
 rules.add_argument('--noun-plurals', help="find plurals for canonical nouns", action="store_true")
+rules.add_argument('--noun-plurals-multiple', help="find plurals for nouns that have multiple plural forms", action="store_true")
 rules.add_argument('--verb-components', nargs=1, help="init finding components in verbs", metavar="componentID", dest="verb_components")
 rules.add_argument('--verb-past-participles', help="find past participles verbs", action="store_true")
 rules.add_argument('--verb-past-singulars', help="find past singulars verbs", action="store_true")
@@ -86,6 +87,9 @@ if args.noun_genders:
 
 if args.noun_plurals:
 	r.nounPlurals()
+
+if args.noun_plurals_multiple:
+	r.nounPluralsMultiple()
 
 if args.verb_components:
 	r.verbComponents(args.verb_components[0])

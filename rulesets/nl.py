@@ -92,6 +92,11 @@ class Ruleset(RulesetCommon):
 				search_noun.append(label[:-3] + "sme")
 				# kritisch -> kritiek
 				search_noun.append(label[:-3] + "ek")
+			elif label[-5:] == "elijk":
+				# zuidelijk -> zuiden
+				search_noun.append(label[:-4] + "n")
+				# feestelijk -> feest
+				search_noun.append(label[:-4])
 			elif label[-6:] == "kundig":
 				# wiskundig -> wiskunde
 				search_noun.append(label[:-2] + "e")
@@ -621,6 +626,42 @@ class Ruleset(RulesetCommon):
 					lexicalFormID = self.g.value(URIRef(lexicalEntryID),ONTOLEX.canonicalForm,None)
 					canonical_form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
 					self.db.insertFormProperty(canonical_form_id,self.db.properties["number:singular"],True)
+
+
+	def nounPluralsMultiple(self):
+		""" Some Dutch nouns allow multiple plurals, fase -> fases, fasen.
+		Different method, because we want to match nouns that have a plural. """
+
+		# this query performs really slow on rdflib, however, coding this in
+		# rdflib queries requires lots of code; we're using this one sparingly
+		result = self.g.query("""SELECT (SAMPLE(?label) AS ?LABEL) ?lexicalEntryID (COUNT(?lexicalFormID) as ?formcount) WHERE {
+			?lexicalEntryID rdf:type ontolex:LexicalEntry ;
+				lexinfo:partOfSpeech lexinfo:noun ;
+				rdfs:label ?label ;
+				ontolex:otherForm ?lexicalFormID .
+			?lexicalFormID lexinfo:number lexinfo:plural .
+			FILTER( STRENDS(?label, "e") ) .
+			MINUS {     
+				?lexicalFormID lexinfo:partOfSpeech lexinfo:diminutiveNoun . } }
+			GROUP BY ?lexicalEntryID HAVING(COUNT(?lexicalFormID) = 1)""")
+
+		for row in result:
+			label = str(row[0])
+			lexicalEntryID = str(row[1])
+			if label[-2:-1] not in self.vowels:
+				# look up current plural form
+				lexicalFormID = self.g.value(URIRef(lexicalEntryID),ONTOLEX.otherForm,None)
+				formlabel = self.getLabel(lexicalFormID)
+				if formlabel[-1:] == "s":
+					guess_plural = label + "n"
+				elif formlabel[-1:] == "n":
+					guess_plural = label + "s"
+
+				if guess_plural.lower() in self.worddb:
+					if self.userCheck("andere meervoud", label, guess_plural):
+						lex_id = self.db.getID(str(lexicalEntryID),"lexicalEntry")
+						form_id = self.db.storeOtherForm(lex_id,guess_plural,self.lang_id)
+						self.db.insertFormProperty(form_id,self.db.properties["number:plural"],True)
 
 
 	def nounDiminutives(self):
