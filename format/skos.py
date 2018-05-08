@@ -6,15 +6,15 @@ from format.rdfgraph import RDFGraph
 
 
 class SKOSGraph(RDFGraph):
-	def __init__(self,name,language,exportconfig,buildpackage,persist):
-		RDFGraph.__init__(self, name,language,"turtle",exportconfig,buildpackage,persist)
+	def __init__(self,exportconfig,language,buildpackage,persist):
+		RDFGraph.__init__(self,exportconfig,language,"turtle",buildpackage,persist)
 
 		self.g.bind("skos", SKOS)
 		self.g.bind("owl", OWL)
 
 		if self.buildpackage:
-			self.g.add((URIRef("urn:" + name),RDF.type,SKOS.ConceptScheme))
-			self.g.add((URIRef("urn:" + name),DCTERMS.language,URIRef("http://id.loc.gov/vocabulary/iso639-1/" + language)))
+			self.g.add((URIRef("urn:" + exportconfig["name"]),RDF.type,SKOS.ConceptScheme))
+			self.g.add((URIRef("urn:" + exportconfig["name"]),DCTERMS.language,URIRef("http://id.loc.gov/vocabulary/iso639-1/" + language)))
 
 
 	def setConcepts(self,concepts,conceptLabels,conceptDefinitions):
@@ -27,7 +27,7 @@ class SKOSGraph(RDFGraph):
 			if concept_identifier in conceptDefinitions:
 				self.g.add((conceptIdentifier,SKOS.definition,Literal(conceptDefinitions[concept_identifier], lang=self.language)))
 			if self.buildpackage:
-				self.g.add((conceptIdentifier,SKOS.inScheme,URIRef("urn:" + self.name)))
+				self.g.add((conceptIdentifier,SKOS.inScheme,URIRef("urn:" + self.exportconfig["name"])))
 
 
 	def setConceptRelations(self,conceptrelations):

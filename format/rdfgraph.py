@@ -6,20 +6,19 @@ from rdflib import URIRef, Literal, Namespace
 
 
 class RDFGraph():
-	def __init__(self,name,language,format,exportconfig,buildpackage,persist):
-		self.name = name
+	def __init__(self,exportconfig,language,format,buildpackage,persist):
 		self.language = language
 		self.format = format
 		self.exportconfig = exportconfig
 		self.buildpackage = buildpackage
 		
 		if persist:
-			self.g = Graph("Sleepycat", identifier=self.name)
-			if self.g.open(self.exportconfig["persist_base"] + "/" + self.name, create=False) == 1:
-				self.g.open(self.exportconfig["persist_base"] + "/" + self.name, create=True)
+			self.g = Graph("Sleepycat", identifier=self.exportconfig["name"])
+			if self.g.open(self.exportconfig["persist_base"] + "/" + self.exportconfig["name"], create=False) == 1:
+				self.g.open(self.exportconfig["persist_base"] + "/" + self.exportconfig["name"], create=True)
 				self.g.remove((None,None,None))
 			else:
-				self.g.open(self.exportconfig["persist_base"] + "/" + self.name, create=True)
+				self.g.open(self.exportconfig["persist_base"] + "/" + self.exportconfig["name"], create=True)
 		else:
 			self.g = Graph()
 
@@ -82,12 +81,12 @@ class RDFGraph():
 	def printGraph(self):
 		if self.buildpackage:
 			import datetime
-			self.g.add((URIRef("urn:" + self.name),DCTERMS.date,Literal(str(datetime.date.today()))))
+			self.g.add((URIRef("urn:" + self.exportconfig["name"]),DCTERMS.date,Literal(str(datetime.date.today()))))
 			if self.exportconfig["license"]:
-				self.g.add((URIRef("urn:" + self.name),DCTERMS.license,Literal(self.exportconfig["license"])))
+				self.g.add((URIRef("urn:" + self.exportconfig["name"]),DCTERMS.license,Literal(self.exportconfig["license"])))
 			if self.exportconfig["creator"]:
-				self.g.add((URIRef("urn:" + self.name),DCTERMS.creator,Literal(self.exportconfig["creator"])))
-			self.g.add((URIRef("urn:" + self.name),VOID.triples,Literal(str(len(self.g)+1), datatype=XSD.integer)))
+				self.g.add((URIRef("urn:" + self.exportconfig["name"]),DCTERMS.creator,Literal(self.exportconfig["creator"])))
+			self.g.add((URIRef("urn:" + self.exportconfig["name"]),VOID.triples,Literal(str(len(self.g)+1), datatype=XSD.integer)))
 
 		print(bytes.decode(self.g.serialize(format=self.format)))
 		self.g.close()

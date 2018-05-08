@@ -6,6 +6,7 @@
   "language": "nl",
   "export": {
     "creator": "Wim Muskee",
+    "name": "mylexicon",
     "license": "https://creativecommons.org/publicdomain/zero/1.0/",
     "persist_base": "/tmp" },
   "worddb": { "type": "file", "name": "/tmp/keywords.txt" }

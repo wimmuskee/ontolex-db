@@ -7,8 +7,8 @@ from format.namespace import *
 
 
 class LexiconGraph(RDFGraph):
-	def __init__(self,name,language,format,exportconfig,buildpackage,persist):
-		RDFGraph.__init__(self, name,language,format,exportconfig,buildpackage,persist)
+	def __init__(self,exportconfig,language,format,buildpackage,persist):
+		RDFGraph.__init__(self,exportconfig,language,format,buildpackage,persist)
 
 		self.g.bind("ontolex", ONTOLEX)
 		self.g.bind("lexinfo", LEXINFO)
@@ -17,13 +17,13 @@ class LexiconGraph(RDFGraph):
 
 		if self.buildpackage:
 			self.g.bind("lime", LIME)
-			self.g.add((URIRef("urn:" + name),RDF.type,LIME.lexicon))
-			self.g.add((URIRef("urn:" + name),LIME.language,URIRef("http://id.loc.gov/vocabulary/iso639-1/" + language)))
+			self.g.add((URIRef("urn:" + exportconfig["name"]),RDF.type,LIME.lexicon))
+			self.g.add((URIRef("urn:" + exportconfig["name"]),LIME.language,URIRef("http://id.loc.gov/vocabulary/iso639-1/" + language)))
 
 
 	def setLexicalEntries(self,lexicalEntries):
 		if self.buildpackage:
-			self.g.add((URIRef("urn:" + self.name),LIME.lexicalEntries,Literal(str(len(lexicalEntries)), datatype=XSD.integer)))
+			self.g.add((URIRef("urn:" + self.exportconfig["name"]),LIME.lexicalEntries,Literal(str(len(lexicalEntries)), datatype=XSD.integer)))
 
 		for entry in lexicalEntries:
 			lexicalEntryIdentifier = URIRef(entry["lex_identifier"])
@@ -32,7 +32,7 @@ class LexiconGraph(RDFGraph):
 			self.g.add((lexicalEntryIdentifier,RDF.type,URIRef(ONTOLEX + entry["class"])))
 			self.g.add((lexicalEntryIdentifier,LEXINFO.partOfSpeech,URIRef(LEXINFO + entry["pos_value"])))
 			if self.buildpackage:
-				self.g.add((URIRef("urn:" + self.name),LIME.entry,lexicalEntryIdentifier))
+				self.g.add((URIRef("urn:" + self.exportconfig["name"]),LIME.entry,lexicalEntryIdentifier))
 
 
 	def setLexicalEntryRelatons(self,lexicalEntryRelations):
