@@ -150,7 +150,7 @@ class Ruleset(RulesetCommon):
 				# ceremonieel
 				guess_adjective = label[:-4] + "iële"
 			else:
-				guess_adjective = self.__getNounStem(label) + "e"
+				guess_adjective = self.__getStemToPluralizeCheck(self.__getNounStem(label)) + "e"
 
 			if guess_adjective.lower() in self.worddb:
 				if self.userCheck("vervoeging bijvoegelijk naamwoord: " + degree, label, guess_adjective):
