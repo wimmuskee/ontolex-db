@@ -1,6 +1,16 @@
 # ontolex-db
 A tool to manage your ontolex based dictionary.
 
+# installation
+No proper installer yet, just pull the repo, set the config.json, and use the sql files in init/ to setup a database and go.
+
+## dependencies
+- [rdflib](https://github.com/RDFLib/rdflib)
+- [PyMySQL](https://github.com/PyMySQL/PyMySQL)
+- [Berkeley DB](http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html)
+- [bsddb3](http://pypi.python.org/pypi/bsddb3/)
+- [prettytable](https://code.google.com/p/prettytable/)
+
 # usage
 The examples below assume language *nl*, and export responses are truncated and commented.
 
