@@ -178,6 +178,7 @@ class RulesetCommon:
 		for lexicalEntryID in self.g.subjects(LEXINFO.partOfSpeech,partOfSpeech):
 			lexicalEntryID = str(lexicalEntryID)
 			self.lexicalEntries[lexicalEntryID] = {}
+			self.lexicalEntries[lexicalEntryID]["pos"] = str(partOfSpeech)
 			if "label" in fieldset:
 				self.lexicalEntries[lexicalEntryID]["label"] = self.getLabel(lexicalEntryID)
 			if "senses" in fieldset:
@@ -285,20 +286,3 @@ class RulesetCommon:
 					target_sense_identifier = self.db.getIdentifier(target_sense_id,"lexicalSense")
 
 				self.db.insertSenseReference(source_sense_id,senserelation,target_sense_identifier,True)
-
-
-	# NOTE, not used anymore, we need a better way to manage components
-	def getTopUsedComponents(self,min_threshold=2):
-		components = {}
-		result = self.g.query( """SELECT ?componentID (COUNT(?componentID) as ?countComponentID) WHERE {
-			?lexicalEntry decomp:constituent ?componentID . }
-			GROUP BY ?componentID
-			ORDER BY desc(?countComponentID)""")
-
-		for row in result:
-			componentID = str(row[0])
-			count = int(row[1])
-			if count > min_threshold:
-				components[componentID] = count
-
-		return components

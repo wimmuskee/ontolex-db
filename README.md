@@ -97,7 +97,7 @@ gathering new components based on that first one. For example, the Dutch *aanhou
 divided in *aan* and *houden*, similar to the English *deactivate*.
 ```bash
 # get the lexicalFormID and add a component
-ontolex-db-export -v aan -p preposition
+ontolex-db-export -v aan -p adverb
 ontolex-db-manager add component -s urn:uuid:63a6d052-3ee6-4cba-9c07-a66b01cf77a4
 
 # stored component: urn:uuid:6adcd994-3e76-4dbb-ad91-000d6e31211a
@@ -106,4 +106,16 @@ ontolex-db-export --package --transitive > export.ttl
 
 # now use that identifier in the verb-components ruleset
 ontolex-db-ruleset --verb-components urn:uuid:6adcd994-3e76-4dbb-ad91-000d6e31211a
+```
+To manage these types of components, a quick overview of used components can be
+retrieved with the ontolex-db-query function.
+```bash
+ontolex-db-query --verb-components-prefix
+# +-----------------------------------------------+--------+-------+
+# |                  componentID                  | label  | count |
+# +-----------------------------------------------+--------+-------+
+# | urn:uuid:b48de12d-ee93-46b1-b1c8-d55bbe92eeff |   op   |   76  |
+# | urn:uuid:77a8b18d-7161-49eb-99bb-8647ebd80949 |  uit   |   65  |
+# | urn:uuid:6adcd994-3e76-4dbb-ad91-000d6e31211a |  aan   |   63  |
+# +-----------------------------------------------+--------+-------+
 ```

@@ -1,0 +1,19 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import argparse
+from database.sparql import RDFStore
+from functions.common import validateInput, getConfig
+
+parser = argparse.ArgumentParser(description='query script for ontolox-db')
+parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='config', dest='config')
+queries = parser.add_argument_group('queries')
+queries.add_argument('--verb-components-prefix', help="adverb prefix components for verb", action="store_true")
+
+args = parser.parse_args()
+argsdict = vars(args)
+config = getConfig(argsdict)
+db = RDFStore(config)
+
+if args.verb_components_prefix:
+    db.tablePrint("verbComponentsPrefix")
