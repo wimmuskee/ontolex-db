@@ -21,3 +21,4 @@ INSERT INTO partOfSpeechVocabulary (value) VALUES ('presentParticipleAdjective')
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('ordinalAdjective');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('indefiniteCardinalNumeral');
 INSERT INTO partOfSpeechVocabulary (value) VALUES ('indefiniteOrdinalNumeral');
+INSERT INTO partOfSpeechVocabulary (value) VALUES ('properNoun');

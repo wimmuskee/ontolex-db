@@ -8,7 +8,7 @@ from functions.common import validateInput, getConfig
 
 parser = argparse.ArgumentParser(description='manager script for ontolox-db')
 parser.add_argument('action', choices=['add','update'], help="main operating mode, add or update stuff")
-parser.add_argument('mode', choices=['entry','entryrel','form','formprops','sense','definition','relation','component','bulksense'], help="where to operate")
+parser.add_argument('mode', choices=['entry','entryrel','form','formprops','sense','definition','relation','component','csv'], help="where to operate")
 parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='path', dest='config')
 parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
 commongroup = parser.add_argument_group('common options')
@@ -22,7 +22,8 @@ sensegroup = parser.add_argument_group('sense options')
 sensegroup.add_argument('-d', '--definition', nargs=1, help='sense definition', metavar='string', dest='definition')
 sensegroup.add_argument('-r', '--relation', nargs=1, help='sense relation', metavar='namespace:property', dest='relation')
 sensegroup.add_argument('-t', '--target', nargs=1, help='sense relation target', metavar='uri', dest='target')
-sensegroup.add_argument('-i', '--input', nargs=1, help='bulk sense input file', metavar='path', dest='input')
+specialgroup = parser.add_argument_group('special options')
+specialgroup.add_argument('-i', '--input', nargs=1, help='csv input file', metavar='path', dest='input')
 
 
 # set initial vars
@@ -44,7 +45,8 @@ db.setSenseRelations()
 if language not in db.languages:
 	parser.error("invalid language: " + language)
 
-if args.mode != "entry":
+if args.mode not in ["entry","csv"]:
+	#!= "entry" or args.mode != "csv":
 	sourceID = validateInput(argsdict, "source")
 
 	if not sourceID:
@@ -153,30 +155,44 @@ elif args.action == "add" and args.mode == "component":
 	component_identifier = db.getIdentifier(componentID,"component")
 	print("Stored component: " + component_identifier)
 
-elif args.action == "add" and args.mode == "bulksense":
-	relation = validateInput(argsdict, "relation")
-	inputfile = validateInput(argsdict, "input")
-	pos = validateInput(argsdict, "pos")
+elif (args.action == "add" or args.action == "update") and args.mode == "csv":
+	from functions.common import validateCsvInput
+	import csv
+	csvfile = validateInput(argsdict, "input")
 
-	if not relation or not inputfile or not pos:
-		parser.error("we need a relation, a pos and an input file to continue")
+	with open(csvfile, 'r') as csvfile:
+		spamreader = csv.reader(csvfile, delimiter=',')
+		headers = spamreader.__next__()
+		data = []
+		for row in spamreader:
+			rowdata = {}
+			for i in range(0,len(headers)):
+				headername = headers[i]
+				value = row[i]
+				rowdata[headername] = value
+			data.append(rowdata)
 
-	if relation not in db.senserelations:
-		parser.error("invalid relation provided")
+	for row in data:
+		entry = validateCsvInput(row, "ontolex:LexicalEntry")
+		pos = validateCsvInput(row, "lexinfo:partOfSpeech")
+		ref = validateCsvInput(row, "ontolex:reference")
 
-	if pos not in db.posses:
-		parser.error("invalid partOfSpeech: " + pos)
+		if not entry or not pos:
+			print("error adding row: lexicalEntry and partOfSpeech are required")
+			continue
 
-	with open(inputfile) as f:
-		content = f.readlines()
-	
-	for word in content:
-		word = word.strip()
-		lexicalEntryID = db.storeCanonical(word,db.languages[language],db.posses[pos])
+		if pos not in db.posses:
+			print("error adding row: invalid partOfSpeech: " + pos)
+			continue
+
+		lexicalEntryID = db.findLexicalEntry(entry,db.posses[pos])
 		if not lexicalEntryID:
-			lexicalEntryID = db.findLexicalEntry(word,db.posses[pos])
+			lexicalEntryID = db.storeCanonical(entry,db.languages[language],db.posses[pos])
 
-		db.storeLexicalSense(lexicalEntryID,relation,sourceID)
+		if ref:
+			lexicalSenseID = db.storeLexicalSense(lexicalEntryID,"ontolex:reference",ref)
+			if not lexicalSenseID:
+				print("error adding sense data: probably multiple senses for: " + entry)
 
 else:
 	print("something is wrong")

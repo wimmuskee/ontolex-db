@@ -21,3 +21,10 @@ def validateInput(parserArgs,key,default=""):
 			return value
 
 	return default
+
+def validateCsvInput(rowdict,key):
+	""" Simple validation for csv input. """
+	if key in rowdict and rowdict[key]:
+		return rowdict[key].strip(' \t\n\r')
+	else:
+		return ""
