@@ -176,6 +176,9 @@ elif (args.action == "add" or args.action == "update") and args.mode == "csv":
 		entry = validateCsvInput(row, "ontolex:LexicalEntry")
 		pos = validateCsvInput(row, "lexinfo:partOfSpeech")
 		ref = validateCsvInput(row, "ontolex:reference")
+		abbreviationFor = validateCsvInput(row, "lexinfo:abbreviationFor")
+		initialismFor = validateCsvInput(row, "lexinfo:initialismFor")
+		acronymFor = validateCsvInput(row, "lexinfo:acronymFor")
 
 		if not entry or not pos:
 			print("error adding row: lexicalEntry and partOfSpeech are required")
@@ -189,6 +192,26 @@ elif (args.action == "add" or args.action == "update") and args.mode == "csv":
 		if not lexicalEntryID:
 			lexicalEntryID = db.storeCanonical(entry,db.languages[language],db.posses[pos])
 
+		# contractions
+		contraction_entry = ""
+		if abbreviationFor:
+			contraction_entry = abbreviationFor
+			contraction_rel = "lexinfo:abbreviationFor"
+		if initialismFor:
+			contraction_entry = initialismFor
+			contraction_rel = "lexinfo:initialismFor"
+		if acronymFor:
+			contraction_entry = acronymFor
+			contraction_rel = "lexinfo:acronymFor"
+
+		if contraction_entry:
+			contractionLexID = db.findLexicalEntry(contraction_entry,db.posses[pos])
+			if not contractionLexID:
+				contractionLexID = db.storeCanonical(contraction_entry,db.languages[language],db.posses[pos])
+			contractionIdentifier = db.getIdentifier(contractionLexID,"lexicalEntry")
+			db.storeLexicalEntryRelation(lexicalEntryID,db.entryrelations["lexinfo:abbreviationFor"],contractionIdentifier)
+
+		# sense
 		if ref:
 			lexicalSenseID = db.storeLexicalSense(lexicalEntryID,"ontolex:reference",ref)
 			if not lexicalSenseID:

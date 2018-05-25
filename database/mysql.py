@@ -293,6 +293,14 @@ class Database:
 		else:
 			return False
 
+	def checkLexicalEntryRelationExists(self,lexicalEntryID,relation,reference):
+		query = "SELECT * FROM lexicalEntryRelation WHERE lexicalEntryID = %s AND relationID = %s AND reference = %s"
+		row = self.__getRow(query,(lexicalEntryID,relation,reference))
+		if row:
+			return True
+		else:
+			return False
+
 
 	def storeCanonical(self,word,lang_id,pos_id,safemode=True):
 		""" Stores new lexicalEntry and canonicalForm if entry does not exist."""
@@ -348,6 +356,13 @@ class Database:
 
 		self.DB.commit()
 		return lexicalSenseID
+
+
+	def storeLexicalEntryRelation(self,lexicalEntryID,relation,reference):
+		""" Check whether relation already exists, and if not, adds it. """
+		if not self.checkLexicalEntryRelationExists(lexicalEntryID,relation,reference):
+			self.insertLexicalEntryRelation(lexicalEntryID,relation,reference)
+		self.DB.commit()
 
 
 	def storeComponent(self,lexicalFormID):
