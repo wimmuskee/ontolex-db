@@ -733,9 +733,6 @@ class Ruleset(RulesetCommon):
 				guess_gender = "neuter"
 			elif len(label) > 6 and (label[-3:] in ["aar","erd"] or label[-4:] == "aard"):
 				guess_gender = "masculine"
-			elif number == str(LEXINFO.massNoun):
-				# mostly correct
-				guess_gender = "neuter"
 
 			if self.userCheck("geslacht",label,guess_gender):
 				form_id = self.db.getID(str(lexicalFormID),"lexicalForm")
