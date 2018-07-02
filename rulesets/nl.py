@@ -399,6 +399,7 @@ class Ruleset(RulesetCommon):
 		self.verbRelatedNounsVariant("aar")
 		self.verbRelatedNounsVariant("ing")
 		self.verbRelatedNounsVariant("er")
+		self.verbRelatedNounsVariant("atie")
 
 
 	def verbRelatedNounsVariant(self,variant):
@@ -425,6 +426,8 @@ class Ruleset(RulesetCommon):
 			elif variant == "aar":
 				# moorden -> moordenaar
 				noun = label[:-2] + "aar"
+			elif variant == "atie":
+				noun = label[:-4] + "atie"
 			elif variant == "plural":
 				# get first person present
 				noun = ""
