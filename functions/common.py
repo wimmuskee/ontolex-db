@@ -22,9 +22,18 @@ def validateInput(parserArgs,key,default=""):
 
 	return default
 
-def validateCsvInput(rowdict,key):
-	""" Simple validation for csv input. """
-	if key in rowdict and rowdict[key]:
-		return rowdict[key].strip(' \t\n\r')
-	else:
-		return ""
+def readBulkCsv(csvfile):
+	""" Read bulk input csv file, and return data dictionary. """
+	import csv
+	with open(csvfile, 'r') as csvfile:
+		spamreader = csv.reader(csvfile, delimiter=',')
+		headers = spamreader.__next__()
+		data = []
+		for row in spamreader:
+			rowdata = {}
+			for i in range(0,len(headers)):
+				headername = headers[i]
+				value = row[i]
+				rowdata[headername] = value
+			data.append(rowdata)
+	return data

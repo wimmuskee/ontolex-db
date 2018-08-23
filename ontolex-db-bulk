@@ -1,0 +1,31 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# commandline script to add bulk csv files
+
+import argparse
+from database.bulk import Bulk
+from functions.common import validateInput, getConfig, readBulkCsv
+
+parser = argparse.ArgumentParser(description='manager script for ontolox-db')
+parser.add_argument('-c', '--config', nargs=1, help='config file path', metavar='path', dest='config')
+parser.add_argument('-l', '--lang', nargs=1, help='language iso-639-1', metavar='language', dest='language')
+parser.add_argument('-i', '--input', nargs=1, help='csv input file', metavar='path', dest='input')
+
+
+# set initial vars
+args = parser.parse_args()
+argsdict = vars(args)
+config = getConfig(argsdict)
+language = validateInput(argsdict,"language",config["language"])
+csvfile = validateInput(argsdict, "input")
+
+if not csvfile:
+    parser.error("please provide a csv file")
+
+b = Bulk(config,language)
+data = readBulkCsv(csvfile)
+
+for row in data:
+    b.setRow(row)
+    b.storeRow()

@@ -22,9 +22,6 @@ sensegroup = parser.add_argument_group('sense options')
 sensegroup.add_argument('-d', '--definition', nargs=1, help='sense definition', metavar='string', dest='definition')
 sensegroup.add_argument('-r', '--relation', nargs=1, help='sense relation', metavar='namespace:property', dest='relation')
 sensegroup.add_argument('-t', '--target', nargs=1, help='sense relation target', metavar='uri', dest='target')
-specialgroup = parser.add_argument_group('special options')
-specialgroup.add_argument('-i', '--input', nargs=1, help='csv input file', metavar='path', dest='input')
-
 
 # set initial vars
 args = parser.parse_args()
@@ -154,68 +151,6 @@ elif args.action == "add" and args.mode == "component":
 	componentID = db.storeComponent(lexicalFormID)
 	component_identifier = db.getIdentifier(componentID,"component")
 	print("Stored component: " + component_identifier)
-
-elif (args.action == "add" or args.action == "update") and args.mode == "csv":
-	from functions.common import validateCsvInput
-	import csv
-	csvfile = validateInput(argsdict, "input")
-
-	with open(csvfile, 'r') as csvfile:
-		spamreader = csv.reader(csvfile, delimiter=',')
-		headers = spamreader.__next__()
-		data = []
-		for row in spamreader:
-			rowdata = {}
-			for i in range(0,len(headers)):
-				headername = headers[i]
-				value = row[i]
-				rowdata[headername] = value
-			data.append(rowdata)
-
-	for row in data:
-		entry = validateCsvInput(row, "ontolex:LexicalEntry")
-		pos = validateCsvInput(row, "lexinfo:partOfSpeech")
-		ref = validateCsvInput(row, "ontolex:reference")
-		abbreviationFor = validateCsvInput(row, "lexinfo:abbreviationFor")
-		initialismFor = validateCsvInput(row, "lexinfo:initialismFor")
-		acronymFor = validateCsvInput(row, "lexinfo:acronymFor")
-
-		if not entry or not pos:
-			print("error adding row: lexicalEntry and partOfSpeech are required")
-			continue
-
-		if pos not in db.posses:
-			print("error adding row: invalid partOfSpeech: " + pos)
-			continue
-
-		lexicalEntryID = db.findLexicalEntry(entry,db.posses[pos])
-		if not lexicalEntryID:
-			lexicalEntryID = db.storeCanonical(entry,db.languages[language],db.posses[pos])
-
-		# contractions
-		contraction_entry = ""
-		if abbreviationFor:
-			contraction_entry = abbreviationFor
-			contraction_rel = "lexinfo:abbreviationFor"
-		if initialismFor:
-			contraction_entry = initialismFor
-			contraction_rel = "lexinfo:initialismFor"
-		if acronymFor:
-			contraction_entry = acronymFor
-			contraction_rel = "lexinfo:acronymFor"
-
-		if contraction_entry:
-			contractionLexID = db.findLexicalEntry(contraction_entry,db.posses[pos])
-			if not contractionLexID:
-				contractionLexID = db.storeCanonical(contraction_entry,db.languages[language],db.posses[pos])
-			contractionIdentifier = db.getIdentifier(contractionLexID,"lexicalEntry")
-			db.storeLexicalEntryRelation(lexicalEntryID,db.entryrelations["lexinfo:abbreviationFor"],contractionIdentifier)
-
-		# sense
-		if ref:
-			lexicalSenseID = db.storeLexicalSense(lexicalEntryID,"ontolex:reference",ref)
-			if not lexicalSenseID:
-				print("error adding sense data: probably multiple senses for: " + entry)
 
 else:
 	print("something is wrong")
