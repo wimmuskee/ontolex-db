@@ -22,9 +22,11 @@ class Bulk(Database):
             "ontolex:reference": "",
             "lexinfo:pertainsTo": "" }
         self.pos_id = None
-
+        self.lexicalEntryID = None
+        self.lexicalSenseID = None
 
     def setRow(self,row):
+        """ Validates and sets keymap for provided row."""
         for key in self.keymap:
             self.keymap[key] = self.__validateRowInput(row,key)
 
@@ -35,6 +37,8 @@ class Bulk(Database):
             raise ValueError("error adding row: invalid partOfSpeech: " + self.keymap["lexinfo:partOfSpeech"])
 
         self.pos_id = self.posses[self.keymap["lexinfo:partOfSpeech"]]
+        self.lexicalEntryID = None
+        self.lexicalSenseID = None
 
     def storeRow(self):
         self.__setLexicalEntryID()
@@ -43,7 +47,7 @@ class Bulk(Database):
         # senses
         self.__setReference()
         self.__setHypernym()
-        self.__setPertainsTo()
+        #self.__setPertainsTo()
 
 
     def __validateRowInput(self,rowdict,key):
