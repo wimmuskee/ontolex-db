@@ -47,7 +47,7 @@ class Bulk(Database):
         # senses
         self.__setReference()
         self.__setHypernym()
-        #self.__setPertainsTo()
+        self.__setPertainsTo()
 
 
     def __validateRowInput(self,rowdict,key):
@@ -106,10 +106,18 @@ class Bulk(Database):
             if not adjectiveID:
                 adjectiveID = self.storeCanonical(self.keymap["lexinfo:pertainsTo"],self.language_id,db.posses["adjective"])
 
-        # sense stuff for entry, not the adjective
+        # we need lexicalSenses for the entry and the adjective
+        # check if exists from another column, and check again if adding new
         if not self.lexicalSenseID:
-            self.lexicalSenseID = self.insertLexicalSense(self.lexicalEntryID)
-        lexicalSenseIdentifier = self.getIdentifier(self.lexicalSenseID,"lexicalSense")
+            senseCount = self.getCountlexicalSenses(self.lexicalEntryID)
+            if senseCount == 0:
+                self.lexicalSenseID = self.insertLexicalSense(self.lexicalEntryID)
+            elif senseCount == 1:
+                self.lexicalSenseID = self.getLexicalSenseID(self.lexicalEntryID)
+            else:
+                print("error adding sense data: probably multiple senses for: " + self.keymap["ontolex:LexicalEntry"])
 
-        # set adjective senseID
+        lexicalSenseIdentifier = self.getIdentifier(self.lexicalSenseID,"lexicalSense")
         adjectiveSenseID = self.storeLexicalSense(adjectiveID,"lexinfo:pertainsTo",lexicalSenseIdentifier)
+        if not adjectiveSenseID:
+            print("error adding sense data: probably multiple senses for: " + self.keymap["lexinfo:pertainsTo"])
