@@ -15,6 +15,7 @@ class Bulk(Database):
         self.keymap = {
             "ontolex:LexicalEntry": "",
             "lexinfo:partOfSpeech": "",
+            "lexinfo:gender": "",
             "lexinfo:abbreviationFor": "",
             "lexinfo:initialismFor": "",
             "lexinfo:acronymFor": "",
@@ -42,12 +43,13 @@ class Bulk(Database):
 
     def storeRow(self):
         self.__setLexicalEntryID()
+        self.__setGender(self.keymap["lexinfo:gender"])
         self.__setContractions()
 
         # senses
-        self.__setReference()
-        self.__setHypernym()
-        self.__setPertainsTo()
+        self.__setReference(self.keymap["ontolex:reference"])
+        self.__setHypernym(self.keymap["lexinfo:hypernym"])
+        self.__setPertainsTo(self.keymap["lexinfo:pertainsTo"])
 
 
     def __validateRowInput(self,rowdict,key):
@@ -61,6 +63,18 @@ class Bulk(Database):
         self.lexicalEntryID = self.findLexicalEntry(self.keymap["ontolex:LexicalEntry"],self.pos_id)
         if not self.lexicalEntryID:
             self.lexicalEntryID = self.storeCanonical(self.keymap["ontolex:LexicalEntry"],self.language_id,self.pos_id)
+
+    def __setGender(self,gender):
+        """ Only add gender to canonicalForm of provided lexicalEntry."""
+        if "gender:" + gender not in self.properties:
+            return
+
+        lexicalFormID = self.findlexicalForm(self.lexicalEntryID,self.keymap["ontolex:LexicalEntry"],self.language_id)
+
+        # check if property exists already
+        if lexicalFormID:
+            self.insertFormProperty(lexicalFormID,self.properties["gender:" + gender],True)
+
 
     def __setContractions(self):
         contraction_types = ["lexinfo:abbreviationFor","lexinfo:initialismFor","lexinfo:acronymFor"]
@@ -80,31 +94,37 @@ class Bulk(Database):
             contractionIdentifier = self.getIdentifier(contractionLexID,"lexicalEntry")
             self.storeLexicalEntryRelation(self.lexicalEntryID,self.entryrelations[contraction_rel],contractionIdentifier)
 
-    def __setReference(self):
-        if self.keymap["ontolex:reference"]:
-            if self.lexicalSenseID:
-                # if a senseID is set locally, we're gonna assume all columns are for the same sense
-                self.insertSenseReference(self.lexicalSenseID,"ontolex:reference",self.keymap["ontolex:reference"])
-            else:
-                self.lexicalSenseID = self.storeLexicalSense(self.lexicalEntryID,"ontolex:reference",self.keymap["ontolex:reference"])
-                if not self.lexicalSenseID:
-                    print("error adding sense data: probably multiple senses for: " + self.keymap["ontolex:LexicalEntry"])
+    def __setReference(self,reference):
+        if not reference:
+            return
 
-    def __setHypernym(self):
-        if self.keymap["lexinfo:hypernym"]:
-            if self.lexicalSenseID:
-                # if a senseID is set locally, we're gonna assume all columns are for the same sense
-                self.insertSenseReference(self.lexicalSenseID,"lexinfo:hypernym",self.keymap["lexinfo:hypernym"])
-            else:
-                self.lexicalSenseID = self.storeLexicalSense(self.lexicalEntryID,"lexinfo:hypernym",self.keymap["lexinfo:hypernym"])
-                if not self.lexicalSenseID:
-                    print("error adding sense data: probably multiple senses for: " + self.keymap["ontolex:LexicalEntry"])
+        if self.lexicalSenseID:
+            # if a senseID is set locally, we're gonna assume all columns are for the same sense
+            self.insertSenseReference(self.lexicalSenseID,"ontolex:reference",reference)
+        else:
+            self.lexicalSenseID = self.storeLexicalSense(self.lexicalEntryID,"ontolex:reference",reference)
+            if not self.lexicalSenseID:
+                self.__printWarning(self.keymap["ontolex:LexicalEntry"])
 
-    def __setPertainsTo(self):
-        if self.keymap["lexinfo:pertainsTo"]:
-            adjectiveID = self.findLexicalEntry(self.keymap["lexinfo:pertainsTo"],self.posses["adjective"])
-            if not adjectiveID:
-                adjectiveID = self.storeCanonical(self.keymap["lexinfo:pertainsTo"],self.language_id,db.posses["adjective"])
+    def __setHypernym(self,hypernym):
+        if not hypernym:
+            return
+
+        if self.lexicalSenseID:
+            # if a senseID is set locally, we're gonna assume all columns are for the same sense
+            self.insertSenseReference(self.lexicalSenseID,"lexinfo:hypernym",hypernym)
+        else:
+            self.lexicalSenseID = self.storeLexicalSense(self.lexicalEntryID,"lexinfo:hypernym",hypernym)
+            if not self.lexicalSenseID:
+                self.__printWarning(self.keymap["ontolex:LexicalEntry"])
+
+    def __setPertainsTo(self,pertainsto):
+        if not pertainsto:
+            return
+
+        adjectiveID = self.findLexicalEntry(pertainsto,self.posses["adjective"])
+        if not adjectiveID:
+            adjectiveID = self.storeCanonical(pertainsto,self.language_id,db.posses["adjective"])
 
         # we need lexicalSenses for the entry and the adjective
         # check if exists from another column, and check again if adding new
@@ -115,9 +135,12 @@ class Bulk(Database):
             elif senseCount == 1:
                 self.lexicalSenseID = self.getLexicalSenseID(self.lexicalEntryID)
             else:
-                print("error adding sense data: probably multiple senses for: " + self.keymap["ontolex:LexicalEntry"])
+                self.__printWarning(self.keymap["ontolex:LexicalEntry"])
 
         lexicalSenseIdentifier = self.getIdentifier(self.lexicalSenseID,"lexicalSense")
         adjectiveSenseID = self.storeLexicalSense(adjectiveID,"lexinfo:pertainsTo",lexicalSenseIdentifier)
         if not adjectiveSenseID:
-            print("error adding sense data: probably multiple senses for: " + self.keymap["lexinfo:pertainsTo"])
+            self.__printWarning(pertainsto)
+
+    def __printWarning(self,value):
+        print("error adding sense data: probably multiple senses for: " + value)

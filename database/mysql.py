@@ -301,6 +301,13 @@ class Database:
 		else:
 			return False
 
+	def checkLexicalFormPropertyExists(self,lexicalFormID,propertyID):
+		query = "SELECT * FROM formProperties WHERE lexicalFormID = %s AND propertyID = %s"
+		row = self.__getRow(query,(lexicalFormID,propertyID))
+		if row:
+			return True
+		else:
+			return False
 
 	def storeCanonical(self,word,lang_id,pos_id,safemode=True):
 		""" Stores new lexicalEntry and canonicalForm if entry does not exist."""
@@ -449,6 +456,9 @@ class Database:
 
 
 	def insertFormProperty(self,lexicalFormID,propertyID,commit=False):
+		if self.checkLexicalFormPropertyExists(lexicalFormID,propertyID):
+			return
+
 		c = self.DB.cursor()
 		query = "INSERT INTO formProperties (lexicalFormID,propertyID) VALUES (%s,%s)"
 		c.execute(query, (lexicalFormID,propertyID))
